@@ -1,0 +1,14 @@
+<h1>Tipos de cancha</h1>
+
+<p>Cantidad: {{ tiposCancha().length }}</p>
+
+<p>{{ tiposCancha() | json }}</p>
+
+<ul>
+  @for (tipo of tiposCancha(); track tipo.id) {
+    <li>
+      <strong>{{ tipo.nombre }}</strong>
+      <p>{{ tipo.descripcion }}</p>
+    </li>
+  }
+</ul>
