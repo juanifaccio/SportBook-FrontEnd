@@ -1,0 +1,8 @@
+<h2 mat-dialog-title>{{ titulo }}</h2>
+
+<mat-dialog-content>
+  <app-tipo-cancha-form
+    [tipoCancha]="tipoCancha"
+    (guardar)="alGuardar($event)"
+    (cancelar)="alCancelar()" />
+</mat-dialog-content>

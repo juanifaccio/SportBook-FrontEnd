@@ -1,0 +1,13 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  /* Ancho cómodo en mobile; el diálogo lo limita en pantallas grandes. */
+  min-width: 0;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
