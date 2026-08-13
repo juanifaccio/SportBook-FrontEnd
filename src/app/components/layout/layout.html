@@ -1,0 +1,39 @@
+<mat-toolbar color="primary" class="barra-superior">
+  @if (!esPantallaAncha()) {
+    <button
+      mat-icon-button
+      aria-label="Abrir menú de navegación"
+      (click)="alternarMenu()">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
+
+  <span class="marca">SportBook</span>
+</mat-toolbar>
+
+<mat-sidenav-container class="contenedor">
+  <mat-sidenav
+    class="menu"
+    [mode]="modoSidenav()"
+    [opened]="esPantallaAncha()"
+    [disableClose]="esPantallaAncha()">
+    <mat-nav-list>
+      @for (item of items; track item.ruta) {
+        <a
+          mat-list-item
+          [routerLink]="item.ruta"
+          routerLinkActive
+          #enlace="routerLinkActive"
+          [activated]="enlace.isActive"
+          (click)="alNavegar()">
+          <mat-icon matListItemIcon>{{ item.icono }}</mat-icon>
+          <span matListItemTitle>{{ item.etiqueta }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="contenido">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

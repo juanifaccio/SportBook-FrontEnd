@@ -1,1 +1,89 @@
-/* You can add global styles to this file, and also import other style files */
+/* Estilos globales de SportBook.
+ *
+ * El tema de Angular Material (colores, tipografía, densidad) vive en
+ * `src/material-theme.scss`. Acá va solo lo estructural y las utilidades
+ * compartidas entre componentes.
+ *
+ * Metodología mobile-first: todo estilo base asume pantalla chica y las media
+ * queries agregan reglas hacia arriba. Breakpoints de la app (los mismos que
+ * declara `src/app/core/breakpoints.ts`, alineados con Angular Material):
+ *
+ *   SM  >=  600px   celular grande / tablet vertical
+ *   MD  >=  960px   tablet horizontal / notebook
+ *   LG  >= 1280px   escritorio
+ */
+
+html,
+body {
+  height: 100%;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+/* Encabezado de pantalla: título más acción principal. En mobile la acción
+   baja debajo del título; desde SM comparten fila. */
+.encabezado-pantalla {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.encabezado-pantalla h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+@media (min-width: 600px) {
+  .encabezado-pantalla {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* Estado vacío / de error / de carga: bloque centrado con mensaje y acción. */
+.estado-mensaje {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.estado-mensaje mat-icon {
+  width: 3rem;
+  height: 3rem;
+  font-size: 3rem;
+}
+
+.estado-mensaje h1,
+.estado-mensaje h2 {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+  color: var(--mat-sys-on-surface);
+}
+
+.estado-mensaje p {
+  margin: 0;
+  max-width: 32rem;
+}
+
+/* Notificaciones (ver NotificacionService). */
+.notificacion-error {
+  --mat-snack-bar-button-color: var(--mat-sys-on-error);
+  --mdc-snackbar-container-color: var(--mat-sys-error);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-error);
+}
+
+.notificacion-exito {
+  --mat-snack-bar-button-color: var(--mat-sys-on-primary);
+  --mdc-snackbar-container-color: var(--mat-sys-primary);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-primary);
+}
