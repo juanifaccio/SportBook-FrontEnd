@@ -11,7 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { map } from 'rxjs';
 import { TipoCanchaService } from '../../services/tipo-cancha.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
-import { TipoCancha, TipoCanchaDto } from '../../models/tipo-cancha';
+import { TipoCancha } from '../../models/tipo-cancha';
 import { BREAKPOINT_MD } from '../../core/breakpoints';
 import { TipoCanchaDialogComponent } from './tipo-cancha-dialog/tipo-cancha-dialog';
 import {
@@ -89,46 +89,34 @@ export class TipoCanchaComponent implements OnInit {
     this.abrirFormulario(tipoCancha);
   }
 
+  /**
+   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
+   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
+   */
   private abrirFormulario(tipoCancha: TipoCancha | null): void {
     const dialogRef = this.dialog.open<
       TipoCanchaDialogComponent,
       TipoCancha | null,
-      TipoCanchaDto
+      TipoCancha
     >(TipoCanchaDialogComponent, {
       data: tipoCancha,
       width: '32rem',
       maxWidth: '95vw'
     });
 
-    dialogRef.afterClosed().subscribe((dto) => {
-      if (!dto) {
+    dialogRef.afterClosed().subscribe((guardado) => {
+      if (!guardado) {
         return;
       }
 
       if (tipoCancha) {
-        this.actualizar(tipoCancha.id, dto);
-      } else {
-        this.crear(dto);
-      }
-    });
-  }
-
-  private crear(dto: TipoCanchaDto): void {
-    this.tipoCanchaService.crear(dto).subscribe({
-      next: (creado) => {
-        this.tiposCancha.update((tipos) => [...tipos, creado]);
-        this.notificacion.exito('Tipo de cancha creado correctamente.');
-      }
-    });
-  }
-
-  private actualizar(id: number, dto: TipoCanchaDto): void {
-    this.tipoCanchaService.actualizar(id, dto).subscribe({
-      next: (actualizado) => {
         this.tiposCancha.update((tipos) =>
-          tipos.map((tipo) => (tipo.id === id ? actualizado : tipo))
+          tipos.map((tipo) => (tipo.id === guardado.id ? guardado : tipo))
         );
         this.notificacion.exito('Tipo de cancha actualizado correctamente.');
+      } else {
+        this.tiposCancha.update((tipos) => [...tipos, guardado]);
+        this.notificacion.exito('Tipo de cancha creado correctamente.');
       }
     });
   }

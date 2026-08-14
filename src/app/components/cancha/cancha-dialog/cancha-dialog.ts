@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { CanchaFormComponent } from '../cancha-form/cancha-form';
+import { CanchaService } from '../../../services/cancha.service';
 import { Cancha, CanchaDto } from '../../../models/cancha';
 import { TipoCancha } from '../../../models/tipo-cancha';
 
@@ -11,12 +12,12 @@ export interface DatosCanchaDialog {
 }
 
 /**
- * Envuelve al formulario en un diálogo de Material. Su única responsabilidad es
- * traducir entre la API del diálogo (datos inyectados / valor de cierre) y la
- * del formulario (inputs / outputs), de modo que el formulario siga siendo
- * reutilizable fuera de un diálogo.
+ * Envuelve al formulario en un diálogo de Material y se encarga de guardar.
  *
- * Se cierra con el DTO cargado, o con `undefined` si el usuario cancela.
+ * El request se hace acá y no en el listado porque si el backend rechaza los
+ * datos (un nombre duplicado, por ejemplo) el diálogo tiene que seguir abierto
+ * con lo que el usuario había cargado. Se cierra con la cancha ya guardada, o
+ * con `undefined` si el usuario cancela.
  */
 @Component({
   selector: 'app-cancha-dialog',
@@ -27,14 +28,38 @@ export class CanchaDialogComponent {
 
   protected datos = inject<DatosCanchaDialog>(MAT_DIALOG_DATA);
 
-  private dialogRef = inject(MatDialogRef<CanchaDialogComponent, CanchaDto>);
+  private canchaService = inject(CanchaService);
+
+  private dialogRef = inject(MatDialogRef<CanchaDialogComponent, Cancha>);
+
+  /** Deshabilita los botones del formulario mientras el request está en curso. */
+  protected readonly guardando = signal(false);
 
   protected get titulo(): string {
     return this.datos.cancha ? 'Editar cancha' : 'Nueva cancha';
   }
 
   protected alGuardar(dto: CanchaDto): void {
-    this.dialogRef.close(dto);
+    const cancha = this.datos.cancha;
+
+    this.guardando.set(true);
+    // Mientras el request viaja, el diálogo no se puede cerrar con Escape ni
+    // haciendo clic afuera: si se cerrara, el listado no se enteraría del alta.
+    this.dialogRef.disableClose = true;
+
+    const peticion = cancha
+      ? this.canchaService.actualizar(cancha.id, dto)
+      : this.canchaService.crear(dto);
+
+    peticion.subscribe({
+      next: (guardada) => this.dialogRef.close(guardada),
+      // El mensaje de error ya lo mostró el interceptor; acá solo se devuelve el
+      // control del formulario para que el usuario corrija y reintente.
+      error: () => {
+        this.guardando.set(false);
+        this.dialogRef.disableClose = false;
+      }
+    });
   }
 
   protected alCancelar(): void {

@@ -11,7 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { map } from 'rxjs';
 import { TipoEventoService } from '../../services/tipo-evento.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
-import { TipoEvento, TipoEventoDto } from '../../models/tipo-evento';
+import { TipoEvento } from '../../models/tipo-evento';
 import { BREAKPOINT_MD } from '../../core/breakpoints';
 import { TipoEventoDialogComponent } from './tipo-evento-dialog/tipo-evento-dialog';
 import {
@@ -89,46 +89,34 @@ export class TipoEventoComponent implements OnInit {
     this.abrirFormulario(tipoEvento);
   }
 
+  /**
+   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
+   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
+   */
   private abrirFormulario(tipoEvento: TipoEvento | null): void {
     const dialogRef = this.dialog.open<
       TipoEventoDialogComponent,
       TipoEvento | null,
-      TipoEventoDto
+      TipoEvento
     >(TipoEventoDialogComponent, {
       data: tipoEvento,
       width: '32rem',
       maxWidth: '95vw'
     });
 
-    dialogRef.afterClosed().subscribe((dto) => {
-      if (!dto) {
+    dialogRef.afterClosed().subscribe((guardado) => {
+      if (!guardado) {
         return;
       }
 
       if (tipoEvento) {
-        this.actualizar(tipoEvento.id, dto);
-      } else {
-        this.crear(dto);
-      }
-    });
-  }
-
-  private crear(dto: TipoEventoDto): void {
-    this.tipoEventoService.crear(dto).subscribe({
-      next: (creado) => {
-        this.tiposEvento.update((tipos) => [...tipos, creado]);
-        this.notificacion.exito('Tipo de evento creado correctamente.');
-      }
-    });
-  }
-
-  private actualizar(id: number, dto: TipoEventoDto): void {
-    this.tipoEventoService.actualizar(id, dto).subscribe({
-      next: (actualizado) => {
         this.tiposEvento.update((tipos) =>
-          tipos.map((tipo) => (tipo.id === id ? actualizado : tipo))
+          tipos.map((tipo) => (tipo.id === guardado.id ? guardado : tipo))
         );
         this.notificacion.exito('Tipo de evento actualizado correctamente.');
+      } else {
+        this.tiposEvento.update((tipos) => [...tipos, guardado]);
+        this.notificacion.exito('Tipo de evento creado correctamente.');
       }
     });
   }
