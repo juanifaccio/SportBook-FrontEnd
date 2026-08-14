@@ -1,0 +1,73 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" maxlength="60" placeholder="Ej.: Juan Pérez" />
+    @if (formulario.controls.nombre.hasError('required')) {
+      <mat-error>El nombre es obligatorio.</mat-error>
+    } @else if (formulario.controls.nombre.hasError('maxlength')) {
+      <mat-error>El nombre no puede superar los 60 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Email</mat-label>
+    <input matInput type="email" formControlName="email" placeholder="Ej.: juan@ejemplo.com" />
+    @if (formulario.controls.email.hasError('required')) {
+      <mat-error>El email es obligatorio.</mat-error>
+    } @else if (formulario.controls.email.hasError('email')) {
+      <mat-error>El email no tiene un formato válido.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Teléfono</mat-label>
+    <input matInput formControlName="telefono" maxlength="20" placeholder="Ej.: 341 555-1234" />
+    @if (formulario.controls.telefono.hasError('required')) {
+      <mat-error>El teléfono es obligatorio.</mat-error>
+    } @else if (formulario.controls.telefono.hasError('minlength')) {
+      <mat-error>El teléfono tiene que tener al menos 6 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Rol</mat-label>
+    <mat-select formControlName="rolId">
+      @for (rol of roles(); track rol.id) {
+        <mat-option [value]="rol.id">{{ etiquetaRol(rol.nombre) }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.rolId.hasError('required')) {
+      <mat-error>El rol es obligatorio.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Contraseña</mat-label>
+    <input matInput type="password" formControlName="contrasena" autocomplete="new-password" />
+    <!-- En la edición el campo arranca vacío a propósito: la API nunca devuelve
+         la contraseña, así que dejarlo en blanco es lo que conserva la actual. -->
+    @if (esEdicion) {
+      <mat-hint>Dejalo vacío para no cambiarla.</mat-hint>
+    }
+    @if (formulario.controls.contrasena.hasError('required')) {
+      <mat-error>La contraseña es obligatoria.</mat-error>
+    } @else if (formulario.controls.contrasena.hasError('minlength')) {
+      <mat-error>
+        La contraseña tiene que tener al menos {{ largoMinimoContrasena }} caracteres.
+      </mat-error>
+    }
+  </mat-form-field>
+
+  <div class="opcion">
+    <mat-checkbox formControlName="activo">Usuario activo</mat-checkbox>
+  </div>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>
