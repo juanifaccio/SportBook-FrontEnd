@@ -54,6 +54,7 @@ export class LayoutComponent {
 
   protected readonly items: ItemNavegacion[] = [
     { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium' },
+    { etiqueta: 'Horarios', ruta: '/horarios', icono: 'schedule' },
     { etiqueta: 'Tipos de cancha', ruta: '/tipos-cancha', icono: 'category' },
     { etiqueta: 'Tipos de evento', ruta: '/tipos-evento', icono: 'celebration' }
     // A medida que se sumen entidades (Equipamiento, Reservas...) se agregan

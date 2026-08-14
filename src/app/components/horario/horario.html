@@ -1,0 +1,136 @@
+<header class="encabezado-pantalla">
+  <h1>Horarios</h1>
+
+  <!-- Un turno no puede existir sin una cancha: si todavía no hay ninguna, el
+       alta queda deshabilitada y el tooltip explica por qué. -->
+  <span
+    [matTooltip]="hayCanchas() ? '' : 'Primero tenés que crear una cancha'"
+    [matTooltipDisabled]="hayCanchas()">
+    <button mat-flat-button type="button" [disabled]="!hayCanchas()" (click)="abrirAlta()">
+      <mat-icon>add</mat-icon>
+      Nuevo horario
+    </button>
+  </span>
+</header>
+
+@if (hayCanchas()) {
+  <mat-form-field appearance="outline" class="selector-cancha">
+    <mat-label>Cancha</mat-label>
+    <mat-select
+      [value]="canchaSeleccionada()"
+      (valueChange)="alCambiarCancha($event)">
+      @for (cancha of canchas(); track cancha.id) {
+        <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+}
+
+@if (cargando()) {
+  <div class="estado-mensaje">
+    <mat-spinner diameter="48" />
+    <p>Cargando horarios…</p>
+  </div>
+} @else if (error()) {
+  <div class="estado-mensaje">
+    <mat-icon>cloud_off</mat-icon>
+    <h2>No se pudieron cargar los horarios</h2>
+    <p>Revisá que el backend esté ejecutándose y volvé a intentar.</p>
+    <button mat-flat-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  </div>
+} @else if (!hayCanchas()) {
+  <div class="estado-mensaje">
+    <mat-icon>stadium</mat-icon>
+    <h2>Todavía no hay canchas</h2>
+    <p>Los horarios son los turnos de una cancha, así que creá la primera para poder cargarlos.</p>
+    <button mat-flat-button type="button" routerLink="/canchas">
+      <mat-icon>arrow_forward</mat-icon>
+      Ir a canchas
+    </button>
+  </div>
+} @else if (horarios().length === 0) {
+  <div class="estado-mensaje">
+    <mat-icon>schedule</mat-icon>
+    <h2>Esta cancha todavía no tiene horarios</h2>
+    <p>Cargá los turnos que vas a ofrecer para que se puedan reservar.</p>
+    <button mat-flat-button type="button" (click)="abrirAlta()">
+      <mat-icon>add</mat-icon>
+      Nuevo horario
+    </button>
+  </div>
+} @else if (esPantallaAncha()) {
+  <table mat-table [dataSource]="horarios()" class="tabla">
+    <ng-container matColumnDef="fecha">
+      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+      <td mat-cell *matCellDef="let horario">{{ formatearFecha(horario.fecha) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="horario">
+      <th mat-header-cell *matHeaderCellDef>Horario</th>
+      <td mat-cell *matCellDef="let horario">
+        {{ horario.horaInicio }} a {{ horario.horaFin }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estado">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let horario">
+        {{ horario.disponible ? 'Disponible' : 'No disponible' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef class="columna-acciones">Acciones</th>
+      <td mat-cell *matCellDef="let horario" class="columna-acciones">
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Editar"
+          [attr.aria-label]="'Editar el turno de las ' + horario.horaInicio"
+          (click)="abrirEdicion(horario)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Eliminar"
+          [attr.aria-label]="'Eliminar el turno de las ' + horario.horaInicio"
+          (click)="confirmarEliminacion(horario)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+    <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+  </table>
+} @else {
+  <div class="tarjetas">
+    @for (horario of horarios(); track horario.id) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ horario.horaInicio }} a {{ horario.horaFin }}</mat-card-title>
+          <mat-card-subtitle>{{ formatearFecha(horario.fecha) }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <p>{{ horario.disponible ? 'Disponible' : 'No disponible' }}</p>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <button mat-button type="button" (click)="abrirEdicion(horario)">
+            <mat-icon>edit</mat-icon>
+            Editar
+          </button>
+          <button mat-button type="button" (click)="confirmarEliminacion(horario)">
+            <mat-icon>delete</mat-icon>
+            Eliminar
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

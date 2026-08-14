@@ -28,6 +28,11 @@ export const routes: Routes = [
     loadComponent: () => import('./components/cancha/cancha').then((m) => m.CanchaComponent)
   },
   {
+    path: 'horarios',
+    title: 'Horarios — SportBook',
+    loadComponent: () => import('./components/horario/horario').then((m) => m.HorarioComponent)
+  },
+  {
     path: '**',
     title: 'Página no encontrada — SportBook',
     loadComponent: () =>

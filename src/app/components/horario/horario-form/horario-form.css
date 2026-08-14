@@ -1,0 +1,34 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Las dos horas son un solo dato partido en dos: en pantallas con ancho van
+   juntas en la misma fila. */
+.horas {
+  display: flex;
+  flex-direction: column;
+}
+
+.horas mat-form-field {
+  flex: 1;
+}
+
+.opcion {
+  padding-bottom: 1rem;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+@media (min-width: 600px) {
+  .horas {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}

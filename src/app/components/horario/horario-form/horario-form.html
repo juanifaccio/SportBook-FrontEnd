@@ -1,0 +1,54 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <mat-form-field appearance="outline">
+    <mat-label>Cancha</mat-label>
+    <mat-select formControlName="canchaId">
+      @for (cancha of canchas(); track cancha.id) {
+        <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.canchaId.hasError('required')) {
+      <mat-error>La cancha es obligatoria.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Fecha</mat-label>
+    <input matInput type="date" formControlName="fecha" />
+    @if (formulario.controls.fecha.hasError('required')) {
+      <mat-error>La fecha es obligatoria.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="horas">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input matInput type="time" formControlName="horaInicio" />
+      @if (formulario.controls.horaInicio.hasError('required')) {
+        <mat-error>La hora de inicio es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input matInput type="time" formControlName="horaFin" />
+      @if (formulario.controls.horaFin.hasError('required')) {
+        <mat-error>La hora de fin es obligatoria.</mat-error>
+      } @else if (formulario.controls.horaFin.hasError('horasInvertidas')) {
+        <mat-error>Tiene que ser posterior a la hora de inicio.</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div class="opcion">
+    <mat-checkbox formControlName="disponible">Disponible para reservar</mat-checkbox>
+  </div>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>

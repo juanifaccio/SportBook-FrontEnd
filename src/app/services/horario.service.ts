@@ -1,0 +1,46 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Horario, HorarioDto } from '../models/horario';
+import { environment } from '../../environments/environment';
+
+/**
+ * Acceso a los endpoints de horarios del backend.
+ *
+ * Sigue el mismo criterio que el resto de los servicios: la URL sale del
+ * ambiente y los errores quedan a cargo del interceptor.
+ */
+@Injectable({
+  providedIn: 'root'
+})
+export class HorarioService {
+
+  private http = inject(HttpClient);
+
+  private readonly url = `${environment.apiUrl}/horarios`;
+
+  /** Los turnos se consultan por cancha; sin filtro devuelve todos. */
+  listar(canchaId?: number): Observable<Horario[]> {
+    const params =
+      canchaId === undefined ? undefined : new HttpParams().set('canchaId', canchaId);
+
+    return this.http.get<Horario[]>(this.url, { params });
+  }
+
+  obtener(id: number): Observable<Horario> {
+    return this.http.get<Horario>(`${this.url}/${id}`);
+  }
+
+  crear(horario: HorarioDto): Observable<Horario> {
+    return this.http.post<Horario>(this.url, horario);
+  }
+
+  actualizar(id: number, horario: HorarioDto): Observable<Horario> {
+    return this.http.put<Horario>(`${this.url}/${id}`, horario);
+  }
+
+  eliminar(id: number): Observable<{ mensaje: string }> {
+    return this.http.delete<{ mensaje: string }>(`${this.url}/${id}`);
+  }
+
+}
