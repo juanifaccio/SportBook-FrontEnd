@@ -1,0 +1,20 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" maxlength="60" placeholder="Ej.: Cumpleaños" />
+    @if (formulario.controls.nombre.hasError('required')) {
+      <mat-error>El nombre es obligatorio.</mat-error>
+    } @else if (formulario.controls.nombre.hasError('maxlength')) {
+      <mat-error>El nombre no puede superar los 60 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>

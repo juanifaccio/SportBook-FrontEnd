@@ -17,6 +17,12 @@ export const routes: Routes = [
       import('./components/tipo-cancha/tipo-cancha').then((m) => m.TipoCanchaComponent)
   },
   {
+    path: 'tipos-evento',
+    title: 'Tipos de evento — SportBook',
+    loadComponent: () =>
+      import('./components/tipo-evento/tipo-evento').then((m) => m.TipoEventoComponent)
+  },
+  {
     path: '**',
     title: 'Página no encontrada — SportBook',
     loadComponent: () =>
