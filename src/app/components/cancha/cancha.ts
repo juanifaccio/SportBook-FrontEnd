@@ -14,7 +14,7 @@ import { forkJoin, map } from 'rxjs';
 import { CanchaService } from '../../services/cancha.service';
 import { TipoCanchaService } from '../../services/tipo-cancha.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
-import { Cancha, CanchaDto, EstadoCancha, ETIQUETAS_ESTADO } from '../../models/cancha';
+import { Cancha, EstadoCancha, ETIQUETAS_ESTADO } from '../../models/cancha';
 import { TipoCancha } from '../../models/tipo-cancha';
 import { BREAKPOINT_MD } from '../../core/breakpoints';
 import { CanchaDialogComponent, DatosCanchaDialog } from './cancha-dialog/cancha-dialog';
@@ -113,8 +113,12 @@ export class CanchaComponent implements OnInit {
     this.abrirFormulario(cancha);
   }
 
+  /**
+   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
+   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
+   */
   private abrirFormulario(cancha: Cancha | null): void {
-    const dialogRef = this.dialog.open<CanchaDialogComponent, DatosCanchaDialog, CanchaDto>(
+    const dialogRef = this.dialog.open<CanchaDialogComponent, DatosCanchaDialog, Cancha>(
       CanchaDialogComponent,
       {
         data: { cancha: cancha, tipos: this.tipos() },
@@ -123,35 +127,19 @@ export class CanchaComponent implements OnInit {
       }
     );
 
-    dialogRef.afterClosed().subscribe((dto) => {
-      if (!dto) {
+    dialogRef.afterClosed().subscribe((guardada) => {
+      if (!guardada) {
         return;
       }
 
       if (cancha) {
-        this.actualizar(cancha.id, dto);
-      } else {
-        this.crear(dto);
-      }
-    });
-  }
-
-  private crear(dto: CanchaDto): void {
-    this.canchaService.crear(dto).subscribe({
-      next: (creada) => {
-        this.canchas.update((canchas) => [...canchas, creada]);
-        this.notificacion.exito('Cancha creada correctamente.');
-      }
-    });
-  }
-
-  private actualizar(id: number, dto: CanchaDto): void {
-    this.canchaService.actualizar(id, dto).subscribe({
-      next: (actualizada) => {
         this.canchas.update((canchas) =>
-          canchas.map((cancha) => (cancha.id === id ? actualizada : cancha))
+          canchas.map((actual) => (actual.id === guardada.id ? guardada : actual))
         );
         this.notificacion.exito('Cancha actualizada correctamente.');
+      } else {
+        this.canchas.update((canchas) => [...canchas, guardada]);
+        this.notificacion.exito('Cancha creada correctamente.');
       }
     });
   }

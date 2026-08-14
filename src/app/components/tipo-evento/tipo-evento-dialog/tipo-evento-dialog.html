@@ -3,6 +3,7 @@
 <mat-dialog-content>
   <app-tipo-evento-form
     [tipoEvento]="tipoEvento"
+    [guardando]="guardando()"
     (guardar)="alGuardar($event)"
     (cancelar)="alCancelar()" />
 </mat-dialog-content>

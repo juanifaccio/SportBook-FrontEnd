@@ -3,6 +3,7 @@
 <mat-dialog-content>
   <app-tipo-cancha-form
     [tipoCancha]="tipoCancha"
+    [guardando]="guardando()"
     (guardar)="alGuardar($event)"
     (cancelar)="alCancelar()" />
 </mat-dialog-content>

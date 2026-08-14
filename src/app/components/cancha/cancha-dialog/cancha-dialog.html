@@ -4,6 +4,7 @@
   <app-cancha-form
     [cancha]="datos.cancha"
     [tipos]="datos.tipos"
+    [guardando]="guardando()"
     (guardar)="alGuardar($event)"
     (cancelar)="alCancelar()" />
 </mat-dialog-content>
