@@ -53,6 +53,8 @@ export class LayoutComponent {
   protected readonly modoSidenav = computed(() => (this.esPantallaAncha() ? 'side' : 'over'));
 
   protected readonly items: ItemNavegacion[] = [
+    // Reservar va primero: es el caso de uso central de la aplicación, no un ABM más.
+    { etiqueta: 'Reservar', ruta: '/reservar', icono: 'event_available' },
     { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium' },
     { etiqueta: 'Horarios', ruta: '/horarios', icono: 'schedule' },
     { etiqueta: 'Usuarios', ruta: '/usuarios', icono: 'group' },

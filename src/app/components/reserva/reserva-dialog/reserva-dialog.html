@@ -1,0 +1,32 @@
+<h2 mat-dialog-title>Confirmar reserva</h2>
+
+<mat-dialog-content>
+  <dl class="detalle">
+    <dt>Cancha</dt>
+    <dd>{{ datos.cancha.nombre }}</dd>
+
+    <dt>Día</dt>
+    <dd>{{ fechaFormateada }}</dd>
+
+    <dt>Horario</dt>
+    <dd>{{ datos.horario.horaInicio }} a {{ datos.horario.horaFin }}</dd>
+
+    <dt>A nombre de</dt>
+    <dd>{{ datos.usuario.nombre }}</dd>
+  </dl>
+
+  <p class="total">
+    <span>Total</span>
+    <strong>{{ datos.precioTotal | currency: 'ARS' }}</strong>
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [disabled]="guardando()" (click)="cancelar()">
+    Cancelar
+  </button>
+  <button mat-flat-button type="button" [disabled]="guardando()" (click)="confirmar()">
+    <mat-icon>event_available</mat-icon>
+    Confirmar reserva
+  </button>
+</mat-dialog-actions>

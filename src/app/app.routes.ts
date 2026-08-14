@@ -11,6 +11,11 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'reservar',
+    title: 'Reservar — SportBook',
+    loadComponent: () => import('./components/reserva/reserva').then((m) => m.ReservaComponent)
+  },
+  {
     path: 'tipos-cancha',
     title: 'Tipos de cancha — SportBook',
     loadComponent: () =>

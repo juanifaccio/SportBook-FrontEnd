@@ -1,0 +1,69 @@
+/* Mobile-first: los dos selectores arrancan apilados a lo ancho de la pantalla
+   y comparten fila desde SM, donde ya entran los dos. */
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filtros mat-form-field {
+  width: 100%;
+}
+
+.seccion {
+  margin-bottom: 1.5rem;
+}
+
+.seccion h2 {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-title-medium);
+}
+
+/* Dentro de una sección el estado vacío no es el de una pantalla entera: se le
+   saca el aire de arriba y abajo para que no empuje el resumen fuera de vista. */
+.seccion .estado-mensaje {
+  padding: 1.5rem 1rem;
+}
+
+.selector-usuario {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.resumen-linea {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.resumen-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-title-medium);
+}
+
+.resumen-vacio {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 600px) {
+  .filtros {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .filtros mat-form-field {
+    width: 20rem;
+  }
+}

@@ -1,0 +1,27 @@
+/* Etiqueta arriba y valor abajo: en mobile las dos columnas dejaban los valores
+   largos (un nombre completo) partidos en tres líneas. */
+
+.detalle {
+  margin: 0;
+}
+
+.detalle dt {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detalle dd {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-body-large);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-title-medium);
+}

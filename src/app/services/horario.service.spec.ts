@@ -57,6 +57,19 @@ describe('HorarioService', () => {
     req.flush([]);
   });
 
+  it('pide solo los turnos libres de una cancha y un día', () => {
+    service.listarDisponibles(3, '2026-08-20').subscribe();
+
+    const req = httpMock.expectOne(
+      (pedido) => pedido.url === url && pedido.params.has('disponible')
+    );
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('canchaId')).toBe('3');
+    expect(req.request.params.get('fecha')).toBe('2026-08-20');
+    expect(req.request.params.get('disponible')).toBe('true');
+    req.flush([]);
+  });
+
   it('envía el alta con la cancha como id y sin el objeto anidado', () => {
     service.crear(dto).subscribe();
 
