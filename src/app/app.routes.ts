@@ -23,6 +23,11 @@ export const routes: Routes = [
       import('./components/tipo-evento/tipo-evento').then((m) => m.TipoEventoComponent)
   },
   {
+    path: 'canchas',
+    title: 'Canchas — SportBook',
+    loadComponent: () => import('./components/cancha/cancha').then((m) => m.CanchaComponent)
+  },
+  {
     path: '**',
     title: 'Página no encontrada — SportBook',
     loadComponent: () =>
