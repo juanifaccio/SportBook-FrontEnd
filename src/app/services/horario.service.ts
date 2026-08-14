@@ -27,6 +27,20 @@ export class HorarioService {
     return this.http.get<Horario[]>(this.url, { params });
   }
 
+  /**
+   * Turnos libres de una cancha en un día. Es lo que necesita la pantalla de
+   * reservar: los que ya están tomados no se pueden elegir, así que los filtra
+   * el backend en vez de traerlos y esconderlos.
+   */
+  listarDisponibles(canchaId: number, fecha: string): Observable<Horario[]> {
+    const params = new HttpParams()
+      .set('canchaId', canchaId)
+      .set('fecha', fecha)
+      .set('disponible', true);
+
+    return this.http.get<Horario[]>(this.url, { params });
+  }
+
   obtener(id: number): Observable<Horario> {
     return this.http.get<Horario>(`${this.url}/${id}`);
   }

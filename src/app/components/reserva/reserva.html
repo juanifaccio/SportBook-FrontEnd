@@ -1,0 +1,157 @@
+<header class="encabezado-pantalla">
+  <h1>Reservar una cancha</h1>
+</header>
+
+@if (cargando()) {
+  <div class="estado-mensaje">
+    <mat-spinner diameter="48" />
+    <p>Cargando canchas y usuarios…</p>
+  </div>
+} @else if (error()) {
+  <div class="estado-mensaje">
+    <mat-icon>cloud_off</mat-icon>
+    <h2>No se pudo cargar la pantalla</h2>
+    <p>Revisá que el backend esté ejecutándose y volvé a intentar.</p>
+    <button mat-flat-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  </div>
+} @else if (!hayCanchas()) {
+  <div class="estado-mensaje">
+    <mat-icon>stadium</mat-icon>
+    <h2>No hay canchas disponibles</h2>
+    <p>Para reservar hace falta al menos una cancha en estado disponible.</p>
+    <button mat-flat-button type="button" routerLink="/canchas">
+      <mat-icon>arrow_forward</mat-icon>
+      Ir a canchas
+    </button>
+  </div>
+} @else if (!hayUsuarios()) {
+  <div class="estado-mensaje">
+    <mat-icon>group</mat-icon>
+    <h2>No hay usuarios activos</h2>
+    <p>Una reserva siempre va a nombre de alguien, así que primero cargá un usuario.</p>
+    <button mat-flat-button type="button" routerLink="/usuarios">
+      <mat-icon>arrow_forward</mat-icon>
+      Ir a usuarios
+    </button>
+  </div>
+} @else {
+  <div class="filtros">
+    <mat-form-field appearance="outline">
+      <mat-label>Cancha</mat-label>
+      <mat-select [value]="canchaSeleccionada()" (valueChange)="alCambiarCancha($event)">
+        @for (cancha of canchas(); track cancha.id) {
+          <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+        }
+      </mat-select>
+      @if (canchaActual(); as cancha) {
+        <mat-hint>{{ cancha.precioPorHora | currency: 'ARS' }} por hora</mat-hint>
+      }
+    </mat-form-field>
+
+    <!-- Campo de fecha nativo: su valor ya es el "AAAA-MM-DD" que espera el
+         backend, así que no hay que convertir nada ni arriesgarse a que el huso
+         horario corra el día. -->
+    <mat-form-field appearance="outline">
+      <mat-label>Día</mat-label>
+      <input
+        matInput
+        type="date"
+        [min]="hoy"
+        [value]="fecha()"
+        (change)="alCambiarFecha($any($event.target).value)" />
+    </mat-form-field>
+  </div>
+
+  <section class="seccion">
+    <h2>Turnos libres</h2>
+
+    @if (cargandoTurnos()) {
+      <div class="estado-mensaje">
+        <mat-spinner diameter="32" />
+        <p>Buscando turnos…</p>
+      </div>
+    } @else if (errorTurnos()) {
+      <div class="estado-mensaje">
+        <mat-icon>cloud_off</mat-icon>
+        <p>No se pudieron cargar los turnos de ese día.</p>
+        <button mat-stroked-button type="button" (click)="cargarTurnos()">
+          <mat-icon>refresh</mat-icon>
+          Reintentar
+        </button>
+      </div>
+    } @else if (turnos().length === 0) {
+      <div class="estado-mensaje">
+        <mat-icon>event_busy</mat-icon>
+        <p>
+          No quedan turnos libres en {{ canchaActual()?.nombre }} el
+          {{ formatearFecha(fecha()) }}. Probá con otro día u otra cancha.
+        </p>
+        <button mat-stroked-button type="button" routerLink="/horarios">
+          <mat-icon>arrow_forward</mat-icon>
+          Cargar turnos
+        </button>
+      </div>
+    } @else {
+      <mat-chip-listbox
+        aria-label="Turnos libres"
+        [value]="turnoSeleccionado()"
+        (change)="alElegirTurno($event.value)">
+        @for (turno of turnos(); track turno.id) {
+          <mat-chip-option [value]="turno.id">
+            {{ turno.horaInicio }} a {{ turno.horaFin }}
+          </mat-chip-option>
+        }
+      </mat-chip-listbox>
+    }
+  </section>
+
+  <section class="seccion">
+    <h2>A nombre de</h2>
+
+    <!-- Mientras no exista el login (#15) el dueño de la reserva se elige a
+         mano. Cuando haya sesión, este selector sale y el usuario sale de ahí. -->
+    <mat-form-field appearance="outline" class="selector-usuario">
+      <mat-label>Usuario</mat-label>
+      <mat-select [value]="usuarioSeleccionado()" (valueChange)="alElegirUsuario($event)">
+        @for (usuario of usuarios(); track usuario.id) {
+          <mat-option [value]="usuario.id">{{ usuario.nombre }} — {{ usuario.email }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  <mat-card appearance="outlined" class="resumen">
+    <mat-card-content>
+      @if (turnoActual(); as turno) {
+        <p class="resumen-linea">
+          <mat-icon>stadium</mat-icon>
+          <span>{{ canchaActual()?.nombre }}</span>
+        </p>
+        <p class="resumen-linea">
+          <mat-icon>event</mat-icon>
+          <span>{{ formatearFecha(turno.fecha) }}, de {{ turno.horaInicio }} a {{ turno.horaFin }}</span>
+        </p>
+        <p class="resumen-total">
+          <span>Total</span>
+          <strong>{{ precioTotal() | currency: 'ARS' }}</strong>
+        </p>
+      } @else {
+        <p class="resumen-vacio">Elegí un turno y a nombre de quién va la reserva.</p>
+      }
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button
+        mat-flat-button
+        type="button"
+        [disabled]="!puedeReservar()"
+        (click)="confirmarReserva()">
+        <mat-icon>event_available</mat-icon>
+        Reservar
+      </button>
+    </mat-card-actions>
+  </mat-card>
+}
