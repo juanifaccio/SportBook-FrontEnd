@@ -53,10 +53,11 @@ export class LayoutComponent {
   protected readonly modoSidenav = computed(() => (this.esPantallaAncha() ? 'side' : 'over'));
 
   protected readonly items: ItemNavegacion[] = [
+    { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium' },
     { etiqueta: 'Tipos de cancha', ruta: '/tipos-cancha', icono: 'category' },
     { etiqueta: 'Tipos de evento', ruta: '/tipos-evento', icono: 'celebration' }
-    // A medida que se sumen entidades (Equipamiento, Cancha, Reservas...) se
-    // agregan acá siguiendo este mismo formato.
+    // A medida que se sumen entidades (Equipamiento, Reservas...) se agregan
+    // acá siguiendo este mismo formato.
   ];
 
   /** En pantalla chica el menú se cierra al navegar, para no tapar el contenido. */

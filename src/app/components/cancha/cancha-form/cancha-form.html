@@ -1,0 +1,61 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" maxlength="60" placeholder="Ej.: Cancha 1" />
+    @if (formulario.controls.nombre.hasError('required')) {
+      <mat-error>El nombre es obligatorio.</mat-error>
+    } @else if (formulario.controls.nombre.hasError('maxlength')) {
+      <mat-error>El nombre no puede superar los 60 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Tipo de cancha</mat-label>
+    <mat-select formControlName="tipoCanchaId">
+      @for (tipo of tipos(); track tipo.id) {
+        <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.tipoCanchaId.hasError('required')) {
+      <mat-error>El tipo de cancha es obligatorio.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Precio por hora</mat-label>
+    <span matTextPrefix>$&nbsp;</span>
+    <input
+      matInput
+      type="number"
+      formControlName="precioPorHora"
+      min="1"
+      step="0.01"
+      placeholder="Ej.: 8500" />
+    @if (formulario.controls.precioPorHora.hasError('required')) {
+      <mat-error>El precio por hora es obligatorio.</mat-error>
+    } @else if (formulario.controls.precioPorHora.hasError('min')) {
+      <mat-error>El precio por hora tiene que ser mayor a cero.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Estado</mat-label>
+    <mat-select formControlName="estado">
+      @for (estado of estados; track estado) {
+        <mat-option [value]="estado">{{ etiquetasEstado[estado] }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.estado.hasError('required')) {
+      <mat-error>El estado es obligatorio.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>
