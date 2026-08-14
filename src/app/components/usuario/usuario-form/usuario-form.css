@@ -1,0 +1,16 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.opcion {
+  padding-bottom: 1rem;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}

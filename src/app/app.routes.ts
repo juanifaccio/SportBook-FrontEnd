@@ -33,6 +33,11 @@ export const routes: Routes = [
     loadComponent: () => import('./components/horario/horario').then((m) => m.HorarioComponent)
   },
   {
+    path: 'usuarios',
+    title: 'Usuarios — SportBook',
+    loadComponent: () => import('./components/usuario/usuario').then((m) => m.UsuarioComponent)
+  },
+  {
     path: '**',
     title: 'Página no encontrada — SportBook',
     loadComponent: () =>
