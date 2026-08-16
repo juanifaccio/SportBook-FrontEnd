@@ -12,9 +12,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTimepickerModule } from '@angular/material/timepicker';
 import { Horario, HorarioDto } from '../../../models/horario';
 import { Cancha } from '../../../models/cancha';
-import { aDate, aTexto } from '../../../core/fechas';
+import { aDate, aDateHora, aHora, aTexto } from '../../../core/fechas';
 
 /**
  * Valida que el turno no termine antes de empezar.
@@ -24,16 +25,23 @@ import { aDate, aTexto } from '../../../core/fechas';
  * el error en el grupo, el formulario se negaba a enviarse sin decir por qué.
  */
 const posteriorAlInicio = (control: AbstractControl): ValidationErrors | null => {
-  const horaInicio = control.parent?.get('horaInicio')?.value;
-  const horaFin = control.value;
+  const horaInicio: Date | null = control.parent?.get('horaInicio')?.value;
+  const horaFin: Date | null = control.value;
 
   if (!horaInicio || !horaFin) {
     return null;
   }
 
-  // Las horas están en formato de 24 horas con dos dígitos, así que compararlas
-  // como texto da el mismo orden que compararlas como hora.
-  return horaFin > horaInicio ? null : { horasInvertidas: true };
+  // Con una hora que el usuario escribió mal, el timepicker deja en el control
+  // una fecha inválida. De eso ya avisa `matTimepickerParse`: comparar acá solo
+  // agregaría un segundo error para el mismo problema.
+  if (isNaN(horaInicio.getTime()) || isNaN(horaFin.getTime())) {
+    return null;
+  }
+
+  // Se comparan como el "HH:mm" que se va a guardar y no como instantes, porque
+  // los dos `Date` traen además una fecha que no significa nada acá.
+  return aHora(horaFin) > aHora(horaInicio) ? null : { horasInvertidas: true };
 };
 
 /**
@@ -51,7 +59,8 @@ const posteriorAlInicio = (control: AbstractControl): ValidationErrors | null =>
     MatSelectModule,
     MatCheckboxModule,
     MatButtonModule,
-    MatDatepickerModule
+    MatDatepickerModule,
+    MatTimepickerModule
   ],
   templateUrl: './horario-form.html',
   styleUrl: './horario-form.css'
@@ -75,13 +84,14 @@ export class HorarioFormComponent {
 
   private fb = inject(FormBuilder);
 
-  // La hora es un campo nativo (`type="time"`): su valor ya es el "HH:mm" que
-  // espera el backend. La fecha, en cambio, la maneja el calendario de Material
-  // como un `Date`, y se convierte a "AAAA-MM-DD" recién al emitir el DTO.
+  // El calendario y el timepicker de Material trabajan con objetos `Date`, así
+  // que los tres campos de tiempo son `Date` mientras se los edita y se
+  // convierten al texto que espera el backend —"AAAA-MM-DD" y "HH:mm"— recién al
+  // emitir el DTO. Las conversiones viven en `core/fechas.ts`.
   protected formulario = this.fb.group({
     fecha: this.fb.control<Date | null>(null, Validators.required),
-    horaInicio: this.fb.nonNullable.control('', Validators.required),
-    horaFin: this.fb.nonNullable.control('', [Validators.required, posteriorAlInicio]),
+    horaInicio: this.fb.control<Date | null>(null, Validators.required),
+    horaFin: this.fb.control<Date | null>(null, [Validators.required, posteriorAlInicio]),
     canchaId: this.fb.control<number | null>(null, Validators.required),
     disponible: this.fb.nonNullable.control(true)
   });
@@ -99,8 +109,8 @@ export class HorarioFormComponent {
 
       this.formulario.reset({
         fecha: horario ? aDate(horario.fecha) : null,
-        horaInicio: horario?.horaInicio ?? '',
-        horaFin: horario?.horaFin ?? '',
+        horaInicio: horario ? aDateHora(horario.horaInicio) : null,
+        horaFin: horario ? aDateHora(horario.horaFin) : null,
         canchaId: horario?.canchaId ?? this.canchaPorDefecto(),
         disponible: horario?.disponible ?? true
       });
@@ -120,17 +130,18 @@ export class HorarioFormComponent {
 
     const { fecha, horaInicio, horaFin, canchaId, disponible } = this.formulario.getRawValue();
 
-    // El validador `required` ya garantiza que hay fecha; el chequeo es para que
-    // TypeScript lo sepa.
-    if (!fecha) {
+    // El validador `required` ya garantiza que los tres están cargados; el
+    // chequeo es para que TypeScript lo sepa.
+    if (!fecha || !horaInicio || !horaFin) {
       return;
     }
 
     this.guardar.emit({
-      // El calendario devuelve un `Date` y el backend espera "AAAA-MM-DD".
+      // El calendario y el timepicker devuelven `Date`, y el backend espera
+      // "AAAA-MM-DD" y "HH:mm".
       fecha: aTexto(fecha),
-      horaInicio,
-      horaFin,
+      horaInicio: aHora(horaInicio),
+      horaFin: aHora(horaFin),
       canchaId: Number(canchaId),
       disponible
     });

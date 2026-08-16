@@ -29,19 +29,31 @@
     }
   </mat-form-field>
 
+  <!-- Las horas se eligen de la lista o se escriben a mano como HH:mm, igual que
+       la fecha. El error de formato va primero por la misma razón que allá: con
+       texto que no se entiende el control queda vacío y salta también
+       `required`. -->
   <div class="horas">
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>
-      <input matInput type="time" formControlName="horaInicio" />
-      @if (formulario.controls.horaInicio.hasError('required')) {
+      <input matInput [matTimepicker]="desde" formControlName="horaInicio" placeholder="HH:mm" />
+      <mat-timepicker-toggle matIconSuffix [for]="desde" aria-label="Elegir la hora de inicio" />
+      <mat-timepicker #desde interval="30m" />
+      @if (formulario.controls.horaInicio.hasError('matTimepickerParse')) {
+        <mat-error>Escribí la hora como HH:mm, o elegila de la lista.</mat-error>
+      } @else if (formulario.controls.horaInicio.hasError('required')) {
         <mat-error>La hora de inicio es obligatoria.</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Hasta</mat-label>
-      <input matInput type="time" formControlName="horaFin" />
-      @if (formulario.controls.horaFin.hasError('required')) {
+      <input matInput [matTimepicker]="hasta" formControlName="horaFin" placeholder="HH:mm" />
+      <mat-timepicker-toggle matIconSuffix [for]="hasta" aria-label="Elegir la hora de fin" />
+      <mat-timepicker #hasta interval="30m" />
+      @if (formulario.controls.horaFin.hasError('matTimepickerParse')) {
+        <mat-error>Escribí la hora como HH:mm, o elegila de la lista.</mat-error>
+      } @else if (formulario.controls.horaFin.hasError('required')) {
         <mat-error>La hora de fin es obligatoria.</mat-error>
       } @else if (formulario.controls.horaFin.hasError('horasInvertidas')) {
         <mat-error>Tiene que ser posterior a la hora de inicio.</mat-error>

@@ -65,3 +65,45 @@ export const aDate = (fecha: string): Date | null => {
 
   return new Date(anio, mes - 1, dia);
 };
+
+/**
+ * Pasa un `Date` a la hora `"HH:mm"` que espera el backend, con cero a la
+ * izquierda y en formato de 24 horas.
+ *
+ * Es el equivalente de `aTexto` para la hora: el timepicker de Material también
+ * trabaja con `Date`, y este es el borde donde se vuelve al texto.
+ */
+export const aHora = (fecha: Date): string => {
+  const hora = `${fecha.getHours()}`.padStart(2, '0');
+  const minuto = `${fecha.getMinutes()}`.padStart(2, '0');
+
+  return `${hora}:${minuto}`;
+};
+
+/**
+ * Pasa un `"HH:mm"` al `Date` que necesita el timepicker.
+ *
+ * El día que se usa es el de **hoy**, y no uno fijo, porque es el mismo que
+ * elige `NativeDateAdapter.parseTime` cuando el usuario escribe la hora a mano:
+ * así todas las horas del formulario —las que vienen del backend, las escritas
+ * y las elegidas de la lista— comparten la parte de fecha y se pueden comparar
+ * entre sí. De la fecha nadie lee nada: la del turno es un campo aparte.
+ */
+export const aDateHora = (hora: string): Date | null => {
+  const partes = /^(\d{1,2}):(\d{2})$/.exec(hora);
+
+  if (!partes) {
+    return null;
+  }
+
+  const [, horas, minutos] = partes.map(Number);
+
+  if (horas > 23 || minutos > 59) {
+    return null;
+  }
+
+  const fecha = new Date();
+  fecha.setHours(horas, minutos, 0, 0);
+
+  return fecha;
+};

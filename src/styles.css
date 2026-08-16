@@ -46,6 +46,21 @@ app-root {
   }
 }
 
+/* Formularios de los diálogos (la clase `.formulario` de cada `<feature>-form`).
+ *
+ * El espacio de arriba no es decorativo: sin él, la etiqueta del primer campo
+ * sale cortada. Material anula el padding superior del contenido cuando el
+ * diálogo tiene título —`.mat-mdc-dialog-title + .mat-mdc-dialog-content {
+ * padding-top: 0 }`— y ese contenido lleva `overflow: auto`. La etiqueta
+ * flotante de un campo `outline` se dibuja por encima del borde del campo, así
+ * que en el primero queda fuera de la caja de scroll y el navegador se la come.
+ *
+ * Va acá y no en cada formulario porque el problema es del diálogo, que es el
+ * mismo para todos, y no de cómo está armado cada formulario. */
+.formulario {
+  padding-top: 0.5rem;
+}
+
 /* Estado vacío / de error / de carga: bloque centrado con mensaje y acción. */
 .estado-mensaje {
   display: flex;
