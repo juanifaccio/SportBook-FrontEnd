@@ -3,7 +3,12 @@
 <mat-dialog-content>
   <dl class="detalle">
     <dt>Cancha</dt>
-    <dd>{{ datos.cancha.nombre }}</dd>
+    <dd>
+      {{ datos.cancha.nombre }}
+      @if (datos.cancha.tipoCancha; as tipo) {
+        <span class="tipo-cancha">({{ tipo.nombre }})</span>
+      }
+    </dd>
 
     <dt>Día</dt>
     <dd>{{ fechaFormateada }}</dd>

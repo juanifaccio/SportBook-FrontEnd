@@ -9,12 +9,15 @@ import { environment } from '../../../../environments/environment';
 describe('ReservaDialogComponent', () => {
   const url = `${environment.apiUrl}/reservas`;
 
+  const tipoCancha = { id: 17, nombre: 'Pádel', descripcion: 'Cancha de pádel' };
+
   const cancha = {
     id: 12,
     nombre: 'Cancha 3',
     precioPorHora: 4200,
     estado: 'DISPONIBLE' as const,
-    tipoCanchaId: 17
+    tipoCanchaId: tipoCancha.id,
+    tipoCancha: tipoCancha
   };
 
   const horario = {
@@ -101,6 +104,9 @@ describe('ReservaDialogComponent', () => {
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     expect(texto).toContain(cancha.nombre);
+    // El tipo va al lado del nombre: dos canchas pueden llamarse parecido y
+    // acá ya no hay vuelta atrás.
+    expect(texto).toContain('(Pádel)');
     expect(texto).toContain('20/08/2026');
     expect(texto).toContain('11:00 a 13:00');
     expect(texto).toContain(usuario.nombre);

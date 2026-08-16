@@ -1,9 +1,16 @@
 <form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
   <mat-form-field appearance="outline">
     <mat-label>Cancha</mat-label>
+    <!-- El tipo va al lado del nombre: es lo que evita cargarle el turno a la
+         cancha equivocada cuando hay varias con nombres parecidos. -->
     <mat-select formControlName="canchaId">
       @for (cancha of canchas(); track cancha.id) {
-        <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+        <mat-option [value]="cancha.id">
+          {{ cancha.nombre }}
+          @if (cancha.tipoCancha; as tipo) {
+            <span class="tipo-cancha">({{ tipo.nombre }})</span>
+          }
+        </mat-option>
       }
     </mat-select>
     @if (formulario.controls.canchaId.hasError('required')) {

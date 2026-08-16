@@ -13,12 +13,15 @@ describe('ReservaComponent', () => {
   const urlUsuarios = `${environment.apiUrl}/usuarios`;
   const urlHorarios = `${environment.apiUrl}/horarios`;
 
+  const tipoCancha = { id: 17, nombre: 'Pádel', descripcion: 'Cancha de pádel' };
+
   const cancha = {
     id: 12,
     nombre: 'Cancha 3',
     precioPorHora: 4200,
     estado: 'DISPONIBLE' as const,
-    tipoCanchaId: 17
+    tipoCanchaId: tipoCancha.id,
+    tipoCancha: tipoCancha
   };
 
   const canchaEnMantenimiento = {
@@ -174,6 +177,19 @@ describe('ReservaComponent', () => {
     // Dos horas a 4200 por hora.
     expect(fixture.componentInstance['precioTotal']()).toBe(8400);
     expect(botonReservar()?.disabled).toBe(false);
+  });
+
+  it('muestra el tipo al lado del nombre de la cancha en el resumen', async () => {
+    fixture.detectChanges();
+    await responder([cancha], [usuario], [turno]);
+
+    fixture.componentInstance['alElegirTurno'](turno.id);
+    fixture.detectChanges();
+
+    // El nombre solo no distingue dos canchas: el tipo es lo que evita confirmar
+    // la reserva en la que no era.
+    expect(texto()).toContain(cancha.nombre);
+    expect(texto()).toContain('(Pádel)');
   });
 
   it('muestra el error con reintento si falla la carga inicial', async () => {
