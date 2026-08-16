@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CurrencyPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -13,6 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { forkJoin, map } from 'rxjs';
 import { ReservaService } from '../../services/reserva.service';
 import { CanchaService } from '../../services/cancha.service';
@@ -25,7 +26,7 @@ import {
   Reserva
 } from '../../models/reserva';
 import { BREAKPOINT_MD } from '../../core/breakpoints';
-import { formatearFecha, yaEmpezo } from '../../core/fechas';
+import { aDate, aTexto, formatearFecha, yaEmpezo } from '../../core/fechas';
 import {
   DatosReprogramarDialog,
   ReprogramarDialogComponent
@@ -57,7 +58,8 @@ const ESTADOS: EstadoReserva[] = ['PENDIENTE', 'CONFIRMADA', 'CANCELADA'];
     MatTooltipModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatDatepickerModule
   ],
   templateUrl: './gestion-reservas.html',
   styleUrl: './gestion-reservas.css'
@@ -83,6 +85,9 @@ export class GestionReservasComponent implements OnInit {
   protected readonly canchaFiltro = signal<number | null>(null);
   protected readonly fechaFiltro = signal('');
   protected readonly estadoFiltro = signal<EstadoReserva | null>(null);
+
+  /** El día filtrado, como `Date`, que es lo que entiende el calendario. */
+  protected readonly fechaElegida = computed(() => aDate(this.fechaFiltro()));
 
   protected readonly estados = ESTADOS;
   protected readonly etiquetasEstado = ETIQUETAS_ESTADO_RESERVA;
@@ -159,8 +164,9 @@ export class GestionReservasComponent implements OnInit {
     this.cargarReservas();
   }
 
-  protected alCambiarFecha(fecha: string): void {
-    this.fechaFiltro.set(fecha);
+  /** `null` limpia el filtro: sin día se listan las reservas de todos. */
+  protected alCambiarFecha(fecha: Date | null): void {
+    this.fechaFiltro.set(fecha ? aTexto(fecha) : '');
     this.cargarReservas();
   }
 

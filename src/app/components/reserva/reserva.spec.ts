@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 
 import { ReservaComponent } from './reserva';
 import { environment } from '../../../environments/environment';
+import { PROVEEDORES_FECHA } from '../../core/fecha-adapter';
 
 describe('ReservaComponent', () => {
   const urlCanchas = `${environment.apiUrl}/canchas`;
@@ -87,7 +88,7 @@ describe('ReservaComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ReservaComponent, MatDialogModule],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), PROVEEDORES_FECHA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ReservaComponent);
@@ -147,7 +148,8 @@ describe('ReservaComponent', () => {
     await responder([cancha], [usuario], [turno]);
 
     fixture.componentInstance['alElegirTurno'](turno.id);
-    fixture.componentInstance['alCambiarFecha']('2026-08-21');
+    // El calendario entrega un `Date` local y el backend espera "AAAA-MM-DD".
+    fixture.componentInstance['alCambiarFecha'](new Date(2026, 7, 21));
 
     const req = pedidoDeTurnos();
     expect(req.request.params.get('fecha')).toBe('2026-08-21');

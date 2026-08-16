@@ -7,6 +7,7 @@ import { By } from '@angular/platform-browser';
 import { DatosHorarioDialog, HorarioDialogComponent } from './horario-dialog';
 import { HorarioFormComponent } from '../horario-form/horario-form';
 import { environment } from '../../../../environments/environment';
+import { PROVEEDORES_FECHA } from '../../../core/fecha-adapter';
 
 describe('HorarioDialogComponent', () => {
   const url = `${environment.apiUrl}/horarios`;
@@ -46,7 +47,8 @@ describe('HorarioDialogComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: MatDialogRef, useValue: dialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: datos }
+        { provide: MAT_DIALOG_DATA, useValue: datos },
+        PROVEEDORES_FECHA
       ]
     }).compileComponents();
 

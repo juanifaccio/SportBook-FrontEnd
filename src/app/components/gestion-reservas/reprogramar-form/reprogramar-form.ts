@@ -7,10 +7,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { Cancha } from '../../../models/cancha';
 import { Horario } from '../../../models/horario';
 import { Reserva } from '../../../models/reserva';
-import { formatearFecha, hoyLocal } from '../../../core/fechas';
+import { aDate, aTexto, formatearFecha, hoyLocal } from '../../../core/fechas';
 
 /** Cancha y día sobre los que hay que buscar turnos libres. */
 export interface BusquedaTurnos {
@@ -40,7 +41,8 @@ export interface BusquedaTurnos {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatChipsModule
+    MatChipsModule,
+    MatDatepickerModule
   ],
   templateUrl: './reprogramar-form.html',
   styleUrl: './reprogramar-form.css'
@@ -66,12 +68,16 @@ export class ReprogramarFormComponent {
   readonly guardar = output<number>();
   readonly cancelar = output<void>();
 
-  /** Día mínimo del selector: no tiene sentido mover una reserva al pasado. */
+  /** Día mínimo del calendario: no tiene sentido mover una reserva al pasado. */
   protected readonly hoy = hoyLocal();
+  protected readonly minimo = aDate(this.hoy);
 
   protected readonly canchaSeleccionada = signal(0);
   protected readonly fecha = signal('');
   protected readonly turnoSeleccionado = signal<number | null>(null);
+
+  /** El día elegido, como `Date`, que es lo que entiende el calendario. */
+  protected readonly fechaElegida = computed(() => aDate(this.fecha()));
 
   protected readonly formatearFecha = formatearFecha;
 
@@ -96,13 +102,14 @@ export class ReprogramarFormComponent {
     this.pedirTurnos();
   }
 
-  protected alCambiarFecha(fecha: string): void {
-    // El campo se puede vaciar a mano; sin día no hay turnos que pedir.
+  protected alCambiarFecha(fecha: Date | null): void {
+    // El campo se puede vaciar o escribir mal a mano; sin día válido no hay
+    // turnos que pedir.
     if (!fecha) {
       return;
     }
 
-    this.fecha.set(fecha);
+    this.fecha.set(aTexto(fecha));
     this.pedirTurnos();
   }
 

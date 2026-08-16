@@ -11,10 +11,20 @@
     }
   </mat-form-field>
 
+  <!-- La fecha se puede elegir del calendario o escribir a mano como DD/MM/AAAA:
+       el `FechaAdapter` interpreta lo escrito sin ambigüedad de día y mes. -->
   <mat-form-field appearance="outline">
     <mat-label>Fecha</mat-label>
-    <input matInput type="date" formControlName="fecha" />
-    @if (formulario.controls.fecha.hasError('required')) {
+    <input matInput [matDatepicker]="calendario" formControlName="fecha" placeholder="DD/MM/AAAA" />
+    <mat-datepicker-toggle matIconSuffix [for]="calendario" />
+    <mat-datepicker #calendario />
+    <!-- El error de formato va primero: cuando lo escrito no se entiende,
+         Material deja el control en `null` y salta también `required`. Decirle
+         "la fecha es obligatoria" a alguien que sí escribió algo lo manda a
+         buscar el problema donde no está. -->
+    @if (formulario.controls.fecha.hasError('matDatepickerParse')) {
+      <mat-error>Escribí la fecha como DD/MM/AAAA, o elegila del calendario.</mat-error>
+    } @else if (formulario.controls.fecha.hasError('required')) {
       <mat-error>La fecha es obligatoria.</mat-error>
     }
   </mat-form-field>

@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 import { DatosReprogramarDialog, ReprogramarDialogComponent } from './reprogramar-dialog';
 import { environment } from '../../../../environments/environment';
+import { PROVEEDORES_FECHA } from '../../../core/fecha-adapter';
 
 describe('ReprogramarDialogComponent', () => {
   const urlReservas = `${environment.apiUrl}/reservas`;
@@ -79,7 +80,8 @@ describe('ReprogramarDialogComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: MatDialogRef, useValue: dialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: datos }
+        { provide: MAT_DIALOG_DATA, useValue: datos },
+        PROVEEDORES_FECHA
       ]
     }).compileComponents();
 
