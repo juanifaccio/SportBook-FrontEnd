@@ -7,6 +7,7 @@ import { ReservaService } from '../../../services/reserva.service';
 import { Cancha } from '../../../models/cancha';
 import { Horario } from '../../../models/horario';
 import { Usuario } from '../../../models/usuario';
+import { formatearFecha } from '../../../core/fechas';
 
 /** Lo que hay que mostrar en el resumen antes de confirmar. */
 export interface DatosReservaDialog {
@@ -45,13 +46,9 @@ export class ReservaDialogComponent {
   /** Deshabilita los botones mientras el request está en curso. */
   protected readonly guardando = signal(false);
 
-  /**
-   * La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". Se
-   * reordena el texto en vez de construir un `Date`, que interpretaría la fecha
-   * en UTC y mostraría el día anterior.
-   */
+  /** La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". */
   protected get fechaFormateada(): string {
-    return this.datos.horario.fecha.split('-').reverse().join('/');
+    return formatearFecha(this.datos.horario.fecha);
   }
 
   protected confirmar(): void {

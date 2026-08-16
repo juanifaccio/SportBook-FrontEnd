@@ -1,0 +1,207 @@
+<header class="encabezado-pantalla">
+  <h1>Reservas</h1>
+
+  <button mat-flat-button type="button" routerLink="/reservar">
+    <mat-icon>event_available</mat-icon>
+    Nueva reserva
+  </button>
+</header>
+
+<div class="filtros">
+  <mat-form-field appearance="outline">
+    <mat-label>Cancha</mat-label>
+    <mat-select [value]="canchaFiltro()" (valueChange)="alCambiarCancha($event)">
+      <mat-option [value]="null">Todas</mat-option>
+      @for (cancha of canchas(); track cancha.id) {
+        <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <!-- Campo de fecha nativo: su valor ya es el "AAAA-MM-DD" que espera el
+       backend, así que no hay que convertir nada ni arriesgarse a que el huso
+       horario corra el día. -->
+  <mat-form-field appearance="outline">
+    <mat-label>Día</mat-label>
+    <input
+      matInput
+      type="date"
+      [value]="fechaFiltro()"
+      (change)="alCambiarFecha($any($event.target).value)" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Estado</mat-label>
+    <mat-select [value]="estadoFiltro()" (valueChange)="alCambiarEstado($event)">
+      <mat-option [value]="null">Todos</mat-option>
+      @for (estado of estados; track estado) {
+        <mat-option [value]="estado">{{ etiquetasEstado[estado] }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@if (cargando()) {
+  <div class="estado-mensaje">
+    <mat-spinner diameter="48" />
+    <p>Cargando reservas…</p>
+  </div>
+} @else if (error()) {
+  <div class="estado-mensaje">
+    <mat-icon>cloud_off</mat-icon>
+    <h2>No se pudieron cargar las reservas</h2>
+    <p>Revisá que el backend esté ejecutándose y volvé a intentar.</p>
+    <button mat-flat-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  </div>
+} @else if (reservas().length === 0) {
+  <!-- Una lista vacía por los filtros no es lo mismo que no tener ninguna
+       reserva: en un caso hay que ampliar la búsqueda y en el otro, reservar. -->
+  @if (hayFiltros()) {
+    <div class="estado-mensaje">
+      <mat-icon>filter_alt_off</mat-icon>
+      <h2>Ninguna reserva coincide con los filtros</h2>
+      <p>Probá con otra cancha, otro día u otro estado.</p>
+      <button mat-stroked-button type="button" (click)="limpiarFiltros()">
+        <mat-icon>clear</mat-icon>
+        Limpiar filtros
+      </button>
+    </div>
+  } @else {
+    <div class="estado-mensaje">
+      <mat-icon>event_note</mat-icon>
+      <h2>Todavía no hay reservas</h2>
+      <p>Cuando se reserve un turno, va a aparecer acá para poder gestionarlo.</p>
+      <button mat-flat-button type="button" routerLink="/reservar">
+        <mat-icon>event_available</mat-icon>
+        Reservar una cancha
+      </button>
+    </div>
+  }
+} @else if (esPantallaAncha()) {
+  <table mat-table [dataSource]="reservas()" class="tabla">
+    <ng-container matColumnDef="fecha">
+      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+      <td mat-cell *matCellDef="let reserva">{{ formatearFecha(reserva.fecha) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="horario">
+      <th mat-header-cell *matHeaderCellDef>Horario</th>
+      <td mat-cell *matCellDef="let reserva">
+        {{ reserva.horaInicio }} a {{ reserva.horaFin }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="cancha">
+      <th mat-header-cell *matHeaderCellDef>Cancha</th>
+      <td mat-cell *matCellDef="let reserva">{{ reserva.cancha?.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="usuario">
+      <th mat-header-cell *matHeaderCellDef>Usuario</th>
+      <td mat-cell *matCellDef="let reserva">{{ reserva.usuario?.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="estado">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let reserva">{{ etiquetaEstado(reserva) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef>Total</th>
+      <td mat-cell *matCellDef="let reserva">{{ reserva.precioTotal | currency: 'ARS' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef class="columna-acciones">Acciones</th>
+      <td mat-cell *matCellDef="let reserva" class="columna-acciones">
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Ver detalle"
+          [attr.aria-label]="'Ver el detalle de la reserva del ' + formatearFecha(reserva.fecha)"
+          (click)="verDetalle(reserva)">
+          <mat-icon>visibility</mat-icon>
+        </button>
+
+        <!-- El tooltip va en un span y no en el botón porque un botón
+             deshabilitado no dispara eventos de mouse, y entonces el motivo
+             nunca se vería. -->
+        <span
+          [matTooltip]="esGestionable(reserva) ? 'Reprogramar' : motivoNoGestionable(reserva)">
+          <button
+            mat-icon-button
+            type="button"
+            [disabled]="!esGestionable(reserva)"
+            [attr.aria-label]="'Reprogramar la reserva del ' + formatearFecha(reserva.fecha)"
+            (click)="reprogramar(reserva)">
+            <mat-icon>edit_calendar</mat-icon>
+          </button>
+        </span>
+
+        <span
+          [matTooltip]="esGestionable(reserva) ? 'Cancelar' : motivoNoGestionable(reserva)">
+          <button
+            mat-icon-button
+            type="button"
+            [disabled]="!esGestionable(reserva)"
+            [attr.aria-label]="'Cancelar la reserva del ' + formatearFecha(reserva.fecha)"
+            (click)="confirmarCancelacion(reserva)">
+            <mat-icon>event_busy</mat-icon>
+          </button>
+        </span>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+    <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+  </table>
+} @else {
+  <div class="tarjetas">
+    @for (reserva of reservas(); track reserva.id) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ reserva.cancha?.nombre }}</mat-card-title>
+          <mat-card-subtitle>
+            {{ formatearFecha(reserva.fecha) }}, {{ reserva.horaInicio }} a {{ reserva.horaFin }}
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <p>{{ reserva.usuario?.nombre }}</p>
+          <p class="estado">{{ etiquetaEstado(reserva) }}</p>
+          <p class="total">{{ reserva.precioTotal | currency: 'ARS' }}</p>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <button mat-button type="button" (click)="verDetalle(reserva)">
+            <mat-icon>visibility</mat-icon>
+            Detalle
+          </button>
+          <span [matTooltip]="esGestionable(reserva) ? '' : motivoNoGestionable(reserva)">
+            <button
+              mat-button
+              type="button"
+              [disabled]="!esGestionable(reserva)"
+              (click)="reprogramar(reserva)">
+              <mat-icon>edit_calendar</mat-icon>
+              Reprogramar
+            </button>
+          </span>
+          <span [matTooltip]="esGestionable(reserva) ? '' : motivoNoGestionable(reserva)">
+            <button
+              mat-button
+              type="button"
+              [disabled]="!esGestionable(reserva)"
+              (click)="confirmarCancelacion(reserva)">
+              <mat-icon>event_busy</mat-icon>
+              Cancelar
+            </button>
+          </span>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

@@ -1,0 +1,34 @@
+/* Etiqueta arriba y valor abajo, igual que en el diálogo de confirmar la
+   reserva: en mobile las dos columnas dejaban los valores largos (un nombre
+   completo, un email) partidos en tres líneas. */
+
+.detalle {
+  margin: 0;
+}
+
+.detalle dt {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detalle dd {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-body-large);
+}
+
+.secundario {
+  display: block;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-title-medium);
+}

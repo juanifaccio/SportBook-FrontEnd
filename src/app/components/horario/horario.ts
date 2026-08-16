@@ -18,6 +18,7 @@ import { NotificacionService } from '../../core/services/notificacion.service';
 import { Horario } from '../../models/horario';
 import { Cancha } from '../../models/cancha';
 import { BREAKPOINT_MD } from '../../core/breakpoints';
+import { formatearFecha } from '../../core/fechas';
 import { DatosHorarioDialog, HorarioDialogComponent } from './horario-dialog/horario-dialog';
 import {
   ConfirmacionComponent,
@@ -134,14 +135,8 @@ export class HorarioComponent implements OnInit {
     });
   }
 
-  /**
-   * La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". Se
-   * reordena el texto en vez de construir un `Date`, que interpretaría la fecha
-   * en UTC y mostraría el día anterior.
-   */
-  protected formatearFecha(fecha: string): string {
-    return fecha.split('-').reverse().join('/');
-  }
+  /** La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". */
+  protected readonly formatearFecha = formatearFecha;
 
   protected abrirAlta(): void {
     this.abrirFormulario(null);

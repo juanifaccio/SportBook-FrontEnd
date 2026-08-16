@@ -1,0 +1,81 @@
+<p class="actual">
+  Hoy está en <strong>{{ reserva().cancha?.nombre }}</strong>,
+  el {{ formatearFecha(reserva().fecha) }} de {{ reserva().horaInicio }} a
+  {{ reserva().horaFin }}.
+</p>
+
+<div class="filtros">
+  <mat-form-field appearance="outline">
+    <mat-label>Cancha</mat-label>
+    <mat-select
+      [value]="canchaSeleccionada()"
+      [disabled]="guardando()"
+      (valueChange)="alCambiarCancha($event)">
+      @for (cancha of canchas(); track cancha.id) {
+        <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+      }
+    </mat-select>
+    @if (canchaActual(); as cancha) {
+      <mat-hint>{{ cancha.precioPorHora | currency: 'ARS' }} por hora</mat-hint>
+    }
+  </mat-form-field>
+
+  <!-- Campo de fecha nativo: su valor ya es el "AAAA-MM-DD" que espera el
+       backend, así que no hay que convertir nada ni arriesgarse a que el huso
+       horario corra el día. -->
+  <mat-form-field appearance="outline">
+    <mat-label>Día</mat-label>
+    <input
+      matInput
+      type="date"
+      [min]="hoy"
+      [value]="fecha()"
+      [disabled]="guardando()"
+      (change)="alCambiarFecha($any($event.target).value)" />
+  </mat-form-field>
+</div>
+
+<h3>Turnos libres</h3>
+
+@if (cargandoTurnos()) {
+  <div class="estado-mensaje">
+    <mat-spinner diameter="32" />
+    <p>Buscando turnos…</p>
+  </div>
+} @else if (errorTurnos()) {
+  <div class="estado-mensaje">
+    <mat-icon>cloud_off</mat-icon>
+    <p>No se pudieron cargar los turnos de ese día.</p>
+  </div>
+} @else if (turnos().length === 0) {
+  <div class="estado-mensaje">
+    <mat-icon>event_busy</mat-icon>
+    <p>No quedan turnos libres ese día en esa cancha. Probá con otro día u otra cancha.</p>
+  </div>
+} @else {
+  <mat-chip-listbox
+    aria-label="Turnos libres"
+    [value]="turnoSeleccionado()"
+    [disabled]="guardando()"
+    (change)="alElegirTurno($event.value)">
+    @for (turno of turnos(); track turno.id) {
+      <mat-chip-option [value]="turno.id">
+        {{ turno.horaInicio }} a {{ turno.horaFin }}
+      </mat-chip-option>
+    }
+  </mat-chip-listbox>
+}
+
+<div class="acciones">
+  <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+    Cancelar
+  </button>
+  <button
+    mat-flat-button
+    type="button"
+    [disabled]="guardando() || turnoSeleccionado() === null"
+    (click)="alEnviar()">
+    <mat-icon>edit_calendar</mat-icon>
+    Reprogramar
+  </button>
+</div>
