@@ -29,10 +29,39 @@ export const yaEmpezo = (fecha: string, horaInicio: string): boolean => {
  * no con `toISOString()`, que devuelve el día en UTC y a la tarde ya está
  * mostrando el de mañana.
  */
-export const hoyLocal = (): string => {
-  const ahora = new Date();
-  const mes = `${ahora.getMonth() + 1}`.padStart(2, '0');
-  const dia = `${ahora.getDate()}`.padStart(2, '0');
+export const hoyLocal = (): string => aTexto(new Date());
 
-  return `${ahora.getFullYear()}-${mes}-${dia}`;
+/**
+ * Pasa un `Date` a `"AAAA-MM-DD"` usando sus partes **locales**.
+ *
+ * Nunca `toISOString()`: ese devuelve el día en UTC, así que una fecha elegida
+ * en el calendario a la tarde saldría como la del día siguiente.
+ */
+export const aTexto = (fecha: Date): string => {
+  const mes = `${fecha.getMonth() + 1}`.padStart(2, '0');
+  const dia = `${fecha.getDate()}`.padStart(2, '0');
+
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+};
+
+/**
+ * Pasa un `"AAAA-MM-DD"` a `Date`, a medianoche **local**.
+ *
+ * Nunca `new Date("2026-08-20")`: esa forma la interpreta como medianoche UTC y
+ * en Argentina cae el día anterior a las 21:00.
+ *
+ * Junto con `aTexto` forman el único borde donde la aplicación pasa de texto a
+ * `Date`, que es lo que necesita el calendario de Material. Todo lo demás sigue
+ * hablando en texto.
+ */
+export const aDate = (fecha: string): Date | null => {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
+
+  if (!partes) {
+    return null;
+  }
+
+  const [, anio, mes, dia] = partes.map(Number);
+
+  return new Date(anio, mes - 1, dia);
 };

@@ -51,17 +51,20 @@
       }
     </mat-form-field>
 
-    <!-- Campo de fecha nativo: su valor ya es el "AAAA-MM-DD" que espera el
-         backend, así que no hay que convertir nada ni arriesgarse a que el huso
-         horario corra el día. -->
+    <!-- Se puede elegir del calendario o escribir como DD/MM/AAAA. El `Date` que
+         devuelve se convierte a "AAAA-MM-DD" en el componente, que es lo único
+         que viaja al backend. -->
     <mat-form-field appearance="outline">
       <mat-label>Día</mat-label>
       <input
         matInput
-        type="date"
-        [min]="hoy"
-        [value]="fecha()"
-        (change)="alCambiarFecha($any($event.target).value)" />
+        [matDatepicker]="calendario"
+        [min]="minimo"
+        [value]="fechaElegida()"
+        placeholder="DD/MM/AAAA"
+        (dateChange)="alCambiarFecha($event.value)" />
+      <mat-datepicker-toggle matIconSuffix [for]="calendario" />
+      <mat-datepicker #calendario />
     </mat-form-field>
   </div>
 

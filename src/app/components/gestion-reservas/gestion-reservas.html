@@ -18,16 +18,28 @@
     </mat-select>
   </mat-form-field>
 
-  <!-- Campo de fecha nativo: su valor ya es el "AAAA-MM-DD" que espera el
-       backend, así que no hay que convertir nada ni arriesgarse a que el huso
-       horario corra el día. -->
+  <!-- Se puede elegir del calendario o escribir como DD/MM/AAAA. A diferencia
+       de los otros, este campo se puede vaciar: sin día se muestran todos. -->
   <mat-form-field appearance="outline">
     <mat-label>Día</mat-label>
     <input
       matInput
-      type="date"
-      [value]="fechaFiltro()"
-      (change)="alCambiarFecha($any($event.target).value)" />
+      [matDatepicker]="calendario"
+      [value]="fechaElegida()"
+      placeholder="DD/MM/AAAA"
+      (dateChange)="alCambiarFecha($event.value)" />
+    @if (fechaFiltro()) {
+      <button
+        matIconSuffix
+        mat-icon-button
+        type="button"
+        aria-label="Quitar el filtro de día"
+        (click)="alCambiarFecha(null)">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+    <mat-datepicker-toggle matIconSuffix [for]="calendario" />
+    <mat-datepicker #calendario />
   </mat-form-field>
 
   <mat-form-field appearance="outline">

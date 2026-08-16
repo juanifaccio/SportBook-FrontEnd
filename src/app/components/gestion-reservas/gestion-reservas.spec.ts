@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 
 import { GestionReservasComponent } from './gestion-reservas';
 import { environment } from '../../../environments/environment';
+import { PROVEEDORES_FECHA } from '../../core/fecha-adapter';
 
 describe('GestionReservasComponent', () => {
   const urlReservas = `${environment.apiUrl}/reservas`;
@@ -64,7 +65,7 @@ describe('GestionReservasComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [GestionReservasComponent, MatDialogModule],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), PROVEEDORES_FECHA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GestionReservasComponent);
@@ -124,7 +125,9 @@ describe('GestionReservasComponent', () => {
     porCancha.flush([reserva]);
     await fixture.whenStable();
 
-    fixture.componentInstance['alCambiarFecha']('2099-08-20');
+    // El calendario entrega un `Date` local y el backend espera "AAAA-MM-DD".
+    // Que el 20 siga siendo 20 es la prueba de que la conversión no pasa por UTC.
+    fixture.componentInstance['alCambiarFecha'](new Date(2099, 7, 20));
     const porFecha = httpMock.expectOne((pedido) => pedido.url === urlReservas);
     expect(porFecha.request.params.get('fecha')).toBe('2099-08-20');
     expect(porFecha.request.params.get('canchaId')).toBe(`${cancha.id}`);

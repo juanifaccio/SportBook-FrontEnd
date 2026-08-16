@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { forkJoin } from 'rxjs';
 import { HorarioService } from '../../services/horario.service';
 import { CanchaService } from '../../services/cancha.service';
@@ -18,7 +19,7 @@ import { NotificacionService } from '../../core/services/notificacion.service';
 import { Cancha } from '../../models/cancha';
 import { Horario } from '../../models/horario';
 import { Usuario } from '../../models/usuario';
-import { formatearFecha, hoyLocal } from '../../core/fechas';
+import { aDate, aTexto, formatearFecha, hoyLocal } from '../../core/fechas';
 import { DatosReservaDialog, ReservaDialogComponent } from './reserva-dialog/reserva-dialog';
 
 /**
@@ -50,7 +51,8 @@ const minutosDe = (hora: string): number => {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatChipsModule
+    MatChipsModule,
+    MatDatepickerModule
   ],
   templateUrl: './reserva.html',
   styleUrl: './reserva.css'
@@ -71,9 +73,13 @@ export class ReservaComponent implements OnInit {
   protected readonly turnoSeleccionado = signal<number | null>(null);
   protected readonly usuarioSeleccionado = signal<number | null>(null);
 
-  /** Fecha mínima del selector: no tiene sentido reservar un día que ya pasó. */
+  /** Fecha mínima del calendario: no tiene sentido reservar un día que ya pasó. */
   protected readonly hoy = hoyLocal();
+  protected readonly minimo = aDate(this.hoy);
   protected readonly fecha = signal(this.hoy);
+
+  /** El día elegido, como `Date`, que es lo que entiende el calendario. */
+  protected readonly fechaElegida = computed(() => aDate(this.fecha()));
 
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
@@ -169,13 +175,14 @@ export class ReservaComponent implements OnInit {
     this.cargarTurnos();
   }
 
-  protected alCambiarFecha(fecha: string): void {
-    // El campo se puede vaciar a mano; sin día no hay turnos que pedir.
+  protected alCambiarFecha(fecha: Date | null): void {
+    // El campo se puede vaciar o escribir mal a mano; sin día válido no hay
+    // turnos que pedir.
     if (!fecha) {
       return;
     }
 
-    this.fecha.set(fecha);
+    this.fecha.set(aTexto(fecha));
     this.cargarTurnos();
   }
 

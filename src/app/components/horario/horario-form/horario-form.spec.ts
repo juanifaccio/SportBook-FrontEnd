@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { HorarioFormComponent } from './horario-form';
 import { HorarioDto } from '../../../models/horario';
+import { PROVEEDORES_FECHA } from '../../../core/fecha-adapter';
 
 describe('HorarioFormComponent', () => {
   const cancha = {
@@ -23,7 +24,9 @@ describe('HorarioFormComponent', () => {
       input.dispatchEvent(new Event('input'));
     };
 
-    cargar(inputs[0] as HTMLInputElement, '2026-08-20');
+    // La fecha se escribe a mano como DD/MM/AAAA, que es la otra forma de
+    // cargarla además del calendario. El `FechaAdapter` la interpreta.
+    cargar(inputs[0] as HTMLInputElement, '20/08/2026');
     cargar(inputs[1] as HTMLInputElement, horaInicio);
     cargar(inputs[2] as HTMLInputElement, horaFin);
 
@@ -44,7 +47,8 @@ describe('HorarioFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HorarioFormComponent]
+      imports: [HorarioFormComponent],
+      providers: [PROVEEDORES_FECHA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HorarioFormComponent);
@@ -80,6 +84,24 @@ describe('HorarioFormComponent', () => {
 
     expect(emitidos).toEqual([]);
     expect(errores()).toContain('Tiene que ser posterior a la hora de inicio.');
+  });
+
+  it('no emite nada si la fecha escrita a mano no se entiende', async () => {
+    const emitidos: HorarioDto[] = [];
+    fixture.componentInstance.guardar.subscribe((dto) => emitidos.push(dto));
+
+    const inputs = (fixture.nativeElement as HTMLElement).querySelectorAll('input');
+    const fecha = inputs[0] as HTMLInputElement;
+
+    fecha.value = '31 de febrero';
+    fecha.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    await enviar();
+
+    // Antes que inventar una fecha, el formulario avisa y no llama al backend.
+    expect(emitidos).toEqual([]);
+    expect(errores()).toContain('Escribí la fecha como DD/MM/AAAA, o elegila del calendario.');
   });
 
   it('deja de marcar el error cuando se corrige la hora de inicio', async () => {
