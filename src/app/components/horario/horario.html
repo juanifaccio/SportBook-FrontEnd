@@ -20,7 +20,12 @@
       [value]="canchaSeleccionada()"
       (valueChange)="alCambiarCancha($event)">
       @for (cancha of canchas(); track cancha.id) {
-        <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+        <mat-option [value]="cancha.id">
+          {{ cancha.nombre }}
+          @if (cancha.tipoCancha; as tipo) {
+            <span class="tipo-cancha">({{ tipo.nombre }})</span>
+          }
+        </mat-option>
       }
     </mat-select>
   </mat-form-field>

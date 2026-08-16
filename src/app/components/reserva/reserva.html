@@ -43,7 +43,12 @@
       <mat-label>Cancha</mat-label>
       <mat-select [value]="canchaSeleccionada()" (valueChange)="alCambiarCancha($event)">
         @for (cancha of canchas(); track cancha.id) {
-          <mat-option [value]="cancha.id">{{ cancha.nombre }}</mat-option>
+          <mat-option [value]="cancha.id">
+            {{ cancha.nombre }}
+            @if (cancha.tipoCancha; as tipo) {
+              <span class="tipo-cancha">({{ tipo.nombre }})</span>
+            }
+          </mat-option>
         }
       </mat-select>
       @if (canchaActual(); as cancha) {
@@ -131,7 +136,14 @@
       @if (turnoActual(); as turno) {
         <p class="resumen-linea">
           <mat-icon>stadium</mat-icon>
-          <span>{{ canchaActual()?.nombre }}</span>
+          @if (canchaActual(); as cancha) {
+            <span>
+              {{ cancha.nombre }}
+              @if (cancha.tipoCancha; as tipo) {
+                <span class="tipo-cancha">({{ tipo.nombre }})</span>
+              }
+            </span>
+          }
         </p>
         <p class="resumen-linea">
           <mat-icon>event</mat-icon>

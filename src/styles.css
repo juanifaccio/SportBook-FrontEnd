@@ -61,6 +61,13 @@ app-root {
   padding-top: 0.5rem;
 }
 
+/* El tipo al lado del nombre de la cancha. Va acá y no en cada componente
+   porque el nombre solo no alcanza para distinguir dos canchas en ninguna de
+   las pantallas donde hay que elegir una. */
+.tipo-cancha {
+  color: var(--mat-sys-on-surface-variant);
+}
+
 /* Estado vacío / de error / de carga: bloque centrado con mensaje y acción. */
 .estado-mensaje {
   display: flex;

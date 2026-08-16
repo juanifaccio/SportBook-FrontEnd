@@ -11,12 +11,15 @@ describe('HorarioComponent', () => {
   const urlCanchas = `${environment.apiUrl}/canchas`;
   const urlHorarios = `${environment.apiUrl}/horarios`;
 
+  const tipoCancha = { id: 2, nombre: 'Fútbol 5', descripcion: 'Césped sintético' };
+
   const cancha = {
     id: 3,
     nombre: 'Cancha 1',
     precioPorHora: 8500,
     estado: 'DISPONIBLE',
-    tipoCanchaId: 2
+    tipoCanchaId: tipoCancha.id,
+    tipoCancha: tipoCancha
   };
 
   const horario = {
@@ -75,6 +78,19 @@ describe('HorarioComponent', () => {
     expect(texto).toContain('20/08/2026');
     expect(texto).toContain('10:00');
     expect(texto).toContain('11:00');
+  });
+
+  it('muestra el tipo al lado del nombre en el selector de cancha', async () => {
+    fixture.detectChanges();
+
+    responder([cancha], [horario]);
+    await fixture.whenStable();
+
+    // El nombre solo no distingue dos canchas: sin el tipo es fácil terminar
+    // cargándole el turno a la equivocada.
+    const selector = (fixture.nativeElement as HTMLElement).querySelector('mat-select');
+    expect(selector?.textContent).toContain('Cancha 1');
+    expect(selector?.textContent).toContain('(Fútbol 5)');
   });
 
   it('muestra el estado vacío cuando la cancha no tiene turnos', async () => {

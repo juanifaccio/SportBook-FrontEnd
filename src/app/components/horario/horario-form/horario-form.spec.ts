@@ -5,12 +5,15 @@ import { HorarioDto } from '../../../models/horario';
 import { PROVEEDORES_FECHA } from '../../../core/fecha-adapter';
 
 describe('HorarioFormComponent', () => {
+  const tipoCancha = { id: 2, nombre: 'Fútbol 5', descripcion: 'Césped sintético' };
+
   const cancha = {
     id: 3,
     nombre: 'Cancha 1',
     precioPorHora: 8500,
     estado: 'DISPONIBLE' as const,
-    tipoCanchaId: 2
+    tipoCanchaId: tipoCancha.id,
+    tipoCancha: tipoCancha
   };
 
   let fixture: ComponentFixture<HorarioFormComponent>;
@@ -73,6 +76,20 @@ describe('HorarioFormComponent', () => {
         disponible: true
       }
     ]);
+  });
+
+  it('muestra el tipo al lado del nombre en el selector de cancha', async () => {
+    // La cancha por defecto la carga un efecto, así que el select recién queda
+    // con valor cuando el componente se estabiliza.
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Es el campo donde se le asigna la cancha al turno: si dos se llaman
+    // parecido, el tipo es lo único que evita cargarlo en la equivocada.
+    const selector = (fixture.nativeElement as HTMLElement).querySelector('mat-select');
+
+    expect(selector?.textContent).toContain('Cancha 1');
+    expect(selector?.textContent).toContain('(Fútbol 5)');
   });
 
   it('avisa cuando la hora de fin no es posterior a la de inicio', async () => {

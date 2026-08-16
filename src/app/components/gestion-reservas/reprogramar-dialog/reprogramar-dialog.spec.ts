@@ -11,12 +11,15 @@ describe('ReprogramarDialogComponent', () => {
   const urlReservas = `${environment.apiUrl}/reservas`;
   const urlHorarios = `${environment.apiUrl}/horarios`;
 
+  const tipoCancha = { id: 17, nombre: 'Pádel', descripcion: 'Cancha de pádel' };
+
   const cancha = {
     id: 12,
     nombre: 'Cancha 3',
     precioPorHora: 4200,
     estado: 'DISPONIBLE' as const,
-    tipoCanchaId: 17
+    tipoCanchaId: tipoCancha.id,
+    tipoCancha: tipoCancha
   };
 
   const reserva = {
@@ -106,6 +109,18 @@ describe('ReprogramarDialogComponent', () => {
 
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('15:00 a 17:00');
+  });
+
+  it('muestra el tipo al lado del nombre en el selector de cancha', async () => {
+    pedidoDeTurnos().flush([turnoLibre]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Reprogramar puede mover la reserva a otra cancha: el nombre solo no
+    // alcanza para saber a cuál se la está mandando.
+    const selector = (fixture.nativeElement as HTMLElement).querySelector('mat-select');
+    expect(selector?.textContent).toContain('Cancha 3');
+    expect(selector?.textContent).toContain('(Pádel)');
   });
 
   it('vuelve a pedir los turnos al cambiar de día', async () => {
