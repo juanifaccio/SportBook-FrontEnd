@@ -46,10 +46,22 @@ export interface ReservaDto {
   usuarioId: number;
 }
 
+/**
+ * Datos que se envían al reprogramar.
+ *
+ * Lo único modificable de una reserva es el turno: la fecha, las horas, la
+ * cancha y el precio se vuelven a copiar del turno nuevo en el backend, igual
+ * que en el alta.
+ */
+export interface ReprogramarDto {
+  horarioId: number;
+}
+
 /** Filtros opcionales del listado de reservas. */
 export interface FiltrosReserva {
   usuarioId?: number;
   canchaId?: number;
   /** Día en formato `AAAA-MM-DD`. */
   fecha?: string;
+  estado?: EstadoReserva;
 }

@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Reprogramar reserva</h2>
+
+<mat-dialog-content>
+  <app-reprogramar-form
+    [reserva]="datos.reserva"
+    [canchas]="datos.canchas"
+    [turnos]="turnos()"
+    [cargandoTurnos]="cargandoTurnos()"
+    [errorTurnos]="errorTurnos()"
+    [guardando]="guardando()"
+    (buscar)="buscarTurnos($event)"
+    (guardar)="alGuardar($event)"
+    (cancelar)="alCancelar()" />
+</mat-dialog-content>

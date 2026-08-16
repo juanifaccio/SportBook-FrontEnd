@@ -1,0 +1,62 @@
+/* Mobile-first: los filtros arrancan apilados a lo ancho de la pantalla y la
+   vista base es la de tarjetas. La tabla solo aparece desde MD, donde hay ancho
+   suficiente para las siete columnas. */
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filtros mat-form-field {
+  width: 100%;
+}
+
+.tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tarjetas p {
+  margin: 0 0 0.25rem;
+}
+
+.estado {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.total {
+  font: var(--mat-sys-title-medium);
+}
+
+.tabla {
+  width: 100%;
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--mat-sys-corner-medium);
+  overflow: hidden;
+}
+
+.columna-acciones {
+  width: 10rem;
+  text-align: right;
+}
+
+@media (min-width: 600px) {
+  .filtros {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .filtros mat-form-field {
+    width: 14rem;
+  }
+
+  .tarjetas {
+    /* En tablet vertical entran dos tarjetas por fila. */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  }
+}

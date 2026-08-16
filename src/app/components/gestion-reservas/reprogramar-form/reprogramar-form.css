@@ -1,0 +1,42 @@
+/* Mobile-first: los dos selectores arrancan apilados y comparten fila desde SM,
+   donde ya entran los dos. */
+
+.actual {
+  margin: 0 0 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filtros mat-form-field {
+  width: 100%;
+}
+
+h3 {
+  margin: 0.5rem 0 0.75rem;
+  font: var(--mat-sys-title-small);
+}
+
+/* Dentro del diálogo el estado vacío no es el de una pantalla entera: se le saca
+   el aire de arriba y abajo para que los botones no queden fuera de vista. */
+.estado-mensaje {
+  padding: 1rem;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 600px) {
+  .filtros {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}

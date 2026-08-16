@@ -16,6 +16,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/reserva/reserva').then((m) => m.ReservaComponent)
   },
   {
+    path: 'reservas',
+    title: 'Reservas — SportBook',
+    loadComponent: () =>
+      import('./components/gestion-reservas/gestion-reservas').then(
+        (m) => m.GestionReservasComponent
+      )
+  },
+  {
     path: 'tipos-cancha',
     title: 'Tipos de cancha — SportBook',
     loadComponent: () =>

@@ -5,6 +5,8 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+  <button mat-button type="button" (click)="cancelar()">
+    {{ datos.textoCancelar ?? 'Cancelar' }}
+  </button>
   <button mat-flat-button type="button" (click)="confirmar()">{{ datos.textoConfirmar }}</button>
 </mat-dialog-actions>

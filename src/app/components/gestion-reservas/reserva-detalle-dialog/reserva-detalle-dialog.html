@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Reserva #{{ reserva.id }}</h2>
+
+<mat-dialog-content>
+  <dl class="detalle">
+    <dt>Estado</dt>
+    <dd>{{ etiquetasEstado[reserva.estado] }}</dd>
+
+    <dt>Cancha</dt>
+    <dd>
+      {{ reserva.cancha?.nombre }}
+      @if (reserva.cancha?.tipoCancha; as tipo) {
+        <span class="secundario">({{ tipo.nombre }})</span>
+      }
+    </dd>
+
+    <dt>Día</dt>
+    <dd>{{ formatearFecha(reserva.fecha) }}</dd>
+
+    <dt>Horario</dt>
+    <dd>{{ reserva.horaInicio }} a {{ reserva.horaFin }}</dd>
+
+    <dt>A nombre de</dt>
+    <dd>
+      {{ reserva.usuario?.nombre }}
+      <span class="secundario">{{ reserva.usuario?.email }}</span>
+      <span class="secundario">{{ reserva.usuario?.telefono }}</span>
+    </dd>
+
+    @if (reserva.cancha; as cancha) {
+      <dt>Precio por hora</dt>
+      <dd>{{ cancha.precioPorHora | currency: 'ARS' }}</dd>
+    }
+  </dl>
+
+  <p class="total">
+    <span>Total</span>
+    <strong>{{ reserva.precioTotal | currency: 'ARS' }}</strong>
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button type="button" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

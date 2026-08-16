@@ -18,6 +18,7 @@ import { NotificacionService } from '../../core/services/notificacion.service';
 import { Cancha } from '../../models/cancha';
 import { Horario } from '../../models/horario';
 import { Usuario } from '../../models/usuario';
+import { formatearFecha, hoyLocal } from '../../core/fechas';
 import { DatosReservaDialog, ReservaDialogComponent } from './reserva-dialog/reserva-dialog';
 
 /**
@@ -28,19 +29,6 @@ const minutosDe = (hora: string): number => {
   const [horas, minutos] = hora.split(':').map(Number);
 
   return horas * 60 + minutos;
-};
-
-/**
- * Día de hoy como "AAAA-MM-DD". Se arma con las partes locales de la fecha y no
- * con `toISOString()`, que devuelve el día en UTC y a la tarde ya está mostrando
- * el de mañana.
- */
-const hoyLocal = (): string => {
-  const ahora = new Date();
-  const mes = `${ahora.getMonth() + 1}`.padStart(2, '0');
-  const dia = `${ahora.getDate()}`.padStart(2, '0');
-
-  return `${ahora.getFullYear()}-${mes}-${dia}`;
 };
 
 /**
@@ -226,14 +214,8 @@ export class ReservaComponent implements OnInit {
     });
   }
 
-  /**
-   * La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". Se
-   * reordena el texto en vez de construir un `Date`, que interpretaría la fecha
-   * en UTC y mostraría el día anterior.
-   */
-  protected formatearFecha(fecha: string): string {
-    return fecha.split('-').reverse().join('/');
-  }
+  /** La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". */
+  protected readonly formatearFecha = formatearFecha;
 
   /**
    * El request lo hace el diálogo, que se cierra recién cuando el backend

@@ -55,6 +55,8 @@ export class LayoutComponent {
   protected readonly items: ItemNavegacion[] = [
     // Reservar va primero: es el caso de uso central de la aplicación, no un ABM más.
     { etiqueta: 'Reservar', ruta: '/reservar', icono: 'event_available' },
+    // Y justo después, la contracara: lo ya reservado y qué hacer con ello.
+    { etiqueta: 'Reservas', ruta: '/reservas', icono: 'event_note' },
     { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium' },
     { etiqueta: 'Horarios', ruta: '/horarios', icono: 'schedule' },
     { etiqueta: 'Usuarios', ruta: '/usuarios', icono: 'group' },

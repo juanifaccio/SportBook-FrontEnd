@@ -74,11 +74,40 @@ describe('ReservaService', () => {
     req.flush(reserva);
   });
 
+  it('manda el estado como filtro del listado', () => {
+    service.listar({ estado: 'CANCELADA' }).subscribe();
+
+    const req = httpMock.expectOne((pedido) => pedido.url === url && pedido.params.has('estado'));
+    expect(req.request.params.get('estado')).toBe('CANCELADA');
+    req.flush([]);
+  });
+
   it('apunta al recurso por id al obtener una', () => {
     service.obtener(1).subscribe();
 
     const req = httpMock.expectOne(`${url}/1`);
     expect(req.request.method).toBe('GET');
     req.flush(reserva);
+  });
+
+  it('envía solo el turno nuevo al reprogramar', () => {
+    service.reprogramar(1, { horarioId: 8 }).subscribe();
+
+    const req = httpMock.expectOne(`${url}/1`);
+    expect(req.request.method).toBe('PUT');
+    // La fecha, las horas, la cancha y el precio los vuelve a copiar el backend
+    // del turno nuevo.
+    expect(req.request.body).toEqual({ horarioId: 8 });
+    req.flush({ ...reserva, horarioId: 8 });
+  });
+
+  it('cancela con un PUT a su propia URL y sin cuerpo', () => {
+    service.cancelar(1).subscribe();
+
+    const req = httpMock.expectOne(`${url}/1/cancelar`);
+    expect(req.request.method).toBe('PUT');
+    // Cancelar no es borrar: la reserva se conserva, cambia de estado.
+    expect(req.request.body).toEqual({});
+    req.flush({ ...reserva, estado: 'CANCELADA' });
   });
 });
