@@ -1,6 +1,9 @@
 .formulario {
   display: flex;
   flex-direction: column;
+  /* Aire entre campos: sin esto, el mensaje de error de uno queda pegado a la
+     caja del siguiente. */
+  gap: 0.5rem;
   /* Ancho cómodo en mobile; el diálogo lo limita en pantallas grandes. */
   min-width: 0;
 }

@@ -1,4 +1,4 @@
-import { aDate, aTexto, formatearFecha, hoyLocal, yaEmpezo } from './fechas';
+import { aDate, aDateHora, aHora, aTexto, formatearFecha, hoyLocal, yaEmpezo } from './fechas';
 
 describe('utilidades de fecha', () => {
   describe('aDate / aTexto — el borde entre el texto de la API y el calendario', () => {
@@ -33,6 +33,38 @@ describe('utilidades de fecha', () => {
       const esperado = `${ahora.getFullYear()}-${`${ahora.getMonth() + 1}`.padStart(2, '0')}-${`${ahora.getDate()}`.padStart(2, '0')}`;
 
       expect(hoyLocal()).toBe(esperado);
+    });
+  });
+
+  describe('aDateHora / aHora — el borde entre el texto de la API y el timepicker', () => {
+    it('vuelve al mismo texto del que salió', () => {
+      for (const texto of ['00:00', '09:05', '13:30', '23:59']) {
+        expect(aHora(aDateHora(texto)!)).toBe(texto);
+      }
+    });
+
+    it('rellena con ceros a la izquierda', () => {
+      // El backend guarda las horas como texto y las ordena como texto, así que
+      // un "9:05" sin cero rompería el orden del listado.
+      expect(aHora(new Date(2026, 7, 20, 9, 5))).toBe('09:05');
+    });
+
+    it('acepta un solo dígito en la hora, que es lo que se escribe a mano', () => {
+      expect(aHora(aDateHora('9:30')!)).toBe('09:30');
+    });
+
+    it('ignora el día: solo importan la hora y los minutos', () => {
+      const hora = aDateHora('13:30')!;
+
+      expect(hora.getHours()).toBe(13);
+      expect(hora.getMinutes()).toBe(30);
+      expect(hora.getSeconds()).toBe(0);
+    });
+
+    it('devuelve null si el texto no es una hora válida', () => {
+      for (const basura of ['', '25:00', '10:75', '1030', '10:00:00', 'mediodía']) {
+        expect(aDateHora(basura)).toBeNull();
+      }
     });
   });
 

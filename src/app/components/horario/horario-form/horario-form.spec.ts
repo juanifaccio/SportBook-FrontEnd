@@ -104,6 +104,33 @@ describe('HorarioFormComponent', () => {
     expect(errores()).toContain('Escribí la fecha como DD/MM/AAAA, o elegila del calendario.');
   });
 
+  it('no emite nada si la hora escrita a mano no se entiende', async () => {
+    const emitidos: HorarioDto[] = [];
+    fixture.componentInstance.guardar.subscribe((dto) => emitidos.push(dto));
+
+    await completar('mediodía', '11:00');
+    await enviar();
+
+    expect(emitidos).toEqual([]);
+    // El mensaje tiene que ser el de formato y no el de obligatorio: el usuario
+    // sí escribió algo, y mandarlo a completar un campo que ya completó lo hace
+    // buscar el problema donde no está.
+    expect(errores()).toContain('Escribí la hora como HH:mm, o elegila de la lista.');
+    expect(errores()).not.toContain('La hora de inicio es obligatoria.');
+  });
+
+  it('acepta la hora escrita con un solo dígito', async () => {
+    const emitidos: HorarioDto[] = [];
+    fixture.componentInstance.guardar.subscribe((dto) => emitidos.push(dto));
+
+    await completar('9:30', '11:00');
+    await enviar();
+
+    // El backend guarda y ordena las horas como texto, así que el cero a la
+    // izquierda lo tiene que poner el formulario.
+    expect(emitidos[0]?.horaInicio).toBe('09:30');
+  });
+
   it('deja de marcar el error cuando se corrige la hora de inicio', async () => {
     await completar('10:00', '09:30');
     await enviar();
