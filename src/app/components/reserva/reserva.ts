@@ -11,10 +11,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { HorarioService } from '../../services/horario.service';
 import { CanchaService } from '../../services/cancha.service';
 import { UsuarioService } from '../../services/usuario.service';
+import { AuthService } from '../../core/services/auth.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
 import { Cancha } from '../../models/cancha';
 import { Horario } from '../../models/horario';
@@ -62,8 +63,16 @@ export class ReservaComponent implements OnInit {
   private canchaService = inject(CanchaService);
   private horarioService = inject(HorarioService);
   private usuarioService = inject(UsuarioService);
+  private auth = inject(AuthService);
   private notificacion = inject(NotificacionService);
   private dialog = inject(MatDialog);
+
+  /**
+   * Un administrador reserva desde el mostrador para quien se lo pide, así que
+   * elige a nombre de quién va. Un cliente reserva para sí mismo: el selector no
+   * tendría a quién ofrecerle, y el backend le impone su propio usuario igual.
+   */
+  protected readonly esAdmin = this.auth.esAdmin;
 
   protected readonly canchas = signal<Cancha[]>([]);
   protected readonly usuarios = signal<Usuario[]>([]);
@@ -137,18 +146,32 @@ export class ReservaComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(false);
 
+    const conectado = this.auth.usuario();
+
     forkJoin({
       canchas: this.canchaService.listar(),
-      usuarios: this.usuarioService.listar()
+      // El listado de usuarios es de administración: a un cliente el backend se
+      // lo rechaza con un 403, y tampoco lo necesita. Para él la única opción es
+      // él mismo, y así el resto de la pantalla funciona igual para los dos.
+      usuarios: this.esAdmin()
+        ? this.usuarioService.listar()
+        : of(conectado ? [conectado] : [])
     }).subscribe({
       next: ({ canchas, usuarios }) => {
         // Una cancha en mantenimiento no admite reservas y un usuario dado de
         // baja tampoco puede reservar: el backend los rechaza, así que ni
         // siquiera se ofrecen.
         const disponibles = canchas.filter((cancha) => cancha.estado === 'DISPONIBLE');
+        const activos = usuarios.filter((usuario) => usuario.activo);
 
         this.canchas.set(disponibles);
-        this.usuarios.set(usuarios.filter((usuario) => usuario.activo));
+        this.usuarios.set(activos);
+
+        // El cliente no elige: su reserva va a su nombre, y sin esto el botón de
+        // reservar quedaría deshabilitado para siempre.
+        if (!this.esAdmin()) {
+          this.usuarioSeleccionado.set(activos[0]?.id ?? null);
+        }
 
         const primera = disponibles[0];
 

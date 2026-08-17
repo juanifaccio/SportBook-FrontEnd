@@ -2,9 +2,16 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { provideRouter } from '@angular/router';
 
 import { DatosReservaDialog, ReservaDialogComponent } from './reserva-dialog';
 import { environment } from '../../../../environments/environment';
+import {
+  USUARIO_ADMIN,
+  USUARIO_CLIENTE,
+  cerrarSesionDePrueba,
+  iniciarSesionDePrueba
+} from '../../../core/testing/sesion';
 
 describe('ReservaDialogComponent', () => {
   const url = `${environment.apiUrl}/reservas`;
@@ -77,15 +84,23 @@ describe('ReservaDialogComponent', () => {
     await fixture.whenStable();
   };
 
-  beforeEach(async () => {
+  /**
+   * Quién confirma cambia lo que se manda: el administrador reserva a nombre de
+   * otro, el cliente solo para sí mismo. La sesión se arma antes del `TestBed`
+   * porque `AuthService` la lee al construirse.
+   */
+  const preparar = async (usuario = USUARIO_ADMIN) => {
     cierres = [];
     dialogRef.disableClose = false;
+
+    iniciarSesionDePrueba(usuario);
 
     await TestBed.configureTestingModule({
       imports: [ReservaDialogComponent],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: datos }
       ]
@@ -94,9 +109,14 @@ describe('ReservaDialogComponent', () => {
     fixture = TestBed.createComponent(ReservaDialogComponent);
     httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    await preparar();
   });
 
   afterEach(() => {
+    cerrarSesionDePrueba();
     httpMock.verify();
   });
 
@@ -117,7 +137,25 @@ describe('ReservaDialogComponent', () => {
 
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe('POST');
+    // El administrador reserva desde el mostrador para otro, así que sí manda a
+    // nombre de quién va.
     expect(req.request.body).toEqual({ horarioId: horario.id, usuarioId: usuario.id });
+    req.flush(reserva);
+    await fixture.whenStable();
+
+    expect(cierres).toEqual([true]);
+  });
+
+  it('cuando confirma un cliente manda solo el turno, sin el usuario', async () => {
+    TestBed.resetTestingModule();
+    await preparar(USUARIO_CLIENTE);
+
+    await confirmar();
+
+    const req = httpMock.expectOne(url);
+    // El dueño lo impone el backend con el usuario de la sesión. Mandarlo desde
+    // acá sugeriría que el cliente puede elegirlo, y no puede.
+    expect(req.request.body).toEqual({ horarioId: horario.id });
     req.flush(reserva);
     await fixture.whenStable();
 

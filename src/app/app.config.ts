@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { PROVEEDORES_FECHA } from './core/fecha-adapter';
 
@@ -19,7 +20,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     { provide: LOCALE_ID, useValue: 'es-AR' },
     provideRouter(routes),
-    provideHttpClient(withInterceptors([errorInterceptor])),
+    // El de autenticación va primero: adjunta el token antes de que el request
+    // salga, y al volver decide si la sesión sigue en pie. El de errores es el
+    // que le muestra el mensaje al usuario.
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
 
     // El calendario de Material trabaja con objetos `Date`, y escribir la fecha
     // a mano tiene que ser siempre día/mes/año. Ver `core/fecha-adapter.ts`.

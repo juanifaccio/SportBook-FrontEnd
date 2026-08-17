@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ReservaService } from '../../../services/reserva.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Cancha } from '../../../models/cancha';
 import { Horario } from '../../../models/horario';
 import { Usuario } from '../../../models/usuario';
@@ -41,6 +42,8 @@ export class ReservaDialogComponent {
 
   private reservaService = inject(ReservaService);
 
+  private auth = inject(AuthService);
+
   private dialogRef = inject(MatDialogRef<ReservaDialogComponent, boolean>);
 
   /** Deshabilita los botones mientras el request está en curso. */
@@ -61,7 +64,10 @@ export class ReservaDialogComponent {
     this.reservaService
       .crear({
         horarioId: this.datos.horario.id,
-        usuarioId: this.datos.usuario.id
+        // Solo el administrador reserva a nombre de otro. Para el cliente el
+        // dueño sale de su sesión en el backend, así que mandarlo sería sugerir
+        // que puede elegirlo.
+        ...(this.auth.esAdmin() ? { usuarioId: this.datos.usuario.id } : {})
       })
       .subscribe({
         next: () => this.dialogRef.close(true),

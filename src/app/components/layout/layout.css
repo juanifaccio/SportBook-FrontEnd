@@ -19,6 +19,32 @@
   letter-spacing: 0.02em;
 }
 
+/* Empuja el menú de la cuenta contra el borde derecho de la barra. */
+.separador {
+  flex: 1;
+}
+
+/* En pantalla chica queda solo el ícono: el nombre completo se comería el
+   ancho que necesita la marca. */
+.nombre-cuenta {
+  display: none;
+}
+
+/* Datos del usuario arriba del menú desplegable. No es un ítem: no se hace
+   clic en él, solo dice quién está conectado. */
+.datos-cuenta {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.datos-cuenta strong {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+}
+
 .contenedor {
   flex: 1;
   /* El contenedor ocupa lo que queda debajo de la barra superior. */
@@ -33,6 +59,12 @@
 
 .contenido {
   padding: 1rem;
+}
+
+@media (min-width: 600px) {
+  .nombre-cuenta {
+    display: inline;
+  }
 }
 
 @media (min-width: 960px) {

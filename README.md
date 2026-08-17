@@ -49,6 +49,12 @@ npm start
 Abrí `http://localhost:4200/` en el navegador. La aplicación se recarga sola
 cada vez que modificás un archivo del código fuente.
 
+La primera pantalla es la de **inicio de sesión**: la API pide sesión en todos
+sus endpoints. Si es la primera vez que levantás el proyecto, creá el
+administrador inicial con `npm run seed` en el backend (ver su README) y entrá
+con el email y la contraseña que pusiste ahí. El resto de las cuentas se dan de
+alta desde la pantalla de usuarios.
+
 ## Otros comandos
 
 | Comando | Qué hace |
@@ -82,12 +88,15 @@ src/
   app/
     core/                  piezas transversales
       breakpoints.ts         breakpoints SM / MD / LG
-      interceptors/          manejo centralizado de errores HTTP
-      services/              servicio de notificaciones (snackbars)
+      guards/                quién puede entrar a cada ruta
+      interceptors/          token de la sesión y manejo de errores HTTP
+      services/              sesión (AuthService) y notificaciones (snackbars)
+      testing/               sesiones armadas para los tests
     models/                interfaces del dominio (una por entidad)
     services/              acceso a la API (un servicio por recurso)
     components/
       layout/                barra superior y menú de navegación
+      login/                 inicio de sesión (única pantalla fuera del layout)
       shared/                componentes reutilizables (diálogo de confirmación)
       tipo-cancha/           ABM de tipos de cancha
       no-encontrado/         pantalla 404
@@ -98,6 +107,24 @@ src/
 `components/tipo-cancha/` es la **implementación de referencia**: el resto de las
 entidades del dominio se construyen replicando esa estructura (modelo, servicio,
 listado con estados de carga/vacío/error y diálogo de formulario reutilizable).
+
+## Niveles de acceso
+
+La sesión se guarda en el navegador (token y usuario), así que recargar la página
+no obliga a volver a entrar. Al arrancar, la aplicación revalida esa sesión
+contra el backend: si venció o la cuenta cambió, se cierra sola.
+
+Los dos roles del backend definen qué ofrece la aplicación:
+
+| | `ADMIN` | `CLIENTE` |
+|---|---|---|
+| Reservar | Sí, a nombre de cualquier usuario | Sí, a su propio nombre |
+| Reservas | Todas las del complejo | Solo las suyas |
+| Canchas, horarios, usuarios y tipos | Sí | No aparecen en el menú |
+
+Esconder lo que un rol no puede usar es para no hacerle perder el tiempo, no para
+protegerlo: quien escriba la URL a mano se topa con el guard primero y con el
+backend después, que es donde se decide de verdad.
 
 ## Diseño responsive
 

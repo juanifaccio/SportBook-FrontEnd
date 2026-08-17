@@ -1,0 +1,55 @@
+/* Mobile-first: la tarjeta ocupa el ancho disponible y se limita desde SM. */
+
+.pantalla-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 1.5rem 1rem;
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.tarjeta {
+  width: 100%;
+  max-width: 24rem;
+  padding-bottom: 0.5rem;
+}
+
+/* El encabezado de Material apila título y subtítulo al costado del avatar; acá
+   se centra todo en columna, con el ícono arriba. */
+.encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-top: 1.5rem;
+  text-align: center;
+}
+
+.logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 2.5rem;
+  color: var(--mat-sys-primary);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.entrar {
+  margin-top: 0.5rem;
+}
+
+.pie {
+  padding: 0 1rem 1rem;
+  text-align: center;
+}
+
+.pie p {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
