@@ -9,6 +9,36 @@
   }
 
   <span class="marca">SportBook</span>
+
+  <span class="separador"></span>
+
+  @if (usuario(); as conectado) {
+    <button
+      mat-button
+      class="cuenta"
+      aria-label="Menú de la cuenta"
+      [matMenuTriggerFor]="menuCuenta">
+      <mat-icon>account_circle</mat-icon>
+      <!-- Desde SM entra el nombre al lado del ícono; en pantalla chica el ícono
+           solo, para no comerse la barra. -->
+      <span class="nombre-cuenta">{{ conectado.nombre }}</span>
+    </button>
+
+    <mat-menu #menuCuenta="matMenu">
+      <div class="datos-cuenta">
+        <strong>{{ conectado.nombre }}</strong>
+        <span>{{ conectado.email }}</span>
+        <span>{{ rol() }}</span>
+      </div>
+
+      <mat-divider />
+
+      <button mat-menu-item type="button" (click)="cerrarSesion()">
+        <mat-icon>logout</mat-icon>
+        <span>Cerrar sesión</span>
+      </button>
+    </mat-menu>
+  }
 </mat-toolbar>
 
 <mat-sidenav-container class="contenedor">
@@ -18,7 +48,7 @@
     [opened]="esPantallaAncha()"
     [disableClose]="esPantallaAncha()">
     <mat-nav-list>
-      @for (item of items; track item.ruta) {
+      @for (item of itemsVisibles(); track item.ruta) {
         <a
           mat-list-item
           [routerLink]="item.ruta"

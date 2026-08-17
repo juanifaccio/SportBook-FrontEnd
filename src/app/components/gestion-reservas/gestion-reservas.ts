@@ -17,6 +17,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { forkJoin, map } from 'rxjs';
 import { ReservaService } from '../../services/reserva.service';
 import { CanchaService } from '../../services/cancha.service';
+import { AuthService } from '../../core/services/auth.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
 import { Cancha } from '../../models/cancha';
 import {
@@ -68,9 +69,17 @@ export class GestionReservasComponent implements OnInit {
 
   private reservaService = inject(ReservaService);
   private canchaService = inject(CanchaService);
+  private auth = inject(AuthService);
   private notificacion = inject(NotificacionService);
   private dialog = inject(MatDialog);
   private breakpointObserver = inject(BreakpointObserver);
+
+  /**
+   * El backend ya filtra: al cliente le devuelve solamente sus reservas. Acá el
+   * rol solo decide qué mostrar, porque una columna con su propio nombre
+   * repetido en todas las filas no le dice nada.
+   */
+  protected readonly esAdmin = this.auth.esAdmin;
 
   protected readonly reservas = signal<Reserva[]>([]);
   protected readonly canchas = signal<Cancha[]>([]);
@@ -103,7 +112,11 @@ export class GestionReservasComponent implements OnInit {
     { initialValue: false }
   );
 
-  protected readonly columnas = ['fecha', 'horario', 'cancha', 'usuario', 'estado', 'total', 'acciones'];
+  protected readonly columnas = computed(() =>
+    this.esAdmin()
+      ? ['fecha', 'horario', 'cancha', 'usuario', 'estado', 'total', 'acciones']
+      : ['fecha', 'horario', 'cancha', 'estado', 'total', 'acciones']
+  );
 
   protected readonly formatearFecha = formatearFecha;
 

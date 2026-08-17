@@ -167,8 +167,8 @@
       </td>
     </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-    <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+    <tr mat-header-row *matHeaderRowDef="columnas()"></tr>
+    <tr mat-row *matRowDef="let fila; columns: columnas()"></tr>
   </table>
 } @else {
   <div class="tarjetas">
@@ -182,7 +182,9 @@
         </mat-card-header>
 
         <mat-card-content>
-          <p>{{ reserva.usuario?.nombre }}</p>
+          @if (esAdmin()) {
+            <p>{{ reserva.usuario?.nombre }}</p>
+          }
           <p class="estado">{{ etiquetaEstado(reserva) }}</p>
           <p class="total">{{ reserva.precioTotal | currency: 'ARS' }}</p>
         </mat-card-content>

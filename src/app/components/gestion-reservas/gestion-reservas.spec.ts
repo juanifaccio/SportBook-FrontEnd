@@ -7,6 +7,12 @@ import { provideRouter } from '@angular/router';
 import { GestionReservasComponent } from './gestion-reservas';
 import { environment } from '../../../environments/environment';
 import { PROVEEDORES_FECHA } from '../../core/fecha-adapter';
+import {
+  USUARIO_ADMIN,
+  USUARIO_CLIENTE,
+  cerrarSesionDePrueba,
+  iniciarSesionDePrueba
+} from '../../core/testing/sesion';
 
 describe('GestionReservasComponent', () => {
   const urlReservas = `${environment.apiUrl}/reservas`;
@@ -62,7 +68,14 @@ describe('GestionReservasComponent', () => {
 
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  beforeEach(async () => {
+  /**
+   * La sesión se arma antes del `TestBed` porque `AuthService` la lee al
+   * construirse. Por defecto es un administrador, que es quien ve las reservas
+   * de todo el complejo y necesita saber de quién es cada una.
+   */
+  const preparar = async (usuario = USUARIO_ADMIN) => {
+    iniciarSesionDePrueba(usuario);
+
     await TestBed.configureTestingModule({
       imports: [GestionReservasComponent, MatDialogModule],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), PROVEEDORES_FECHA]
@@ -70,10 +83,15 @@ describe('GestionReservasComponent', () => {
 
     fixture = TestBed.createComponent(GestionReservasComponent);
     httpMock = TestBed.inject(HttpTestingController);
+  };
+
+  beforeEach(async () => {
+    await preparar();
   });
 
   afterEach(() => {
     httpMock.verify();
+    cerrarSesionDePrueba();
   });
 
   it('se crea correctamente', async () => {
@@ -90,6 +108,19 @@ describe('GestionReservasComponent', () => {
     expect(texto()).toContain(cancha.nombre);
     expect(texto()).toContain(usuario.nombre);
     expect(texto()).toContain('Confirmada');
+  });
+
+  it('al cliente no le muestra la columna del usuario', async () => {
+    TestBed.resetTestingModule();
+    await preparar(USUARIO_CLIENTE);
+
+    fixture.detectChanges();
+    await responder([reserva]);
+
+    // El backend ya le devuelve solamente sus reservas, así que una columna con
+    // su propio nombre repetido en cada fila no le aporta nada.
+    expect(texto()).toContain(cancha.nombre);
+    expect(texto()).not.toContain(usuario.nombre);
   });
 
   it('avisa cuando todavía no hay ninguna reserva', async () => {

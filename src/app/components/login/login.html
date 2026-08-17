@@ -1,0 +1,58 @@
+<main class="pantalla-login">
+  <mat-card appearance="outlined" class="tarjeta">
+    <mat-card-header class="encabezado">
+      <mat-icon class="logo">sports_soccer</mat-icon>
+      <mat-card-title>SportBook</mat-card-title>
+      <mat-card-subtitle>Reservá tu cancha en el complejo</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input
+            matInput
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            placeholder="Ej.: nombre@ejemplo.com" />
+          @if (formulario.controls.email.hasError('required')) {
+            <mat-error>El email es obligatorio.</mat-error>
+          } @else if (formulario.controls.email.hasError('email')) {
+            <mat-error>Escribí un email válido.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            [type]="verContrasena() ? 'text' : 'password'"
+            formControlName="contrasena"
+            autocomplete="current-password" />
+          <button
+            mat-icon-button
+            matIconSuffix
+            type="button"
+            [attr.aria-label]="verContrasena() ? 'Ocultar la contraseña' : 'Mostrar la contraseña'"
+            [attr.aria-pressed]="verContrasena()"
+            (click)="alternarContrasena()">
+            <mat-icon>{{ verContrasena() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (formulario.controls.contrasena.hasError('required')) {
+            <mat-error>La contraseña es obligatoria.</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button type="submit" class="entrar" [disabled]="entrando()">
+          <mat-icon>login</mat-icon>
+          {{ entrando() ? 'Entrando…' : 'Iniciar sesión' }}
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-footer class="pie">
+      <p>¿No tenés cuenta? Pedísela al complejo: las cuentas las crea la administración.</p>
+    </mat-card-footer>
+  </mat-card>
+</main>

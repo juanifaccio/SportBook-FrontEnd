@@ -21,11 +21,17 @@
   <div class="estado-mensaje">
     <mat-icon>stadium</mat-icon>
     <h2>No hay canchas disponibles</h2>
-    <p>Para reservar hace falta al menos una cancha en estado disponible.</p>
-    <button mat-flat-button type="button" routerLink="/canchas">
-      <mat-icon>arrow_forward</mat-icon>
-      Ir a canchas
-    </button>
+    <!-- Las canchas las administra el complejo, así que el cliente no tiene a
+         dónde ir a arreglarlo: se le dice qué pasa y nada más. -->
+    @if (esAdmin()) {
+      <p>Para reservar hace falta al menos una cancha en estado disponible.</p>
+      <button mat-flat-button type="button" routerLink="/canchas">
+        <mat-icon>arrow_forward</mat-icon>
+        Ir a canchas
+      </button>
+    } @else {
+      <p>Por ahora no hay ninguna cancha habilitada. Volvé a intentar más tarde.</p>
+    }
   </div>
 } @else if (!hayUsuarios()) {
   <div class="estado-mensaje">
@@ -97,10 +103,12 @@
           No quedan turnos libres en {{ canchaActual()?.nombre }} el
           {{ formatearFecha(fecha()) }}. Probá con otro día u otra cancha.
         </p>
-        <button mat-stroked-button type="button" routerLink="/horarios">
-          <mat-icon>arrow_forward</mat-icon>
-          Cargar turnos
-        </button>
+        @if (esAdmin()) {
+          <button mat-stroked-button type="button" routerLink="/horarios">
+            <mat-icon>arrow_forward</mat-icon>
+            Cargar turnos
+          </button>
+        }
       </div>
     } @else {
       <mat-chip-listbox
@@ -116,20 +124,23 @@
     }
   </section>
 
-  <section class="seccion">
-    <h2>A nombre de</h2>
+  <!-- El administrador reserva desde el mostrador para quien se lo pide, así que
+       elige a nombre de quién va. El cliente reserva para sí mismo: no hay nada
+       que elegir, y el backend le impone su propio usuario igual. -->
+  @if (esAdmin()) {
+    <section class="seccion">
+      <h2>A nombre de</h2>
 
-    <!-- Mientras no exista el login (#15) el dueño de la reserva se elige a
-         mano. Cuando haya sesión, este selector sale y el usuario sale de ahí. -->
-    <mat-form-field appearance="outline" class="selector-usuario">
-      <mat-label>Usuario</mat-label>
-      <mat-select [value]="usuarioSeleccionado()" (valueChange)="alElegirUsuario($event)">
-        @for (usuario of usuarios(); track usuario.id) {
-          <mat-option [value]="usuario.id">{{ usuario.nombre }} — {{ usuario.email }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-  </section>
+      <mat-form-field appearance="outline" class="selector-usuario">
+        <mat-label>Usuario</mat-label>
+        <mat-select [value]="usuarioSeleccionado()" (valueChange)="alElegirUsuario($event)">
+          @for (usuario of usuarios(); track usuario.id) {
+            <mat-option [value]="usuario.id">{{ usuario.nombre }} — {{ usuario.email }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </section>
+  }
 
   <mat-card appearance="outlined" class="resumen">
     <mat-card-content>
@@ -154,7 +165,13 @@
           <strong>{{ precioTotal() | currency: 'ARS' }}</strong>
         </p>
       } @else {
-        <p class="resumen-vacio">Elegí un turno y a nombre de quién va la reserva.</p>
+        <p class="resumen-vacio">
+          @if (esAdmin()) {
+            Elegí un turno y a nombre de quién va la reserva.
+          } @else {
+            Elegí un turno para reservar.
+          }
+        </p>
       }
     </mat-card-content>
 

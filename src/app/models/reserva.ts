@@ -36,14 +36,19 @@ export interface Reserva {
 /**
  * Datos que se envían al reservar.
  *
- * A diferencia del resto de los modelos, no es un `Omit<Reserva, 'id'>`: el
- * cliente manda solamente el turno y el usuario, y el backend deriva del turno
- * la fecha, las horas, la cancha, el estado y el precio. Un precio calculado en
- * el navegador no se puede creer, así que ni siquiera viaja.
+ * A diferencia del resto de los modelos, no es un `Omit<Reserva, 'id'>`: se manda
+ * solamente el turno, y el backend deriva de él la fecha, las horas, la cancha,
+ * el estado y el precio. Un precio calculado en el navegador no se puede creer,
+ * así que ni siquiera viaja.
  */
 export interface ReservaDto {
   horarioId: number;
-  usuarioId: number;
+  /**
+   * A nombre de quién va. Opcional porque solo lo manda un administrador, que
+   * reserva desde el mostrador para otro: al cliente el backend le impone el
+   * usuario de su sesión, y mandarlo no cambiaría nada.
+   */
+  usuarioId?: number;
 }
 
 /**

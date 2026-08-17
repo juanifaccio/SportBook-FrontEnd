@@ -7,6 +7,12 @@ import { provideRouter } from '@angular/router';
 import { ReservaComponent } from './reserva';
 import { environment } from '../../../environments/environment';
 import { PROVEEDORES_FECHA } from '../../core/fecha-adapter';
+import {
+  USUARIO_ADMIN,
+  USUARIO_CLIENTE,
+  cerrarSesionDePrueba,
+  iniciarSesionDePrueba
+} from '../../core/testing/sesion';
 
 describe('ReservaComponent', () => {
   const urlCanchas = `${environment.apiUrl}/canchas`;
@@ -88,7 +94,15 @@ describe('ReservaComponent', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')
     ).find((boton) => boton.textContent?.includes('Reservar'));
 
-  beforeEach(async () => {
+  /**
+   * La pantalla se comporta distinto según el rol, así que la sesión se arma
+   * antes de configurar el `TestBed`: `AuthService` la lee al construirse.
+   * Por defecto es un administrador, que es quien elige a nombre de quién va la
+   * reserva.
+   */
+  const preparar = async (usuario = USUARIO_ADMIN) => {
+    iniciarSesionDePrueba(usuario);
+
     await TestBed.configureTestingModule({
       imports: [ReservaComponent, MatDialogModule],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), PROVEEDORES_FECHA]
@@ -96,10 +110,15 @@ describe('ReservaComponent', () => {
 
     fixture = TestBed.createComponent(ReservaComponent);
     httpMock = TestBed.inject(HttpTestingController);
+  };
+
+  beforeEach(async () => {
+    await preparar();
   });
 
   afterEach(() => {
     httpMock.verify();
+    cerrarSesionDePrueba();
   });
 
   it('se crea correctamente', async () => {
@@ -206,5 +225,31 @@ describe('ReservaComponent', () => {
     fixture.detectChanges();
 
     expect(texto()).toContain('No se pudo cargar la pantalla');
+  });
+
+  it('al cliente no le pide el listado de usuarios ni le ofrece elegir a nombre de quién', async () => {
+    TestBed.resetTestingModule();
+    await preparar(USUARIO_CLIENTE);
+
+    fixture.detectChanges();
+
+    // El listado de usuarios es de administración: al cliente el backend se lo
+    // rechaza con un 403, así que la pantalla ni siquiera lo pide. Que
+    // `httpMock.verify()` no se queje al terminar prueba que no salió.
+    httpMock.expectOne(urlCanchas).flush([cancha]);
+    await fixture.whenStable();
+    pedidoDeTurnos().flush([turno]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(texto()).not.toContain('A nombre de');
+
+    // Su propia reserva va a su nombre sin elegir nada: con el turno elegido
+    // alcanza para poder reservar.
+    fixture.componentInstance['alElegirTurno'](turno.id);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['usuarioSeleccionado']()).toBe(USUARIO_CLIENTE.id);
+    expect(botonReservar()?.disabled).toBe(false);
   });
 });
