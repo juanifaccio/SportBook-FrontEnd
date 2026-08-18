@@ -15,7 +15,8 @@ través de una API REST en JSON. El backend vive en su propio repositorio,
 - [Angular](https://angular.dev) 22 (componentes standalone y signals)
 - TypeScript
 - [Angular Material](https://material.angular.dev) 22 (Material 3)
-- [Vitest](https://vitest.dev) para tests unitarios
+- [Vitest](https://vitest.dev) para los tests unitarios
+- [Playwright](https://playwright.dev) para los tests end-to-end
 
 ## Requisitos previos
 
@@ -29,6 +30,9 @@ través de una API REST en JSON. El backend vive en su propio repositorio,
   él la aplicación levanta igual, pero muestra un mensaje de error en cada
   pantalla que necesite datos. Las instrucciones para levantarlo están en el
   README de su repositorio.
+
+  Los **tests no lo necesitan**: ni los unitarios ni los end-to-end. Ver
+  [Tests](#tests).
 
 ## Instalación
 
@@ -62,7 +66,75 @@ alta desde la pantalla de usuarios.
 | `npm start` | Servidor de desarrollo en `http://localhost:4200/` |
 | `npm run build` | Compila para producción en `dist/` |
 | `npm run watch` | Compila en modo desarrollo y recompila ante cada cambio |
-| `npm test` | Ejecuta los tests unitarios con Vitest |
+| `npm test` | Tests unitarios con Vitest |
+| `npm run e2e` | Tests end-to-end con Playwright |
+| `npm run e2e:ui` | Los mismos, en el modo interactivo de Playwright |
+| `npm run e2e:reporte` | Abre el informe HTML de la última corrida |
+| `npm run start:e2e` | Servidor de desarrollo con el ambiente de los e2e, en el 4300 |
+
+## Tests
+
+Dos suites, que prueban cosas distintas y se corren por separado.
+
+### Unitarios (`npm test`)
+
+**178 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
+más el adaptador de fechas, la sesión, el interceptor de errores, los guards y el
+login. Se ejecutan sobre el DOM simulado de jsdom, sin navegador.
+
+### End-to-end (`npm run e2e`)
+
+**63 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
+manejan desde un navegador como lo haría una persona. Recorren los flujos
+completos —entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse—
+sobre el bundle real, con el router, los guards y los diálogos de Material.
+
+La primera vez hay que bajar el navegador que usa Playwright:
+
+```bash
+npx playwright install chromium
+```
+
+Después alcanza con:
+
+```bash
+npm run e2e
+```
+
+No hace falta levantar nada a mano: Playwright arranca el servidor de desarrollo
+en el puerto 4300 y lo apaga al terminar.
+
+**El backend no interviene.** `e2e/apoyo/api-falsa.ts` intercepta lo que la
+aplicación le pide a `/api` y lo responde desde un estado en memoria,
+reproduciendo el contrato real: los mismos códigos HTTP, los mismos mensajes en
+español y las mismas reglas de negocio. No es un stub de listas fijas —guarda lo
+que se crea, se edita y se borra—, así que los recorridos se pueden seguir de
+punta a punta.
+
+Es a propósito: los dos proyectos son independientes y agnósticos entre sí, así
+que los tests del frontend no pueden exigir el repositorio del backend ni una
+base MySQL para correr. Lo que solo se ve al juntar las dos piezas ya lo cubren
+los tests de integración del backend, que le pegan por HTTP a la API entera.
+
+```
+e2e/
+  apoyo/
+    datos.ts        datos con los que arranca cada test
+    api-falsa.ts    el backend simulado dentro del navegador
+    fixtures.ts     la API ya enganchada, más ayudas de Material
+  login.spec.ts             entrar, salir y la sesión que sobrevive a recargar
+  niveles-de-acceso.spec.ts qué ve y a dónde entra cada rol
+  navegacion.spec.ts        ruteo, títulos, 404 y menú lateral responsive
+  tipo-cancha.spec.ts       el ABM de referencia, de punta a punta
+  reservar.spec.ts          el caso de uso central
+  gestion-reservas.spec.ts  listar, filtrar, reprogramar y cancelar
+```
+
+Cuando algo falla, el informe con capturas y trazas queda en `playwright-report/`:
+
+```bash
+npm run e2e:reporte
+```
 
 ## Conexión con el backend
 
@@ -73,6 +145,8 @@ ambiente, en `src/environments/`.
   donde escucha el backend por defecto.
 - `environment.production.ts` — producción. Apunta a `/api`, asumiendo que el
   frontend se sirve detrás del mismo dominio que la API.
+- `environment.e2e.ts` — tests end-to-end. También `/api`: la API la responde el
+  navegador, y con un solo origen no hay CORS de por medio.
 
 Si tu backend corre en otro puerto o en otra máquina, cambiá `apiUrl` en
 `src/environments/environment.ts`. El build de producción reemplaza ese archivo
