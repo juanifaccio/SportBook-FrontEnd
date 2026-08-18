@@ -1,5 +1,5 @@
 import { ADMINISTRADOR, ANA } from './apoyo/datos';
-import { abrirComo, expect, test } from './apoyo/fixtures';
+import { abrirComo, expect, notificacion, test } from './apoyo/fixtures';
 
 /**
  * Navegación: el ruteo, los títulos de cada pantalla, la 404 y el menú lateral,
@@ -32,6 +32,23 @@ test.describe('Navegación', () => {
     await expect(page).toHaveTitle('Página no encontrada — SportBook');
     // La 404 cuelga del layout: el usuario no queda sin salida.
     await expect(page.locator('mat-sidenav')).toBeVisible();
+  });
+
+  test('desde la 404 se vuelve al inicio, y al cliente también', async ({ page }) => {
+    // El botón apuntaba a /tipos-cancha, que es solo para administradores: un
+    // cliente salía del callejón sin salida para caer en otro.
+    await abrirComo(page, ANA, '/lo-que-sea');
+
+    await page.getByRole('link', { name: 'Volver al inicio' }).click();
+
+    await expect(page).toHaveURL(/\/reservar$/);
+    await expect(page.getByRole('heading', { name: 'Reservar una cancha' })).toBeVisible();
+
+    // Esta es la comprobación que distingue un caso del otro: con el destino
+    // equivocado la URL terminaba igual en /reservar, pero porque lo rebotaba el
+    // `adminGuard`, y el usuario se comía un mensaje de permisos que no venía a
+    // cuento.
+    await expect(notificacion(page)).toHaveCount(0);
   });
 
   test('desde MD el menú lateral está fijo y no hay botón para abrirlo', async ({ page }) => {
