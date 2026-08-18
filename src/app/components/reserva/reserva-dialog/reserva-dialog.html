@@ -18,6 +18,15 @@
 
     <dt>A nombre de</dt>
     <dd>{{ datos.usuario.nombre }}</dd>
+
+    @if (datos.evento; as evento) {
+      <dt>Evento</dt>
+      <dd>
+        {{ evento.tipoEvento.nombre }}
+        <span class="secundario">{{ evento.descripcion }}</span>
+        <span class="secundario">{{ evento.cantidadPersonas }} personas</span>
+      </dd>
+    }
   </dl>
 
   <p class="total">

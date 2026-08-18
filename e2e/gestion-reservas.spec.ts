@@ -104,10 +104,26 @@ test.describe('Gestión de reservas', () => {
     await expect(detalle).toContainText(ANA.email);
     await expect(detalle).toContainText(ANA.telefono);
     await expect(detalle).toContainText('Confirmada');
+    // El evento es parte de "los datos completos" que pide la propuesta.
+    await expect(detalle).toContainText('Cumpleaños de 15');
+    await expect(detalle).toContainText('40 personas');
 
     await detalle.getByRole('button', { name: 'Cerrar' }).click();
 
     await expect(detalle).toBeHidden();
+  });
+
+  // La mayoría de las reservas son un partido y nada más: sin evento no aparece
+  // una fila vacía.
+  test('el detalle de una reserva sin evento no muestra esa fila', async ({ page }) => {
+    await abrirComo(page, ADMINISTRADOR, '/reservas');
+
+    await fila(page, '20:00 a 21:00').getByRole('button', { name: 'Ver el detalle' }).click();
+
+    const detalle = dialogo(page);
+
+    await expect(detalle.getByRole('heading', { name: 'Reserva #2' })).toBeVisible();
+    await expect(detalle).not.toContainText('Evento');
   });
 
   test('cancelar deja la reserva en el historial y devuelve el turno a los libres', async ({

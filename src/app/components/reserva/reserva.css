@@ -32,6 +32,21 @@
   max-width: 28rem;
 }
 
+/* Los campos del evento van apilados y no más anchos que el selector de usuario,
+   para que la sección se lea como parte del mismo formulario y no como otra
+   pantalla. */
+.formulario-evento {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 28rem;
+  margin-top: 1rem;
+}
+
+.formulario-evento textarea {
+  resize: vertical;
+}
+
 .resumen-linea {
   display: flex;
   align-items: center;

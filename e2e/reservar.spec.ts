@@ -170,6 +170,84 @@ test.describe('Reservar una cancha', () => {
     await expect(page.getByRole('button', { name: 'Ir a canchas' })).toHaveCount(0);
   });
 
+  // La #14: el evento se declara al reservar y se guarda con un segundo request,
+  // porque necesita el id de una reserva que todavía no existe.
+  test('reserva declarando un evento y lo guarda junto con la reserva', async ({ page, api }) => {
+    await abrirComo(page, ANA, '/reservar');
+    await elegirDia(page, MANANA);
+    await turnos(page).first().click();
+
+    await page.getByRole('checkbox', { name: 'Es para un evento' }).check();
+    await elegirOpcion(page, 'Tipo de evento', 'Torneo');
+    await page.getByLabel('Descripción').fill('Torneo relámpago');
+    await page.getByLabel('Cantidad de personas').fill('16');
+
+    await page.getByRole('button', { name: 'Reservar' }).click();
+
+    const confirmacion = dialogo(page);
+
+    // El resumen lo muestra antes de que no haya vuelta atrás.
+    await expect(confirmacion).toContainText('Torneo relámpago');
+    await expect(confirmacion).toContainText('16 personas');
+
+    await confirmacion.getByRole('button', { name: 'Confirmar reserva' }).click();
+
+    await expect(confirmacion).toBeHidden();
+    await expect(notificacion(page)).toContainText('Reserva confirmada correctamente.');
+
+    const creada = api.estado.reservas.at(-1);
+    const evento = api.estado.eventos.at(-1);
+
+    expect(evento?.descripcion).toBe('Torneo relámpago');
+    expect(evento?.cantidadPersonas).toBe(16);
+    expect(evento?.reservaId).toBe(creada?.id);
+  });
+
+  // Marcado pero incompleto se reservaría sin el evento y sin avisar.
+  test('no deja confirmar con el evento marcado a medio completar', async ({ page }) => {
+    await abrirComo(page, ANA, '/reservar');
+    await elegirDia(page, MANANA);
+    await turnos(page).first().click();
+
+    await expect(page.getByRole('button', { name: 'Reservar' })).toBeEnabled();
+
+    await page.getByRole('checkbox', { name: 'Es para un evento' }).check();
+
+    await expect(page.getByRole('button', { name: 'Reservar' })).toBeDisabled();
+
+    // Destildarlo vuelve a habilitar la reserva sin evento.
+    await page.getByRole('checkbox', { name: 'Es para un evento' }).uncheck();
+
+    await expect(page.getByRole('button', { name: 'Reservar' })).toBeEnabled();
+  });
+
+  // La reserva ya quedó hecha: reintentarla la duplicaría, así que el diálogo se
+  // cierra igual y avisa que el evento quedó pendiente.
+  test('si el evento falla avisa pero la reserva queda hecha', async ({ page, api }) => {
+    api.fallar('POST', '/eventos', 500, { mensaje: 'Error al crear el evento' });
+
+    await abrirComo(page, ANA, '/reservar');
+    await elegirDia(page, MANANA);
+    await turnos(page).first().click();
+
+    await page.getByRole('checkbox', { name: 'Es para un evento' }).check();
+    await elegirOpcion(page, 'Tipo de evento', 'Torneo');
+    await page.getByLabel('Descripción').fill('Torneo relámpago');
+    await page.getByLabel('Cantidad de personas').fill('16');
+
+    await page.getByRole('button', { name: 'Reservar' }).click();
+    await dialogo(page).getByRole('button', { name: 'Confirmar reserva' }).click();
+
+    await expect(dialogo(page)).toBeHidden();
+    // Son dos snackbars: el del interceptor con el error crudo y el de la
+    // pantalla explicando qué quedó pendiente.
+    await expect(
+      notificacion(page).filter({ hasText: 'el evento no se pudo guardar' })
+    ).toBeVisible();
+    expect(api.estado.reservas).toHaveLength(5);
+    expect(api.estado.eventos).toHaveLength(1);
+  });
+
   test('con el backend caído ofrece reintentar', async ({ page, api }) => {
     api.fallar('GET', '/canchas', 0);
 

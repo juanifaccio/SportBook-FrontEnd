@@ -26,6 +26,17 @@
       <span class="secundario">{{ reserva.usuario?.telefono }}</span>
     </dd>
 
+    <!-- La mayoría de las reservas son un partido y nada más: si no hay evento,
+         no se muestra una fila vacía. -->
+    @if (reserva.evento; as evento) {
+      <dt>Evento</dt>
+      <dd>
+        {{ evento.tipoEvento?.nombre }}
+        <span class="secundario">{{ evento.descripcion }}</span>
+        <span class="secundario">{{ evento.cantidadPersonas }} personas</span>
+      </dd>
+    }
+
     @if (reserva.cancha; as cancha) {
       <dt>Precio por hora</dt>
       <dd>{{ cancha.precioPorHora | currency: 'ARS' }}</dd>

@@ -1,6 +1,8 @@
 import { Cancha } from './cancha';
+import { Evento } from './evento';
 import { Horario } from './horario';
 import { Usuario } from './usuario';
+import { formatearFecha } from '../core/fechas';
 
 /** Estados que acepta el enum `EstadoReserva` del backend. */
 export type EstadoReserva = 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA';
@@ -31,6 +33,11 @@ export interface Reserva {
   usuario?: Usuario;
   cancha?: Cancha;
   horario?: Horario;
+  /**
+   * El evento de la reserva, si tiene. Viene `null` en la mayoría, que son un
+   * partido y nada más; por eso además de opcional puede llegar nulo.
+   */
+  evento?: Evento | null;
 }
 
 /**
@@ -61,6 +68,17 @@ export interface ReservaDto {
 export interface ReprogramarDto {
   horarioId: number;
 }
+
+/**
+ * Cómo se nombra una reserva cuando hay que elegirla de una lista o
+ * identificarla en una fila: el día, el horario y la cancha alcanzan para
+ * distinguirla de las demás.
+ */
+export const etiquetaDeReserva = (reserva: Reserva): string => {
+  const cancha = reserva.cancha ? ` · ${reserva.cancha.nombre}` : '';
+
+  return `${formatearFecha(reserva.fecha)}, ${reserva.horaInicio} a ${reserva.horaFin}${cancha}`;
+};
 
 /** Filtros opcionales del listado de reservas. */
 export interface FiltrosReserva {

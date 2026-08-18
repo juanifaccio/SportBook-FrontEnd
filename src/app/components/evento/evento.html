@@ -1,0 +1,149 @@
+<header class="encabezado-pantalla">
+  <h1>Eventos</h1>
+
+  <!-- Sin tipos cargados o sin reservas libres no hay evento posible, y el
+       formulario se abriría con un selector vacío: el motivo va en el tooltip. -->
+  <span
+    [matTooltip]="
+      hayTipos()
+        ? 'Todas las reservas vigentes ya tienen su evento'
+        : 'Primero hay que crear al menos un tipo de evento'
+    "
+    [matTooltipDisabled]="puedeCrear()">
+    <button mat-flat-button type="button" [disabled]="!puedeCrear()" (click)="abrirAlta()">
+      <mat-icon>add</mat-icon>
+      Nuevo evento
+    </button>
+  </span>
+</header>
+
+@if (cargando()) {
+  <div class="estado-mensaje">
+    <mat-spinner diameter="48" />
+    <p>Cargando eventos…</p>
+  </div>
+} @else if (error()) {
+  <div class="estado-mensaje">
+    <mat-icon>cloud_off</mat-icon>
+    <h2>No se pudieron cargar los eventos</h2>
+    <p>Revisá que el backend esté ejecutándose y volvé a intentar.</p>
+    <button mat-flat-button type="button" (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
+  </div>
+} @else if (eventos().length === 0) {
+  <div class="estado-mensaje">
+    <mat-icon>celebration</mat-icon>
+    <h2>Todavía no hay eventos</h2>
+    <p>Un evento es lo que se festeja o se juega en una reserva: un cumpleaños, un torneo.</p>
+    @if (puedeCrear()) {
+      <button mat-flat-button type="button" (click)="abrirAlta()">
+        <mat-icon>add</mat-icon>
+        Nuevo evento
+      </button>
+    } @else if (!hayTipos()) {
+      <p>Primero hay que crear al menos un tipo de evento.</p>
+    } @else {
+      <p>Para cargar uno hace falta una reserva vigente que todavía no tenga evento.</p>
+    }
+  </div>
+} @else if (esPantallaAncha()) {
+  <table mat-table [dataSource]="eventos()" class="tabla">
+    <ng-container matColumnDef="reserva">
+      <th mat-header-cell *matHeaderCellDef>Reserva</th>
+      <td mat-cell *matCellDef="let evento">
+        @if (evento.reserva; as reserva) {
+          {{ etiquetaDeReserva(reserva) }}
+          @if (reserva.cancha?.tipoCancha; as tipo) {
+            <span class="tipo-cancha">({{ tipo.nombre }})</span>
+          }
+        }
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="tipo">
+      <th mat-header-cell *matHeaderCellDef>Tipo</th>
+      <td mat-cell *matCellDef="let evento">{{ evento.tipoEvento?.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="descripcion">
+      <th mat-header-cell *matHeaderCellDef>Descripción</th>
+      <td mat-cell *matCellDef="let evento">{{ evento.descripcion }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="personas">
+      <th mat-header-cell *matHeaderCellDef class="columna-numero">Personas</th>
+      <td mat-cell *matCellDef="let evento" class="columna-numero">
+        {{ evento.cantidadPersonas }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="usuario">
+      <th mat-header-cell *matHeaderCellDef>A nombre de</th>
+      <td mat-cell *matCellDef="let evento">{{ evento.reserva?.usuario?.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef class="columna-acciones">Acciones</th>
+      <td mat-cell *matCellDef="let evento" class="columna-acciones">
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Editar"
+          [attr.aria-label]="'Editar ' + evento.descripcion"
+          (click)="abrirEdicion(evento)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Eliminar"
+          [attr.aria-label]="'Eliminar ' + evento.descripcion"
+          (click)="confirmarEliminacion(evento)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas()"></tr>
+    <tr mat-row *matRowDef="let fila; columns: columnas()"></tr>
+  </table>
+} @else {
+  <div class="tarjetas">
+    @for (evento of eventos(); track evento.id) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ evento.tipoEvento?.nombre }}</mat-card-title>
+          @if (evento.reserva; as reserva) {
+            <mat-card-subtitle>
+              {{ etiquetaDeReserva(reserva) }}
+              @if (reserva.cancha?.tipoCancha; as tipo) {
+                <span class="tipo-cancha">({{ tipo.nombre }})</span>
+              }
+            </mat-card-subtitle>
+          }
+        </mat-card-header>
+
+        <mat-card-content>
+          <p>{{ evento.descripcion }}</p>
+          <p class="secundario">{{ evento.cantidadPersonas }} personas</p>
+          @if (esAdmin()) {
+            <p class="secundario">A nombre de {{ evento.reserva?.usuario?.nombre }}</p>
+          }
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <button mat-button type="button" (click)="abrirEdicion(evento)">
+            <mat-icon>edit</mat-icon>
+            Editar
+          </button>
+          <button mat-button type="button" (click)="confirmarEliminacion(evento)">
+            <mat-icon>delete</mat-icon>
+            Eliminar
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

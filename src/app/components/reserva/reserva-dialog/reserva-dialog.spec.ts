@@ -15,8 +15,11 @@ import {
 
 describe('ReservaDialogComponent', () => {
   const url = `${environment.apiUrl}/reservas`;
+  const urlEventos = `${environment.apiUrl}/eventos`;
 
   const tipoCancha = { id: 17, nombre: 'Pádel', descripcion: 'Cancha de pádel' };
+
+  const tipoEvento = { id: 3, nombre: 'Cumpleaños' };
 
   const cancha = {
     id: 12,
@@ -49,7 +52,19 @@ describe('ReservaDialogComponent', () => {
     cancha: cancha,
     horario: horario,
     usuario: usuario,
-    precioTotal: 8400
+    precioTotal: 8400,
+    evento: null
+  };
+
+  /** La misma reserva, pero declarando además el evento que se va a festejar. */
+  const datosConEvento: DatosReservaDialog = {
+    ...datos,
+    evento: {
+      tipoEventoId: tipoEvento.id,
+      tipoEvento: tipoEvento,
+      descripcion: 'Cumpleaños de 15',
+      cantidadPersonas: 40
+    }
   };
 
   const reserva = {
@@ -89,7 +104,7 @@ describe('ReservaDialogComponent', () => {
    * otro, el cliente solo para sí mismo. La sesión se arma antes del `TestBed`
    * porque `AuthService` la lee al construirse.
    */
-  const preparar = async (usuario = USUARIO_ADMIN) => {
+  const preparar = async (usuario = USUARIO_ADMIN, datosDelDialogo = datos) => {
     cierres = [];
     dialogRef.disableClose = false;
 
@@ -102,7 +117,7 @@ describe('ReservaDialogComponent', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: MatDialogRef, useValue: dialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: datos }
+        { provide: MAT_DIALOG_DATA, useValue: datosDelDialogo }
       ]
     }).compileComponents();
 
@@ -143,7 +158,7 @@ describe('ReservaDialogComponent', () => {
     req.flush(reserva);
     await fixture.whenStable();
 
-    expect(cierres).toEqual([true]);
+    expect(cierres).toEqual([{ eventoPendiente: false }]);
   });
 
   it('cuando confirma un cliente manda solo el turno, sin el usuario', async () => {
@@ -159,7 +174,7 @@ describe('ReservaDialogComponent', () => {
     req.flush(reserva);
     await fixture.whenStable();
 
-    expect(cierres).toEqual([true]);
+    expect(cierres).toEqual([{ eventoPendiente: false }]);
   });
 
   it('bloquea los botones mientras el request está en curso', async () => {
@@ -193,5 +208,75 @@ describe('ReservaDialogComponent', () => {
     await fixture.whenStable();
 
     expect(cierres).toEqual([undefined]);
+  });
+
+  describe('cuando además se declaró un evento', () => {
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+      await preparar(USUARIO_ADMIN, datosConEvento);
+    });
+
+    it('lo muestra en el resumen antes de confirmar', () => {
+      const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+      expect(texto).toContain(tipoEvento.nombre);
+      expect(texto).toContain('Cumpleaños de 15');
+      expect(texto).toContain('40 personas');
+    });
+
+    // Son dos requests encadenados porque el evento necesita el id de una
+    // reserva que todavía no existe.
+    it('lo carga con el id de la reserva recién creada', async () => {
+      await confirmar();
+
+      httpMock.expectOne(url).flush(reserva);
+      await fixture.whenStable();
+
+      const req = httpMock.expectOne(urlEventos);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({
+        descripcion: 'Cumpleaños de 15',
+        cantidadPersonas: 40,
+        tipoEventoId: tipoEvento.id,
+        reservaId: reserva.id
+      });
+      req.flush({ id: 9, ...req.request.body });
+      await fixture.whenStable();
+
+      expect(cierres).toEqual([{ eventoPendiente: false }]);
+    });
+
+    // La reserva ya quedó hecha: reintentar la duplicaría y el turno ya no está
+    // libre, así que el diálogo se cierra igual avisando que faltó el evento.
+    it('se cierra avisando si la reserva salió pero el evento no', async () => {
+      await confirmar();
+
+      httpMock.expectOne(url).flush(reserva);
+      await fixture.whenStable();
+
+      httpMock
+        .expectOne(urlEventos)
+        .flush(
+          { mensaje: 'Error al crear el evento' },
+          { status: 500, statusText: 'Internal Server Error' }
+        );
+      await fixture.whenStable();
+
+      expect(cierres).toEqual([{ eventoPendiente: true }]);
+    });
+
+    // Si lo que falla es la reserva, el evento ni se intenta: no hay a qué
+    // colgarlo.
+    it('no intenta el evento si la reserva fue rechazada', async () => {
+      await confirmar();
+
+      httpMock
+        .expectOne(url)
+        .flush({ mensaje: 'El turno ya fue reservado' }, { status: 409, statusText: 'Conflict' });
+      await fixture.whenStable();
+
+      httpMock.expectNone(urlEventos);
+      expect(cierres).toEqual([]);
+    });
   });
 });

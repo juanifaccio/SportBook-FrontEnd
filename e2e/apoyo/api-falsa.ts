@@ -1,5 +1,6 @@
 import { Page, Route } from '@playwright/test';
 import { Cancha } from '../../src/app/models/cancha';
+import { Evento } from '../../src/app/models/evento';
 import { Horario } from '../../src/app/models/horario';
 import { Reserva } from '../../src/app/models/reserva';
 import { Usuario } from '../../src/app/models/usuario';
@@ -255,6 +256,10 @@ export class ApiFalsa {
 
     if (ruta.startsWith('/tipos-evento')) {
       return this.tiposEvento(pedido, sesion);
+    }
+
+    if (ruta.startsWith('/eventos')) {
+      return this.eventos(pedido, sesion);
     }
 
     if (ruta.startsWith('/canchas')) {
@@ -577,6 +582,15 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
+      // La clave foránea de Evento es la que frena el borrado en el backend; el
+      // controller traduce ese error de Prisma a este 409.
+      if (this.estado.eventos.some((evento) => evento.tipoEventoId === id)) {
+        return falla(
+          409,
+          'No se puede eliminar el tipo de evento porque tiene eventos asociados'
+        );
+      }
+
       this.estado.tiposEvento.splice(indice, 1);
 
       return ok({ mensaje: 'Tipo de evento eliminado correctamente' });
@@ -856,7 +870,10 @@ export class ApiFalsa {
       ...reserva,
       usuario: usuario ? sinContrasena(usuario) : undefined,
       cancha: cancha ? this.conTipo(cancha) : undefined,
-      horario: horario
+      horario: horario,
+      // El backend lo incluye en todas sus respuestas de reserva, y viene `null`
+      // en las que son un partido y nada más.
+      evento: this.estado.eventos.find((evento) => evento.reservaId === reserva.id) ?? null
     };
   }
 
@@ -1098,6 +1115,169 @@ export class ApiFalsa {
     const horas = (minutosDe(horario.horaFin) - minutosDe(horario.horaInicio)) / 60;
 
     return (cancha?.precioPorHora ?? 0) * horas;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Eventos
+  // ---------------------------------------------------------------------------
+
+  /** El evento con su tipo y su reserva, como lo devuelve el backend. */
+  private conTipoYReserva(evento: Evento): Evento {
+    const tipoEvento = this.estado.tiposEvento.find((item) => item.id === evento.tipoEventoId);
+    const reserva = this.estado.reservas.find((item) => item.id === evento.reservaId);
+
+    return {
+      ...evento,
+      tipoEvento: tipoEvento,
+      reserva: reserva ? this.conRelaciones(reserva) : undefined
+    };
+  }
+
+  /** Un evento es de quien es su reserva; el administrador los gestiona todos. */
+  private puedeGestionar(evento: Evento, sesion: UsuarioSembrado): boolean {
+    const reserva = this.estado.reservas.find((item) => item.id === evento.reservaId);
+
+    return this.esAdmin(sesion) || reserva?.usuarioId === sesion.id;
+  }
+
+  /** Valida lo común al alta y a la edición, con los mensajes del controller. */
+  private validarEvento(cuerpo: Record<string, unknown>): Respuesta | null {
+    const descripcion = `${cuerpo['descripcion'] ?? ''}`.trim();
+    const cantidadPersonas = Number(cuerpo['cantidadPersonas']);
+
+    if (!descripcion) {
+      return falla(400, 'La descripción es obligatoria');
+    }
+
+    if (!Number.isInteger(cantidadPersonas) || cantidadPersonas <= 0) {
+      return falla(400, 'La cantidad de personas debe ser un número entero mayor a cero');
+    }
+
+    if (!this.estado.tiposEvento.some((tipo) => tipo.id === Number(cuerpo['tipoEventoId']))) {
+      return falla(400, 'El tipo de evento indicado no existe');
+    }
+
+    return null;
+  }
+
+  private eventos(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
+    const { metodo, ruta, parametros, cuerpo } = pedido;
+
+    if (metodo === 'GET' && ruta === '/eventos') {
+      const reservaId = parametros.get('reservaId');
+
+      const filtrados = this.estado.eventos.filter((evento) => {
+        if (reservaId && evento.reservaId !== Number(reservaId)) {
+          return false;
+        }
+
+        // Al cliente el backend le impone sus propias reservas.
+        return this.puedeGestionar(evento, sesion);
+      });
+
+      return ok(filtrados.map((evento) => this.conTipoYReserva(evento)));
+    }
+
+    if (metodo === 'POST' && ruta === '/eventos') {
+      return this.crearEvento(cuerpo, sesion);
+    }
+
+    const id = idDe(ruta, '/eventos');
+    const indice = this.estado.eventos.findIndex((evento) => evento.id === id);
+
+    if (indice === -1) {
+      return falla(404, 'Evento no encontrado');
+    }
+
+    const evento = this.estado.eventos[indice];
+
+    if (!this.puedeGestionar(evento, sesion)) {
+      return falla(403, 'La reserva es de otro usuario');
+    }
+
+    if (metodo === 'GET') {
+      return ok(this.conTipoYReserva(evento));
+    }
+
+    if (metodo === 'PUT') {
+      const invalido = this.validarEvento(cuerpo);
+
+      if (invalido) {
+        return invalido;
+      }
+
+      const reserva = this.estado.reservas.find((item) => item.id === evento.reservaId);
+
+      if (reserva?.estado === 'CANCELADA') {
+        return falla(409, 'La reserva está cancelada');
+      }
+
+      // El `reservaId` del cuerpo se ignora: un evento no se muda de reserva.
+      const actualizado: Evento = {
+        ...evento,
+        descripcion: `${cuerpo['descripcion']}`.trim(),
+        cantidadPersonas: Number(cuerpo['cantidadPersonas']),
+        tipoEventoId: Number(cuerpo['tipoEventoId'])
+      };
+
+      this.estado.eventos[indice] = actualizado;
+
+      return ok(this.conTipoYReserva(actualizado));
+    }
+
+    if (metodo === 'DELETE') {
+      // Borrar el evento de una reserva cancelada sí se permite: es limpiar un
+      // dato que ya no aplica, no modificarlo.
+      this.estado.eventos.splice(indice, 1);
+
+      return ok({ mensaje: 'Evento eliminado correctamente' });
+    }
+
+    return falla(404, 'No se encontró el recurso solicitado');
+  }
+
+  private crearEvento(cuerpo: Record<string, unknown>, sesion: UsuarioSembrado): Respuesta {
+    const invalido = this.validarEvento(cuerpo);
+
+    if (invalido) {
+      return invalido;
+    }
+
+    const reservaId = Number(cuerpo['reservaId']);
+
+    if (!reservaId) {
+      return falla(400, 'La reserva es obligatoria');
+    }
+
+    const reserva = this.estado.reservas.find((item) => item.id === reservaId);
+
+    if (!reserva) {
+      return falla(400, 'La reserva indicada no existe');
+    }
+
+    if (!this.esAdmin(sesion) && reserva.usuarioId !== sesion.id) {
+      return falla(403, 'La reserva es de otro usuario');
+    }
+
+    if (reserva.estado === 'CANCELADA') {
+      return falla(409, 'La reserva está cancelada');
+    }
+
+    if (this.estado.eventos.some((evento) => evento.reservaId === reservaId)) {
+      return falla(409, 'La reserva ya tiene un evento');
+    }
+
+    const creado: Evento = {
+      id: proximoId(this.estado.eventos),
+      descripcion: `${cuerpo['descripcion']}`.trim(),
+      cantidadPersonas: Number(cuerpo['cantidadPersonas']),
+      tipoEventoId: Number(cuerpo['tipoEventoId']),
+      reservaId: reservaId
+    };
+
+    this.estado.eventos.push(creado);
+
+    return ok(this.conTipoYReserva(creado), 201);
   }
 
 }

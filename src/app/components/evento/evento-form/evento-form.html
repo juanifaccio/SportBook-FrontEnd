@@ -1,0 +1,77 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <!-- Un evento no se muda de reserva: al editar, la reserva es un dato fijo y
+       no un selector. El backend ignora el `reservaId` del PUT por lo mismo. -->
+  @if (esEdicion) {
+    <div class="reserva-fija">
+      <span class="etiqueta">Reserva</span>
+      <span>{{ reservaFija }}</span>
+    </div>
+  } @else {
+    <mat-form-field appearance="outline">
+      <mat-label>Reserva</mat-label>
+      <mat-select formControlName="reservaId">
+        @for (reserva of reservas(); track reserva.id) {
+          <mat-option [value]="reserva.id">{{ etiquetaDeReserva(reserva) }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Solo se ofrecen las reservas vigentes que todavía no tienen evento.</mat-hint>
+      @if (formulario.controls.reservaId.hasError('required')) {
+        <mat-error>La reserva es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+  }
+
+  <mat-form-field appearance="outline">
+    <mat-label>Tipo de evento</mat-label>
+    <mat-select formControlName="tipoEventoId">
+      @for (tipo of tipos(); track tipo.id) {
+        <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.tipoEventoId.hasError('required')) {
+      <mat-error>El tipo de evento es obligatorio.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Descripción</mat-label>
+    <textarea
+      matInput
+      formControlName="descripcion"
+      rows="3"
+      maxlength="255"
+      placeholder="Ej.: Cumpleaños de 15 con torta y música"></textarea>
+    @if (formulario.controls.descripcion.hasError('required')) {
+      <mat-error>La descripción es obligatoria.</mat-error>
+    } @else if (formulario.controls.descripcion.hasError('maxlength')) {
+      <mat-error>La descripción no puede superar los 255 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Cantidad de personas</mat-label>
+    <input
+      matInput
+      type="number"
+      formControlName="cantidadPersonas"
+      min="1"
+      step="1"
+      placeholder="Ej.: 40" />
+    @if (formulario.controls.cantidadPersonas.hasError('required')) {
+      <mat-error>La cantidad de personas es obligatoria.</mat-error>
+    } @else if (formulario.controls.cantidadPersonas.hasError('min')) {
+      <mat-error>Tiene que ir al menos una persona.</mat-error>
+    } @else if (formulario.controls.cantidadPersonas.hasError('entero')) {
+      <mat-error>La cantidad de personas tiene que ser un número entero.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>

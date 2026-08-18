@@ -1,0 +1,35 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  /* Aire entre campos: sin esto, el mensaje de error de uno queda pegado a la
+     caja del siguiente. */
+  gap: 0.5rem;
+  /* Ancho cómodo en mobile; el diálogo lo limita en pantallas grandes. */
+  min-width: 0;
+}
+
+/* De fábrica el textarea se estira también a lo ancho, y con eso se sale del
+   diálogo. Solo se puede agrandar hacia abajo. */
+.formulario textarea {
+  resize: vertical;
+}
+
+/* La reserva al editar: se lee como un campo más, pero no se puede tocar. */
+.reserva-fija {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 1rem;
+}
+
+.reserva-fija .etiqueta {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}

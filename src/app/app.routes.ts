@@ -46,6 +46,14 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'eventos',
+        title: 'Eventos — SportBook',
+        // Sin `adminGuard` a propósito: el evento es de quien es la reserva, así
+        // que el cliente entra a gestionar los suyos y el backend le devuelve
+        // solamente esos.
+        loadComponent: () => import('./components/evento/evento').then((m) => m.EventoComponent)
+      },
+      {
         path: 'tipos-cancha',
         title: 'Tipos de cancha — SportBook',
         canActivate: [adminGuard],

@@ -21,7 +21,7 @@ const PANTALLAS_DE_ADMIN = [
 
 test.describe('Niveles de acceso', () => {
 
-  test('el administrador tiene en el menú las siete pantallas', async ({ page }) => {
+  test('el administrador tiene en el menú las ocho pantallas', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/reservar');
 
     // Se miran las etiquetas y no el nombre accesible del enlace: ese incluye
@@ -31,6 +31,7 @@ test.describe('Niveles de acceso', () => {
     await expect(items).toHaveText([
       'Reservar',
       'Reservas',
+      'Eventos',
       'Canchas',
       'Horarios',
       'Usuarios',
@@ -39,12 +40,15 @@ test.describe('Niveles de acceso', () => {
     ]);
   });
 
+  // Eventos entra en la lista del cliente: el evento es de quien es la reserva,
+  // así que ahí gestiona los suyos. Tipos de evento, en cambio, es el catálogo
+  // que administra el complejo.
   test('el cliente solo ve en el menú lo que puede usar', async ({ page }) => {
     await abrirComo(page, ANA, '/reservar');
 
     const items = page.locator('mat-sidenav [matListItemTitle]');
 
-    await expect(items).toHaveText(['Reservar', 'Reservas']);
+    await expect(items).toHaveText(['Reservar', 'Reservas', 'Eventos']);
   });
 
   test('el menú de la cuenta muestra quién está conectado y con qué rol', async ({ page }) => {

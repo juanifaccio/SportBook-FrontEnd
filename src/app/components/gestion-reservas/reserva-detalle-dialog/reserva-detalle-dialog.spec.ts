@@ -66,4 +66,47 @@ describe('ReservaDetalleDialogComponent', () => {
     expect(texto()).toContain('11:00 a 13:00');
     expect(texto()).toContain('Confirmada');
   });
+
+  // La mayoría de las reservas son un partido y nada más: sin evento no tiene
+  // que aparecer una fila vacía.
+  it('no muestra la fila de evento si la reserva no tiene uno', () => {
+    expect(texto()).not.toContain('Evento');
+  });
+
+  describe('cuando la reserva tiene un evento', () => {
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+
+      await TestBed.configureTestingModule({
+        imports: [ReservaDetalleDialogComponent],
+        providers: [
+          { provide: MatDialogRef, useValue: { close: () => {} } },
+          {
+            provide: MAT_DIALOG_DATA,
+            useValue: {
+              ...reserva,
+              evento: {
+                id: 4,
+                descripcion: 'Cumpleaños de 15',
+                cantidadPersonas: 40,
+                tipoEventoId: 3,
+                reservaId: reserva.id,
+                tipoEvento: { id: 3, nombre: 'Cumpleaños' }
+              }
+            }
+          }
+        ]
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(ReservaDetalleDialogComponent);
+      fixture.detectChanges();
+    });
+
+    // Es lo que pide la propuesta del detalle: los datos completos de la reserva
+    // y de su evento.
+    it('lo muestra con su tipo, descripción y cantidad de personas', () => {
+      expect(texto()).toContain('Cumpleaños de 15');
+      expect(texto()).toContain('40 personas');
+    });
+  });
 });
