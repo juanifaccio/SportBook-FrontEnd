@@ -18,8 +18,11 @@ describe('ReservaComponent', () => {
   const urlCanchas = `${environment.apiUrl}/canchas`;
   const urlUsuarios = `${environment.apiUrl}/usuarios`;
   const urlHorarios = `${environment.apiUrl}/horarios`;
+  const urlTiposEvento = `${environment.apiUrl}/tipos-evento`;
 
   const tipoCancha = { id: 17, nombre: 'Pádel', descripcion: 'Cancha de pádel' };
+
+  const tipoEvento = { id: 3, nombre: 'Cumpleaños' };
 
   const cancha = {
     id: 12,
@@ -66,17 +69,20 @@ describe('ReservaComponent', () => {
     httpMock.expectOne((pedido) => pedido.url === urlHorarios && pedido.params.has('disponible'));
 
   /**
-   * La pantalla pide canchas y usuarios a la vez, y recién con una cancha
-   * elegida pide los turnos del día. Si ninguna cancha está disponible no queda
-   * ninguna elegida, así que ese tercer pedido no llega a salir.
+   * La pantalla pide canchas, usuarios y tipos de evento a la vez, y recién con
+   * una cancha elegida pide los turnos del día. Si ninguna cancha está
+   * disponible no queda ninguna elegida, así que ese último pedido no llega a
+   * salir.
    */
   const responder = async (
     canchas: { estado: string }[],
     usuarios: unknown[],
-    turnos: unknown[]
+    turnos: unknown[],
+    tiposEvento: unknown[] = [tipoEvento]
   ) => {
     httpMock.expectOne(urlCanchas).flush(canchas);
     httpMock.expectOne(urlUsuarios).flush(usuarios);
+    httpMock.expectOne(urlTiposEvento).flush(tiposEvento);
     await fixture.whenStable();
 
     if (canchas.some((cancha) => cancha.estado === 'DISPONIBLE')) {
@@ -214,9 +220,11 @@ describe('ReservaComponent', () => {
   it('muestra el error con reintento si falla la carga inicial', async () => {
     fixture.detectChanges();
 
-    // El de usuarios se responde primero: los dos pedidos salen juntos y, en
-    // cuanto uno falla, el otro queda cancelado y ya no se le puede responder.
+    // El de canchas se responde último: los tres pedidos salen juntos y, en
+    // cuanto uno falla, los otros quedan cancelados y ya no se les puede
+    // responder.
     httpMock.expectOne(urlUsuarios).flush([usuario]);
+    httpMock.expectOne(urlTiposEvento).flush([tipoEvento]);
     httpMock.expectOne(urlCanchas).flush(
       { mensaje: 'Error al listar las canchas' },
       { status: 500, statusText: 'Server Error' }
@@ -237,6 +245,7 @@ describe('ReservaComponent', () => {
     // rechaza con un 403, así que la pantalla ni siquiera lo pide. Que
     // `httpMock.verify()` no se queje al terminar prueba que no salió.
     httpMock.expectOne(urlCanchas).flush([cancha]);
+    httpMock.expectOne(urlTiposEvento).flush([tipoEvento]);
     await fixture.whenStable();
     pedidoDeTurnos().flush([turno]);
     await fixture.whenStable();
@@ -251,5 +260,87 @@ describe('ReservaComponent', () => {
 
     expect(fixture.componentInstance['usuarioSeleccionado']()).toBe(USUARIO_CLIENTE.id);
     expect(botonReservar()?.disabled).toBe(false);
+  });
+
+  describe('el evento de la reserva', () => {
+    /** Deja la pantalla con un turno y un usuario ya elegidos. */
+    const conTurnoElegido = async () => {
+      fixture.detectChanges();
+      await responder([cancha], [usuario], [turno]);
+
+      fixture.componentInstance['alElegirTurno'](turno.id);
+      fixture.componentInstance['alElegirUsuario'](usuario.id);
+      fixture.detectChanges();
+    };
+
+    const completarEvento = () => {
+      fixture.componentInstance['eventoFormulario'].setValue({
+        tipoEventoId: tipoEvento.id,
+        descripcion: 'Cumpleaños de 15',
+        cantidadPersonas: 40
+      });
+      fixture.detectChanges();
+    };
+
+    it('ofrece declararlo cuando hay tipos cargados', async () => {
+      await conTurnoElegido();
+
+      expect(texto()).toContain('Es para un evento');
+    });
+
+    // Sin tipos no hay nada que elegir, así que la sección no aparece: una
+    // reserva sin evento es lo normal, no un error.
+    it('no ofrece nada si no hay tipos de evento', async () => {
+      fixture.detectChanges();
+      await responder([cancha], [usuario], [turno], []);
+
+      expect(texto()).not.toContain('Es para un evento');
+    });
+
+    // Marcado pero incompleto se reservaría sin el evento y sin avisar: o se
+    // completa, o se destilda.
+    it('bloquea el botón mientras el evento marcado está incompleto', async () => {
+      await conTurnoElegido();
+      expect(botonReservar()?.disabled).toBe(false);
+
+      fixture.componentInstance['alCambiarConEvento'](true);
+      fixture.detectChanges();
+
+      expect(botonReservar()?.disabled).toBe(true);
+
+      completarEvento();
+
+      expect(botonReservar()?.disabled).toBe(false);
+    });
+
+    it('rechaza una cantidad de personas con decimales', async () => {
+      await conTurnoElegido();
+      fixture.componentInstance['alCambiarConEvento'](true);
+      completarEvento();
+
+      fixture.componentInstance['eventoFormulario'].controls.cantidadPersonas.setValue(12.5);
+      fixture.detectChanges();
+
+      expect(botonReservar()?.disabled).toBe(true);
+    });
+
+    it('olvida lo cargado al destildarlo', async () => {
+      await conTurnoElegido();
+      fixture.componentInstance['alCambiarConEvento'](true);
+      completarEvento();
+
+      fixture.componentInstance['alCambiarConEvento'](false);
+      fixture.detectChanges();
+
+      const controles = fixture.componentInstance['eventoFormulario'].controls;
+
+      // La descripción es `nonNullable`, así que vuelve a su valor inicial y no
+      // a null como los dos numéricos.
+      expect(controles.descripcion.value).toBe('');
+      expect(controles.tipoEventoId.value).toBeNull();
+      expect(controles.cantidadPersonas.value).toBeNull();
+      // Sin evento marcado, el botón vuelve a depender solo del turno.
+      expect(botonReservar()?.disabled).toBe(false);
+    });
   });
 });

@@ -78,13 +78,13 @@ Dos suites, que prueban cosas distintas y se corren por separado.
 
 ### Unitarios (`npm test`)
 
-**178 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
+**205 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
 más el adaptador de fechas, la sesión, el interceptor de errores, los guards y el
 login. Se ejecutan sobre el DOM simulado de jsdom, sin navegador.
 
 ### End-to-end (`npm run e2e`)
 
-**63 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
+**78 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
 manejan desde un navegador como lo haría una persona. Recorren los flujos
 completos —entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse—
 sobre el bundle real, con el router, los guards y los diálogos de Material.
@@ -128,6 +128,7 @@ e2e/
   tipo-cancha.spec.ts       el ABM de referencia, de punta a punta
   reservar.spec.ts          el caso de uso central
   gestion-reservas.spec.ts  listar, filtrar, reprogramar y cancelar
+  evento.spec.ts            el evento de una reserva, con los dos roles
 ```
 
 Cuando algo falla, el informe con capturas y trazas queda en `playwright-report/`:
@@ -173,6 +174,7 @@ src/
       login/                 inicio de sesión (única pantalla fuera del layout)
       shared/                componentes reutilizables (diálogo de confirmación)
       tipo-cancha/           ABM de tipos de cancha
+      evento/                ABM del evento de una reserva
       no-encontrado/         pantalla 404
     app.routes.ts          rutas de la aplicación (con lazy loading)
     app.config.ts          providers de la aplicación
@@ -194,6 +196,7 @@ Los dos roles del backend definen qué ofrece la aplicación:
 |---|---|---|
 | Reservar | Sí, a nombre de cualquier usuario | Sí, a su propio nombre |
 | Reservas | Todas las del complejo | Solo las suyas |
+| Eventos | Todos los del complejo | Solo los de sus reservas |
 | Canchas, horarios, usuarios y tipos | Sí | No aparecen en el menú |
 
 Esconder lo que un rol no puede usar es para no hacerle perder el tiempo, no para

@@ -1,4 +1,5 @@
 import { Cancha } from '../../src/app/models/cancha';
+import { Evento } from '../../src/app/models/evento';
 import { Horario } from '../../src/app/models/horario';
 import { Reserva } from '../../src/app/models/reserva';
 import { Rol } from '../../src/app/models/rol';
@@ -29,6 +30,7 @@ export interface EstadoApi {
   canchas: Cancha[];
   horarios: Horario[];
   reservas: Reserva[];
+  eventos: Evento[];
 }
 
 /**
@@ -197,6 +199,24 @@ export const RESERVAS: Reserva[] = [
   }
 ];
 
+export const CUMPLEANIOS: TipoEvento = { id: 1, nombre: 'Cumpleaños' };
+export const TORNEO: TipoEvento = { id: 2, nombre: 'Torneo' };
+
+/**
+ * Un solo evento sembrado, sobre la reserva #1 de Ana: alcanza para probar que
+ * el listado lo muestra, que el detalle de esa reserva lo trae y que la #2 —sin
+ * evento— sigue disponible para cargarle uno.
+ */
+export const EVENTOS: Evento[] = [
+  {
+    id: 1,
+    descripcion: 'Cumpleaños de 15',
+    cantidadPersonas: 40,
+    tipoEventoId: CUMPLEANIOS.id,
+    reservaId: 1
+  }
+];
+
 /**
  * Una copia fresca del estado inicial.
  *
@@ -209,11 +229,9 @@ export const datosIniciales = (): EstadoApi =>
     roles: [ROL_ADMIN, ROL_CLIENTE],
     usuarios: [ADMINISTRADOR, ANA, BRUNO],
     tiposCancha: [FUTBOL_5, PADEL],
-    tiposEvento: [
-      { id: 1, nombre: 'Cumpleaños' },
-      { id: 2, nombre: 'Torneo' }
-    ] as TipoEvento[],
+    tiposEvento: [CUMPLEANIOS, TORNEO],
     canchas: [CANCHA_1, CANCHA_2, CANCHA_3],
     horarios: TURNOS,
-    reservas: RESERVAS
+    reservas: RESERVAS,
+    eventos: EVENTOS
   });

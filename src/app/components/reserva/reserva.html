@@ -142,6 +142,67 @@
     </section>
   }
 
+  <!-- La mayoría de las reservas son un partido y nada más, así que el evento es
+       opcional y arranca plegado. Sin tipos cargados no hay nada que elegir. -->
+  @if (hayTiposEvento()) {
+    <section class="seccion">
+      <h2>Evento</h2>
+
+      <mat-checkbox [checked]="conEvento()" (change)="alCambiarConEvento($event.checked)">
+        Es para un evento (cumpleaños, torneo…)
+      </mat-checkbox>
+
+      @if (conEvento()) {
+        <form class="formulario-evento" [formGroup]="eventoFormulario">
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de evento</mat-label>
+            <mat-select formControlName="tipoEventoId">
+              @for (tipo of tiposEvento(); track tipo.id) {
+                <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+              }
+            </mat-select>
+            @if (eventoFormulario.controls.tipoEventoId.hasError('required')) {
+              <mat-error>El tipo de evento es obligatorio.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Descripción</mat-label>
+            <textarea
+              matInput
+              formControlName="descripcion"
+              rows="2"
+              maxlength="255"
+              placeholder="Ej.: Cumpleaños de 15 con torta y música"></textarea>
+            @if (eventoFormulario.controls.descripcion.hasError('required')) {
+              <mat-error>La descripción es obligatoria.</mat-error>
+            } @else if (eventoFormulario.controls.descripcion.hasError('maxlength')) {
+              <mat-error>La descripción no puede superar los 255 caracteres.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Cantidad de personas</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="cantidadPersonas"
+              min="1"
+              step="1"
+              placeholder="Ej.: 40" />
+            @if (eventoFormulario.controls.cantidadPersonas.hasError('required')) {
+              <mat-error>La cantidad de personas es obligatoria.</mat-error>
+            } @else if (eventoFormulario.controls.cantidadPersonas.hasError('min')) {
+              <mat-error>Tiene que ir al menos una persona.</mat-error>
+            } @else if (eventoFormulario.controls.cantidadPersonas.hasError('entero')) {
+              <mat-error>La cantidad de personas tiene que ser un número entero.</mat-error>
+            }
+          </mat-form-field>
+        </form>
+      }
+    </section>
+  }
+
   <mat-card appearance="outlined" class="resumen">
     <mat-card-content>
       @if (turnoActual(); as turno) {

@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>{{ titulo }}</h2>
+
+<mat-dialog-content>
+  <app-evento-form
+    [evento]="datos.evento"
+    [reservas]="datos.reservas"
+    [tipos]="datos.tipos"
+    [guardando]="guardando()"
+    (guardar)="alGuardar($event)"
+    (cancelar)="alCancelar()" />
+</mat-dialog-content>

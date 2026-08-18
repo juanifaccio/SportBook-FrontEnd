@@ -1,6 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CurrencyPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,18 +12,27 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { forkJoin, of } from 'rxjs';
 import { HorarioService } from '../../services/horario.service';
 import { CanchaService } from '../../services/cancha.service';
 import { UsuarioService } from '../../services/usuario.service';
+import { TipoEventoService } from '../../services/tipo-evento.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
 import { Cancha } from '../../models/cancha';
 import { Horario } from '../../models/horario';
+import { TipoEvento } from '../../models/tipo-evento';
 import { Usuario } from '../../models/usuario';
 import { aDate, aTexto, formatearFecha, hoyLocal } from '../../core/fechas';
-import { DatosReservaDialog, ReservaDialogComponent } from './reserva-dialog/reserva-dialog';
+import { entero } from '../../core/validadores';
+import {
+  DatosReservaDialog,
+  EventoDeclarado,
+  ReservaDialogComponent,
+  ResultadoReserva
+} from './reserva-dialog/reserva-dialog';
 
 /**
  * Pasa una hora "HH:mm" a minutos desde la medianoche, para poder restar dos
@@ -53,7 +64,9 @@ const minutosDe = (hora: string): number => {
     MatInputModule,
     MatSelectModule,
     MatChipsModule,
-    MatDatepickerModule
+    MatCheckboxModule,
+    MatDatepickerModule,
+    ReactiveFormsModule
   ],
   templateUrl: './reserva.html',
   styleUrl: './reserva.css'
@@ -63,9 +76,11 @@ export class ReservaComponent implements OnInit {
   private canchaService = inject(CanchaService);
   private horarioService = inject(HorarioService);
   private usuarioService = inject(UsuarioService);
+  private tipoEventoService = inject(TipoEventoService);
   private auth = inject(AuthService);
   private notificacion = inject(NotificacionService);
   private dialog = inject(MatDialog);
+  private fb = inject(FormBuilder);
 
   /**
    * Un administrador reserva desde el mostrador para quien se lo pide, así que
@@ -77,6 +92,7 @@ export class ReservaComponent implements OnInit {
   protected readonly canchas = signal<Cancha[]>([]);
   protected readonly usuarios = signal<Usuario[]>([]);
   protected readonly turnos = signal<Horario[]>([]);
+  protected readonly tiposEvento = signal<TipoEvento[]>([]);
 
   protected readonly canchaSeleccionada = signal<number | null>(null);
   protected readonly turnoSeleccionado = signal<number | null>(null);
@@ -130,8 +146,42 @@ export class ReservaComponent implements OnInit {
     return cancha.precioPorHora * horas;
   });
 
+  /**
+   * Una reserva puede ser un partido y nada más, así que el evento es opcional y
+   * arranca plegado: quien solo quiere la cancha no tiene que ver estos campos.
+   */
+  protected readonly conEvento = signal(false);
+
+  protected readonly hayTiposEvento = computed(() => this.tiposEvento().length > 0);
+
+  protected eventoFormulario = this.fb.group({
+    tipoEventoId: this.fb.control<number | null>(null, Validators.required),
+    descripcion: this.fb.nonNullable.control('', [
+      Validators.required,
+      Validators.maxLength(255)
+    ]),
+    cantidadPersonas: this.fb.control<number | null>(null, [
+      Validators.required,
+      Validators.min(1),
+      entero
+    ])
+  });
+
+  /**
+   * Estado del formulario del evento como signal, para que `puedeReservar` se
+   * recalcule cuando el usuario termina de completarlo.
+   */
+  private readonly estadoEvento = toSignal(this.eventoFormulario.statusChanges, {
+    initialValue: this.eventoFormulario.status
+  });
+
   protected readonly puedeReservar = computed(
-    () => this.turnoActual() !== undefined && this.usuarioActual() !== undefined
+    () =>
+      this.turnoActual() !== undefined &&
+      this.usuarioActual() !== undefined &&
+      // Con el evento marcado pero incompleto se reservaría sin él y sin avisar:
+      // o se completa, o se destilda.
+      (!this.conEvento() || this.estadoEvento() === 'VALID')
   );
 
   ngOnInit(): void {
@@ -155,9 +205,12 @@ export class ReservaComponent implements OnInit {
       // él mismo, y así el resto de la pantalla funciona igual para los dos.
       usuarios: this.esAdmin()
         ? this.usuarioService.listar()
-        : of(conectado ? [conectado] : [])
+        : of(conectado ? [conectado] : []),
+      // Los tipos de evento sí los puede consultar cualquier sesión: son el
+      // catálogo con el que el cliente declara qué viene a hacer.
+      tiposEvento: this.tipoEventoService.listar()
     }).subscribe({
-      next: ({ canchas, usuarios }) => {
+      next: ({ canchas, usuarios, tiposEvento }) => {
         // Una cancha en mantenimiento no admite reservas y un usuario dado de
         // baja tampoco puede reservar: el backend los rechaza, así que ni
         // siquiera se ofrecen.
@@ -166,6 +219,7 @@ export class ReservaComponent implements OnInit {
 
         this.canchas.set(disponibles);
         this.usuarios.set(activos);
+        this.tiposEvento.set(tiposEvento);
 
         // El cliente no elige: su reserva va a su nombre, y sin esto el botón de
         // reservar quedaría deshabilitado para siempre.
@@ -217,6 +271,16 @@ export class ReservaComponent implements OnInit {
     this.usuarioSeleccionado.set(usuarioId);
   }
 
+  protected alCambiarConEvento(marcado: boolean): void {
+    this.conEvento.set(marcado);
+
+    // Al destildarlo se limpia lo cargado: si se vuelve a marcar, el formulario
+    // arranca en blanco en vez de traerse datos de un evento descartado.
+    if (!marcado) {
+      this.eventoFormulario.reset();
+    }
+  }
+
   /** Turnos que quedan libres en la cancha y el día elegidos. */
   protected cargarTurnos(): void {
     const canchaId = this.canchaSeleccionada();
@@ -264,25 +328,62 @@ export class ReservaComponent implements OnInit {
       cancha: cancha,
       horario: horario,
       usuario: usuario,
-      precioTotal: this.precioTotal()
+      precioTotal: this.precioTotal(),
+      evento: this.eventoDeclarado()
     };
 
-    const dialogRef = this.dialog.open<ReservaDialogComponent, DatosReservaDialog, boolean>(
+    const dialogRef = this.dialog.open<
       ReservaDialogComponent,
-      { data: datos, width: '32rem', maxWidth: '95vw' }
-    );
+      DatosReservaDialog,
+      ResultadoReserva
+    >(ReservaDialogComponent, { data: datos, width: '32rem', maxWidth: '95vw' });
 
-    dialogRef.afterClosed().subscribe((reservado) => {
-      if (!reservado) {
+    dialogRef.afterClosed().subscribe((resultado) => {
+      if (!resultado) {
         return;
       }
 
-      this.notificacion.exito('Reserva confirmada correctamente.');
+      if (resultado.eventoPendiente) {
+        this.notificacion.error(
+          'La reserva se confirmó, pero el evento no se pudo guardar. Cargalo desde Eventos.'
+        );
+      } else {
+        this.notificacion.exito('Reserva confirmada correctamente.');
+      }
+
+      this.alCambiarConEvento(false);
 
       // El turno reservado dejó de estar libre: se vuelven a pedir los del día
       // para que desaparezca de la lista.
       this.cargarTurnos();
     });
+  }
+
+  /**
+   * El evento que se va a cargar junto con la reserva, o `null` si no se declaró
+   * ninguno. Se lee del formulario en el momento de confirmar y no de un
+   * `computed`, para que no pueda quedar con un valor viejo en caché.
+   */
+  private eventoDeclarado(): EventoDeclarado | null {
+    if (!this.conEvento() || this.eventoFormulario.invalid) {
+      return null;
+    }
+
+    const { tipoEventoId, descripcion, cantidadPersonas } =
+      this.eventoFormulario.getRawValue();
+
+    const tipoEvento = this.tiposEvento().find((tipo) => tipo.id === tipoEventoId);
+
+    if (!tipoEvento) {
+      return null;
+    }
+
+    return {
+      tipoEventoId: tipoEvento.id,
+      tipoEvento: tipoEvento,
+      descripcion: descripcion.trim(),
+      cantidadPersonas: Number(cantidadPersonas)
+    };
   }
 
 }

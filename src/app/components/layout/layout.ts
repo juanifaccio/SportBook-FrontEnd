@@ -77,11 +77,16 @@ export class LayoutComponent {
     // Y justo después, la contracara: lo ya reservado y qué hacer con ello. El
     // cliente ve acá solamente las suyas; eso lo resuelve el backend.
     { etiqueta: 'Reservas', ruta: '/reservas', icono: 'event_note' },
+    // Tampoco es solo del administrador: el evento es de quien es la reserva, y
+    // el cliente entra acá a cargar o corregir el de las suyas.
+    { etiqueta: 'Eventos', ruta: '/eventos', icono: 'celebration' },
     { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium', soloAdmin: true },
     { etiqueta: 'Horarios', ruta: '/horarios', icono: 'schedule', soloAdmin: true },
     { etiqueta: 'Usuarios', ruta: '/usuarios', icono: 'group', soloAdmin: true },
     { etiqueta: 'Tipos de cancha', ruta: '/tipos-cancha', icono: 'category', soloAdmin: true },
-    { etiqueta: 'Tipos de evento', ruta: '/tipos-evento', icono: 'celebration', soloAdmin: true }
+    // `label` y no `celebration`: ese ícono pasó a ser el de Eventos, y repetirlo
+    // haría que las dos entradas se confundan de un vistazo.
+    { etiqueta: 'Tipos de evento', ruta: '/tipos-evento', icono: 'label', soloAdmin: true }
     // A medida que se sumen entidades (Equipamiento, Reservas...) se agregan
     // acá siguiendo este mismo formato.
   ];
