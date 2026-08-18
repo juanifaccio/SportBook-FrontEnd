@@ -33,6 +33,13 @@
 
       <mat-divider />
 
+      <!-- El perfil va acá y no en el menú lateral: no es una pantalla más de la
+           aplicación, es la cuenta de quien está conectado. -->
+      <a mat-menu-item routerLink="/perfil">
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Mi perfil</span>
+      </a>
+
       <button mat-menu-item type="button" (click)="cerrarSesion()">
         <mat-icon>logout</mat-icon>
         <span>Cerrar sesión</span>

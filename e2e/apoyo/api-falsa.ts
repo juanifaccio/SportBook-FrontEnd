@@ -238,8 +238,8 @@ export class ApiFalsa {
       return falla(401, 'Necesitás iniciar sesión para realizar esta acción');
     }
 
-    if (metodo === 'GET' && ruta === '/auth/yo') {
-      return ok(sinContrasena(sesion));
+    if (ruta.startsWith('/auth/yo')) {
+      return this.perfil(pedido, sesion);
     }
 
     if (ruta === '/roles') {
@@ -313,6 +313,81 @@ export class ApiFalsa {
     }
 
     return ok({ token: `token-${usuario.id}`, usuario: sinContrasena(usuario) });
+  }
+
+  /**
+   * El perfil propio: siempre sobre el usuario de la sesión, nunca sobre un id
+   * que venga del cliente.
+   */
+  private perfil(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
+    const { metodo, ruta, cuerpo } = pedido;
+
+    if (metodo === 'GET' && ruta === '/auth/yo') {
+      return ok(sinContrasena(sesion));
+    }
+
+    if (metodo === 'PUT' && ruta === '/auth/yo') {
+      const nombre = `${cuerpo['nombre'] ?? ''}`.trim();
+      const email = `${cuerpo['email'] ?? ''}`.trim().toLowerCase();
+      const telefono = `${cuerpo['telefono'] ?? ''}`.trim();
+
+      if (!nombre) {
+        return falla(400, 'El nombre es obligatorio');
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return falla(400, 'El email es obligatorio y debe tener un formato válido');
+      }
+
+      if (!/^\+?[\d\s()-]{6,20}$/.test(telefono)) {
+        return falla(400, 'El teléfono es obligatorio y debe tener entre 6 y 20 caracteres');
+      }
+
+      if (this.estado.usuarios.some((item) => item.email === email && item.id !== sesion.id)) {
+        return falla(409, 'Ya existe un usuario con ese email');
+      }
+
+      // Lista blanca: el rol, el activo y la contraseña se descartan aunque
+      // vengan en el cuerpo, igual que hace el controller.
+      sesion.nombre = nombre;
+      sesion.email = email;
+      sesion.telefono = telefono;
+
+      return ok(sinContrasena(sesion));
+    }
+
+    if (metodo === 'PUT' && ruta === '/auth/yo/contrasena') {
+      const actual = `${cuerpo['contrasenaActual'] ?? ''}`;
+      const nueva = `${cuerpo['contrasenaNueva'] ?? ''}`;
+
+      if (!actual) {
+        return falla(400, 'La contraseña actual es obligatoria');
+      }
+
+      if (!nueva) {
+        return falla(400, 'La contraseña nueva es obligatoria');
+      }
+
+      if (nueva.length < 8) {
+        return falla(400, 'La contraseña debe tener al menos 8 caracteres');
+      }
+
+      if (nueva === actual) {
+        return falla(400, 'La contraseña nueva tiene que ser distinta de la actual');
+      }
+
+      // 400 y no 401: la sesión sirve, lo que está mal es un dato del
+      // formulario. Con un 401 el frontend cerraría la sesión.
+      if (sesion.contrasena !== actual) {
+        return falla(400, 'La contraseña actual no es correcta');
+      }
+
+      sesion.contrasena = nueva;
+
+      return ok({ mensaje: 'Contraseña actualizada correctamente' });
+    }
+
+    return falla(404, 'No se encontró el recurso solicitado');
   }
 
   // ---------------------------------------------------------------------------

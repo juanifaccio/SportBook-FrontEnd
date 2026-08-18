@@ -46,6 +46,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'perfil',
+        title: 'Mi perfil — SportBook',
+        // Sin `adminGuard`: la cuenta propia la gestiona cualquiera que tenga
+        // sesión, sea del rol que sea.
+        loadComponent: () => import('./components/perfil/perfil').then((m) => m.PerfilComponent)
+      },
+      {
         path: 'eventos',
         title: 'Eventos — SportBook',
         // Sin `adminGuard` a propósito: el evento es de quien es la reserva, así
