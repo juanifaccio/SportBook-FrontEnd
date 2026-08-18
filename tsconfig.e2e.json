@@ -1,0 +1,13 @@
+/* Tests end-to-end (Playwright). Ver `playwright.config.ts`. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": [
+    "e2e/**/*.ts",
+    "playwright.config.ts",
+    /* La API falsa se tipa con las interfaces del dominio de la aplicación. */
+    "src/app/models/**/*.ts"
+  ]
+}
