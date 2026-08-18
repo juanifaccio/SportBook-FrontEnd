@@ -2,6 +2,7 @@ import { Page, Route } from '@playwright/test';
 import { Cancha } from '../../src/app/models/cancha';
 import { Evento } from '../../src/app/models/evento';
 import { Horario } from '../../src/app/models/horario';
+import { MetodoPago, Pago } from '../../src/app/models/pago';
 import { Reserva } from '../../src/app/models/reserva';
 import { Usuario } from '../../src/app/models/usuario';
 import { EstadoApi, UsuarioSembrado, datosIniciales } from './datos';
@@ -90,6 +91,18 @@ const yaEmpezo = (fecha: string, horaInicio: string): boolean => {
   const [hora, minuto] = horaInicio.split(':').map(Number);
 
   return new Date(anio, mes - 1, dia, hora, minuto).getTime() <= Date.now();
+};
+
+/**
+ * El día de hoy como `"AAAA-MM-DD"`, que es lo que el backend le pone a un pago.
+ * Con partes locales y no `toISOString()`, por lo mismo que en `core/fechas.ts`.
+ */
+const hoy = (): string => {
+  const fecha = new Date();
+  const mes = `${fecha.getMonth() + 1}`.padStart(2, '0');
+  const dia = `${fecha.getDate()}`.padStart(2, '0');
+
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
 };
 
 const proximoId = (coleccion: { id: number }[]): number =>
@@ -260,6 +273,10 @@ export class ApiFalsa {
 
     if (ruta.startsWith('/eventos')) {
       return this.eventos(pedido, sesion);
+    }
+
+    if (ruta.startsWith('/pagos')) {
+      return this.pagos(pedido, sesion);
     }
 
     if (ruta.startsWith('/canchas')) {
@@ -948,8 +965,33 @@ export class ApiFalsa {
       horario: horario,
       // El backend lo incluye en todas sus respuestas de reserva, y viene `null`
       // en las que son un partido y nada más.
-      evento: this.estado.eventos.find((evento) => evento.reservaId === reserva.id) ?? null
+      evento: this.estado.eventos.find((evento) => evento.reservaId === reserva.id) ?? null,
+      pagos: this.estado.pagos.filter((pago) => pago.reservaId === reserva.id)
     };
+  }
+
+  /** Lo que falta pagar de una reserva; los pagos anulados no cuentan. */
+  private saldoDe(reserva: Reserva): number {
+    const pagado = this.estado.pagos
+      .filter((pago) => pago.reservaId === reserva.id && pago.estado !== 'ANULADO')
+      .reduce((total, pago) => total + pago.monto, 0);
+
+    return reserva.precioTotal - pagado;
+  }
+
+  /**
+   * Deja la reserva en el estado que le corresponde según sus pagos, igual que
+   * hace el backend después de registrar o anular uno.
+   */
+  private recalcularReserva(reservaId: number): void {
+    const reserva = this.estado.reservas.find((item) => item.id === reservaId);
+
+    // Cancelar es una decisión, no algo que se derive de la plata.
+    if (!reserva || reserva.estado === 'CANCELADA') {
+      return;
+    }
+
+    reserva.estado = this.saldoDe(reserva) <= 0 ? 'CONFIRMADA' : 'PENDIENTE';
   }
 
   private reservas(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
@@ -1059,7 +1101,8 @@ export class ApiFalsa {
       fecha: horario.fecha,
       horaInicio: horario.horaInicio,
       horaFin: horario.horaFin,
-      estado: 'CONFIRMADA',
+      // Nace PENDIENTE: la confirman sus pagos.
+      estado: 'PENDIENTE',
       precioTotal: this.precioDe(horario),
       usuarioId: usuarioId,
       canchaId: horario.canchaId,
@@ -1309,6 +1352,170 @@ export class ApiFalsa {
     }
 
     return falla(404, 'No se encontró el recurso solicitado');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pagos
+  // ---------------------------------------------------------------------------
+
+  /** El pago con su reserva, como lo devuelve el backend. */
+  private conReserva(pago: Pago): Pago {
+    const reserva = this.estado.reservas.find((item) => item.id === pago.reservaId);
+
+    return { ...pago, reserva: reserva ? this.conRelaciones(reserva) : undefined };
+  }
+
+  private pagos(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
+    const { metodo, ruta, parametros, cuerpo } = pedido;
+
+    if (metodo === 'GET' && ruta === '/pagos') {
+      const reservaId = parametros.get('reservaId');
+      const estado = parametros.get('estado');
+
+      const filtrados = this.estado.pagos.filter((pago) => {
+        if (reservaId && pago.reservaId !== Number(reservaId)) {
+          return false;
+        }
+
+        if (estado && pago.estado !== estado) {
+          return false;
+        }
+
+        // Al cliente el backend le impone sus propias reservas.
+        const reserva = this.estado.reservas.find((item) => item.id === pago.reservaId);
+
+        return this.esAdmin(sesion) || reserva?.usuarioId === sesion.id;
+      });
+
+      return ok(filtrados.map((pago) => this.conReserva(pago)));
+    }
+
+    // La plata la cobra el complejo: el resto de las operaciones son del admin.
+    if (metodo === 'POST' && ruta === '/pagos') {
+      return this.exigirAdmin(sesion) ?? this.crearPago(cuerpo);
+    }
+
+    const anular = /^\/pagos\/(\d+)\/anular$/.exec(ruta);
+
+    if (metodo === 'PUT' && anular) {
+      return this.exigirAdmin(sesion) ?? this.anularPago(Number(anular[1]));
+    }
+
+    const id = idDe(ruta, '/pagos');
+    const indice = this.estado.pagos.findIndex((pago) => pago.id === id);
+
+    if (indice === -1) {
+      return falla(404, 'Pago no encontrado');
+    }
+
+    const pago = this.estado.pagos[indice];
+
+    if (metodo === 'GET') {
+      const reserva = this.estado.reservas.find((item) => item.id === pago.reservaId);
+
+      if (!this.esAdmin(sesion) && reserva?.usuarioId !== sesion.id) {
+        return falla(403, 'La reserva es de otro usuario');
+      }
+
+      return ok(this.conReserva(pago));
+    }
+
+    if (metodo === 'PUT') {
+      const prohibido = this.exigirAdmin(sesion);
+
+      if (prohibido) {
+        return prohibido;
+      }
+
+      if (pago.estado === 'ANULADO') {
+        return falla(409, 'El pago está anulado y no se puede modificar');
+      }
+
+      const metodoNuevo = `${cuerpo['metodo'] ?? ''}`;
+
+      if (!['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'].includes(metodoNuevo)) {
+        return falla(400, 'El método debe ser EFECTIVO, TARJETA, TRANSFERENCIA');
+      }
+
+      // Solo el método: el monto de un pago no se edita.
+      pago.metodo = metodoNuevo as MetodoPago;
+
+      return ok(this.conReserva(pago));
+    }
+
+    return falla(404, 'No se encontró el recurso solicitado');
+  }
+
+  private crearPago(cuerpo: Record<string, unknown>): Respuesta {
+    const monto = Number(cuerpo['monto']);
+    const metodo = `${cuerpo['metodo'] ?? ''}`;
+
+    if (isNaN(monto) || monto <= 0) {
+      return falla(400, 'El monto debe ser un número mayor a cero');
+    }
+
+    if (!['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'].includes(metodo)) {
+      return falla(400, 'El método debe ser EFECTIVO, TARJETA, TRANSFERENCIA');
+    }
+
+    const reservaId = Number(cuerpo['reservaId']);
+
+    if (!reservaId) {
+      return falla(400, 'La reserva es obligatoria');
+    }
+
+    const reserva = this.estado.reservas.find((item) => item.id === reservaId);
+
+    if (!reserva) {
+      return falla(400, 'La reserva indicada no existe');
+    }
+
+    if (reserva.estado === 'CANCELADA') {
+      return falla(409, 'La reserva está cancelada y no admite pagos');
+    }
+
+    const saldo = this.saldoDe(reserva);
+
+    if (saldo <= 0) {
+      return falla(409, 'La reserva ya está paga');
+    }
+
+    if (monto > saldo) {
+      return falla(409, `El monto supera el saldo de la reserva, que es ${saldo}`);
+    }
+
+    const creado: Pago = {
+      id: proximoId(this.estado.pagos),
+      monto: monto,
+      // La fecha la pone el servidor: el día en que se cobra.
+      fecha: hoy(),
+      metodo: metodo as MetodoPago,
+      estado: 'REGISTRADO',
+      reservaId: reservaId
+    };
+
+    this.estado.pagos.push(creado);
+    this.recalcularReserva(reservaId);
+
+    return ok(this.conReserva(creado), 201);
+  }
+
+  private anularPago(id: number): Respuesta {
+    const pago = this.estado.pagos.find((item) => item.id === id);
+
+    if (!pago) {
+      return falla(404, 'Pago no encontrado');
+    }
+
+    if (pago.estado === 'ANULADO') {
+      return falla(409, 'El pago ya está anulado');
+    }
+
+    // Anular no es borrar: la fila se conserva y deja de contar para el saldo.
+    pago.estado = 'ANULADO';
+    this.recalcularReserva(pago.reservaId);
+
+    return ok(this.conReserva(pago));
   }
 
   private crearEvento(cuerpo: Record<string, unknown>, sesion: UsuarioSembrado): Respuesta {

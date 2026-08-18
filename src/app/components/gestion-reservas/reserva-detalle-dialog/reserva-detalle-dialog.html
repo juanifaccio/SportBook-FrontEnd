@@ -43,10 +43,30 @@
     }
   </dl>
 
+  <!-- Lo cobrado hasta ahora. Un pago anulado se muestra igual —es historial—
+       pero tachado, porque dejó de contar para el saldo. -->
+  @if (pagos().length > 0) {
+    <ul class="pagos">
+      @for (pago of pagos(); track pago.id) {
+        <li [class.anulado]="pago.estado === 'ANULADO'">
+          <span>{{ formatearFecha(pago.fecha) }} · {{ etiquetasMetodo[pago.metodo] }}</span>
+          <span>{{ pago.monto | currency: 'ARS' }}</span>
+        </li>
+      }
+    </ul>
+  }
+
   <p class="total">
     <span>Total</span>
     <strong>{{ reserva.precioTotal | currency: 'ARS' }}</strong>
   </p>
+
+  @if (saldo() > 0) {
+    <p class="saldo">
+      <span>Falta pagar</span>
+      <strong>{{ saldo() | currency: 'ARS' }}</strong>
+    </p>
+  }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

@@ -53,6 +53,13 @@ export const routes: Routes = [
         loadComponent: () => import('./components/perfil/perfil').then((m) => m.PerfilComponent)
       },
       {
+        path: 'pagos',
+        title: 'Pagos — SportBook',
+        // Sin `adminGuard`: el cliente entra a ver los pagos de sus reservas. Lo
+        // que no puede es registrarlos, y eso lo decide el backend.
+        loadComponent: () => import('./components/pago/pago').then((m) => m.PagoComponent)
+      },
+      {
         path: 'eventos',
         title: 'Eventos — SportBook',
         // Sin `adminGuard` a propósito: el evento es de quien es la reserva, así

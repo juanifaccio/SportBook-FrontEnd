@@ -1,0 +1,63 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <!-- Al corregir, la reserva y el monto se muestran pero no se tocan: lo único
+       editable es con qué se cobró. El monto se anula y se registra de nuevo. -->
+  @if (esEdicion) {
+    <div class="solo-lectura">
+      <span class="etiqueta">Reserva</span>
+      <span>{{ resumenDelPago }}</span>
+
+      <span class="etiqueta">Monto</span>
+      <span>{{ pago()?.monto | currency: 'ARS' }}</span>
+    </div>
+  } @else {
+    <mat-form-field appearance="outline">
+      <mat-label>Reserva</mat-label>
+      <mat-select formControlName="reservaId">
+        @for (reserva of reservas(); track reserva.id) {
+          <mat-option [value]="reserva.id">{{ etiquetaDeReserva(reserva) }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Solo se ofrecen las reservas vigentes que todavía deben plata.</mat-hint>
+      @if (formulario.controls.reservaId.hasError('required')) {
+        <mat-error>La reserva es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Monto</mat-label>
+      <span matTextPrefix>$&nbsp;</span>
+      <input matInput type="number" formControlName="monto" min="0.01" step="0.01" />
+      @if (saldo !== null) {
+        <mat-hint>Falta pagar {{ saldo | currency: 'ARS' }}.</mat-hint>
+      }
+      @if (formulario.controls.monto.hasError('required')) {
+        <mat-error>El monto es obligatorio.</mat-error>
+      } @else if (formulario.controls.monto.hasError('min')) {
+        <mat-error>El monto tiene que ser mayor a cero.</mat-error>
+      } @else if (formulario.controls.monto.hasError('superaSaldo')) {
+        <mat-error>El monto no puede superar lo que falta pagar.</mat-error>
+      }
+    </mat-form-field>
+  }
+
+  <mat-form-field appearance="outline">
+    <mat-label>Método</mat-label>
+    <mat-select formControlName="metodo">
+      @for (metodo of metodos; track metodo) {
+        <mat-option [value]="metodo">{{ etiquetasMetodo[metodo] }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.metodo.hasError('required')) {
+      <mat-error>El método es obligatorio.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Registrar el pago' }}
+    </button>
+  </div>
+</form>
