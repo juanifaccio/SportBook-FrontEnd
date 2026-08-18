@@ -1,6 +1,7 @@
 import { Cancha } from './cancha';
 import { Evento } from './evento';
 import { Horario } from './horario';
+import { Pago } from './pago';
 import { Usuario } from './usuario';
 import { formatearFecha } from '../core/fechas';
 
@@ -38,6 +39,8 @@ export interface Reserva {
    * partido y nada más; por eso además de opcional puede llegar nulo.
    */
   evento?: Evento | null;
+  /** Los cobros de la reserva, incluidos los anulados. */
+  pagos?: Pago[];
 }
 
 /**

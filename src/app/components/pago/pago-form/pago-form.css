@@ -1,0 +1,33 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  /* Aire entre campos: sin esto, el mensaje de error de uno queda pegado a la
+     caja del siguiente. */
+  gap: 0.5rem;
+  /* Ancho cómodo en mobile; el diálogo lo limita en pantallas grandes. */
+  min-width: 0;
+}
+
+/* La reserva y el monto al corregir: se leen como campos más, pero no se tocan. */
+.solo-lectura {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 1rem;
+}
+
+.solo-lectura .etiqueta {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.solo-lectura .etiqueta:not(:first-child) {
+  padding-top: 0.5rem;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}

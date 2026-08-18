@@ -1,0 +1,46 @@
+/* Mobile-first: la vista base es la de tarjetas apiladas. La tabla solo aparece
+   a partir de MD, donde hay ancho suficiente para las columnas. */
+
+.tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tabla {
+  width: 100%;
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--mat-sys-corner-medium);
+  overflow: hidden;
+}
+
+.columna-numero {
+  width: 8rem;
+  text-align: right;
+}
+
+.columna-acciones {
+  width: 7rem;
+  text-align: right;
+}
+
+.secundario {
+  margin: 0 0 0.25rem;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Un pago anulado sigue a la vista —es historial— pero tiene que leerse como lo
+   que es: algo que ya no cuenta. */
+.anulado {
+  text-decoration: line-through;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 600px) {
+  .tarjetas {
+    /* En tablet vertical entran dos tarjetas por fila. */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  }
+}

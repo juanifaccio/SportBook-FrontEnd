@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { ETIQUETAS_ESTADO_RESERVA, Reserva } from '../../../models/reserva';
+import { ETIQUETAS_METODO_PAGO, saldoDe } from '../../../models/pago';
 import { formatearFecha } from '../../../core/fechas';
 
 /**
@@ -27,6 +28,17 @@ export class ReservaDetalleDialogComponent {
   protected reserva = inject<Reserva>(MAT_DIALOG_DATA);
 
   protected readonly etiquetasEstado = ETIQUETAS_ESTADO_RESERVA;
+
+  protected readonly etiquetasMetodo = ETIQUETAS_METODO_PAGO;
+
+  /** Los cobros de la reserva, los anulados incluidos: el detalle es historial. */
+  protected readonly pagos = computed(() => this.reserva.pagos ?? []);
+
+  /**
+   * Lo que falta pagar. Es el mismo cálculo que hace el backend para decidir si
+   * la reserva está confirmada; acá solo se muestra.
+   */
+  protected readonly saldo = computed(() => saldoDe(this.reserva));
 
   protected readonly formatearFecha = formatearFecha;
 

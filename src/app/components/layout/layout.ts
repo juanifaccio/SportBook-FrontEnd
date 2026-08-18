@@ -80,6 +80,9 @@ export class LayoutComponent {
     // Tampoco es solo del administrador: el evento es de quien es la reserva, y
     // el cliente entra acá a cargar o corregir el de las suyas.
     { etiqueta: 'Eventos', ruta: '/eventos', icono: 'celebration' },
+    // Tampoco es solo del administrador: el cliente entra a ver lo que se cobró
+    // por sus reservas, aunque no pueda registrar nada.
+    { etiqueta: 'Pagos', ruta: '/pagos', icono: 'payments' },
     { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium', soloAdmin: true },
     { etiqueta: 'Horarios', ruta: '/horarios', icono: 'schedule', soloAdmin: true },
     { etiqueta: 'Usuarios', ruta: '/usuarios', icono: 'group', soloAdmin: true },

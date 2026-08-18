@@ -1,6 +1,7 @@
 import { Cancha } from '../../src/app/models/cancha';
 import { Evento } from '../../src/app/models/evento';
 import { Horario } from '../../src/app/models/horario';
+import { Pago } from '../../src/app/models/pago';
 import { Reserva } from '../../src/app/models/reserva';
 import { Rol } from '../../src/app/models/rol';
 import { TipoCancha } from '../../src/app/models/tipo-cancha';
@@ -31,6 +32,7 @@ export interface EstadoApi {
   horarios: Horario[];
   reservas: Reserva[];
   eventos: Evento[];
+  pagos: Pago[];
 }
 
 /**
@@ -151,6 +153,9 @@ export const TURNOS: Horario[] = [
  * Reservas sembradas, una por cada situación que la pantalla de gestión tiene
  * que distinguir: dos vigentes de clientes distintos, una que ya empezó y una
  * cancelada.
+ *
+ * La #1 está CONFIRMADA porque tiene su pago completo; las otras vigentes nacen
+ * PENDIENTE, que es como nacen todas hasta que se cobran.
  */
 export const RESERVAS: Reserva[] = [
   {
@@ -169,7 +174,7 @@ export const RESERVAS: Reserva[] = [
     fecha: MANANA,
     horaInicio: '20:00',
     horaFin: '21:00',
-    estado: 'CONFIRMADA',
+    estado: 'PENDIENTE',
     precioTotal: 6000,
     usuarioId: BRUNO.id,
     canchaId: CANCHA_2.id,
@@ -180,7 +185,7 @@ export const RESERVAS: Reserva[] = [
     fecha: AYER,
     horaInicio: '10:00',
     horaFin: '11:00',
-    estado: 'CONFIRMADA',
+    estado: 'PENDIENTE',
     precioTotal: 8000,
     usuarioId: ANA.id,
     canchaId: CANCHA_1.id,
@@ -224,6 +229,21 @@ export const EVENTOS: Evento[] = [
  * tienen enfrente —crean, editan y borran—, así que compartir los objetos haría
  * que un test viera lo que hizo otro.
  */
+/**
+ * Un solo pago sembrado, el que cubre entera la reserva #1: alcanza para que esa
+ * reserva esté CONFIRMADA y para probar que anularlo la devuelve a PENDIENTE.
+ */
+export const PAGOS: Pago[] = [
+  {
+    id: 1,
+    monto: 8000,
+    fecha: MANANA,
+    metodo: 'EFECTIVO',
+    estado: 'REGISTRADO',
+    reservaId: 1
+  }
+];
+
 export const datosIniciales = (): EstadoApi =>
   structuredClone({
     roles: [ROL_ADMIN, ROL_CLIENTE],
@@ -233,5 +253,6 @@ export const datosIniciales = (): EstadoApi =>
     canchas: [CANCHA_1, CANCHA_2, CANCHA_3],
     horarios: TURNOS,
     reservas: RESERVAS,
-    eventos: EVENTOS
+    eventos: EVENTOS,
+    pagos: PAGOS
   });
