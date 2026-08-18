@@ -25,3 +25,21 @@ export interface Usuario {
 export type UsuarioDto = Omit<Usuario, 'id' | 'rol'> & {
   contrasena?: string;
 };
+
+/**
+ * Datos que un usuario puede cambiarse a sí mismo desde su perfil.
+ *
+ * No es un `UsuarioDto` con menos campos: `rolId` y `activo` no están **a
+ * propósito**, y el backend los descarta aunque viajen. Un cliente no se asciende
+ * a administrador ni se reactiva una cuenta dada de baja editando su perfil.
+ */
+export type PerfilDto = Pick<Usuario, 'nombre' | 'email' | 'telefono'>;
+
+/**
+ * Cambio de contraseña propio. Pide la actual porque, si no, alcanzaría con un
+ * token prestado para cambiarle la clave al dueño y dejarlo afuera de su cuenta.
+ */
+export interface CambioContrasenaDto {
+  contrasenaActual: string;
+  contrasenaNueva: string;
+}

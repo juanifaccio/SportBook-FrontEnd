@@ -125,6 +125,73 @@ describe('AuthService', () => {
     expect(service.autenticado()).toBe(false);
   });
 
+  describe('perfil propio', () => {
+    const perfil = {
+      nombre: 'Nombre Corregido',
+      email: 'corregido@ejemplo.com',
+      telefono: '341 555-1111'
+    };
+
+    it('manda solamente los campos editables', () => {
+      iniciarSesionDePrueba(USUARIO_CLIENTE);
+      preparar();
+
+      service.actualizarPerfil(perfil).subscribe();
+
+      const req = httpMock.expectOne(`${url}/yo`);
+      expect(req.request.method).toBe('PUT');
+      // Sin `rolId` ni `activo`: el backend los descarta igual, pero mandarlos
+      // sugeriría que un cliente puede ascenderse solo.
+      expect(req.request.body).toEqual(perfil);
+      req.flush({ ...USUARIO_CLIENTE, ...perfil });
+    });
+
+    // El nombre se ve en la barra superior: con la copia vieja seguiría
+    // mostrando el anterior hasta recargar.
+    it('refresca la sesión con lo que devolvió el backend', () => {
+      iniciarSesionDePrueba(USUARIO_CLIENTE);
+      preparar();
+
+      service.actualizarPerfil(perfil).subscribe();
+      httpMock.expectOne(`${url}/yo`).flush({ ...USUARIO_CLIENTE, ...perfil });
+
+      expect(service.usuario()?.nombre).toBe('Nombre Corregido');
+      expect(JSON.parse(localStorage.getItem(CLAVE_USUARIO) ?? '{}').nombre).toBe(
+        'Nombre Corregido'
+      );
+    });
+
+    it('si el backend rechaza el guardado, la sesión queda como estaba', () => {
+      iniciarSesionDePrueba(USUARIO_CLIENTE);
+      preparar();
+
+      service.actualizarPerfil(perfil).subscribe({ error: () => {} });
+      httpMock
+        .expectOne(`${url}/yo`)
+        .flush({ mensaje: 'Ya existe un usuario con ese email' }, { status: 409, statusText: 'Conflict' });
+
+      expect(service.usuario()).toEqual(USUARIO_CLIENTE);
+    });
+
+    it('el cambio de contraseña va a su propio endpoint y no toca la sesión', () => {
+      iniciarSesionDePrueba(USUARIO_CLIENTE);
+      preparar();
+
+      const cambio = { contrasenaActual: 'unaClave123', contrasenaNueva: 'otraClave456' };
+
+      service.cambiarContrasena(cambio).subscribe();
+
+      const req = httpMock.expectOne(`${url}/yo/contrasena`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual(cambio);
+      req.flush({ mensaje: 'Contraseña actualizada correctamente' });
+
+      // El token sigue valiendo: no hay motivo para echar al usuario.
+      expect(service.usuario()).toEqual(USUARIO_CLIENTE);
+      expect(localStorage.getItem(CLAVE_TOKEN)).toBe(TOKEN_DE_PRUEBA);
+    });
+  });
+
   it('al cerrar sesión borra todo y vuelve al login', () => {
     iniciarSesionDePrueba(USUARIO_ADMIN);
     preparar();

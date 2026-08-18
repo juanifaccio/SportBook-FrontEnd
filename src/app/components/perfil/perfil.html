@@ -1,0 +1,121 @@
+<header class="encabezado-pantalla">
+  <h1>Mi perfil</h1>
+</header>
+
+<div class="tarjetas">
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>Mis datos</mat-card-title>
+      <mat-card-subtitle>Con estos datos te identifica el complejo.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="formulario" [formGroup]="datosFormulario" (ngSubmit)="guardarDatos()">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre" maxlength="60" />
+          @if (datosFormulario.controls.nombre.hasError('required')) {
+            <mat-error>El nombre es obligatorio.</mat-error>
+          } @else if (datosFormulario.controls.nombre.hasError('maxlength')) {
+            <mat-error>El nombre no puede superar los 60 caracteres.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" maxlength="120" />
+          <mat-hint>Es con lo que iniciás sesión.</mat-hint>
+          @if (datosFormulario.controls.email.hasError('required')) {
+            <mat-error>El email es obligatorio.</mat-error>
+          } @else if (datosFormulario.controls.email.hasError('email')) {
+            <mat-error>El email tiene que tener un formato válido.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="telefono" maxlength="20" />
+          @if (datosFormulario.controls.telefono.hasError('required')) {
+            <mat-error>El teléfono es obligatorio.</mat-error>
+          } @else if (
+            datosFormulario.controls.telefono.hasError('minlength') ||
+            datosFormulario.controls.telefono.hasError('maxlength')
+          ) {
+            <mat-error>El teléfono tiene que tener entre 6 y 20 caracteres.</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- El rol y el estado de la cuenta se muestran pero no se editan: los
+             administra el complejo, y ofrecerlos acá sugeriría que un cliente
+             puede ascenderse solo. -->
+        <dl class="solo-lectura">
+          <dt>Nivel de acceso</dt>
+          <dd>{{ rol() }}</dd>
+
+          <dt>Estado de la cuenta</dt>
+          <dd>{{ usuario()?.activo ? 'Activa' : 'Dada de baja' }}</dd>
+        </dl>
+
+        <div class="acciones">
+          <button mat-flat-button type="submit" [disabled]="guardandoDatos()">
+            <mat-icon>save</mat-icon>
+            {{ guardandoDatos() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>Cambiar la contraseña</mat-card-title>
+      <mat-card-subtitle>
+        Pedimos la actual para que nadie más pueda cambiarla desde tu sesión.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form
+        class="formulario"
+        [formGroup]="contrasenaFormulario"
+        (ngSubmit)="cambiarContrasena()">
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña actual</mat-label>
+          <input matInput [type]="tipoContrasena" formControlName="contrasenaActual" />
+          <button
+            mat-icon-button
+            matIconSuffix
+            type="button"
+            [attr.aria-label]="
+              verContrasenas() ? 'Ocultar las contraseñas' : 'Mostrar las contraseñas'
+            "
+            [attr.aria-pressed]="verContrasenas()"
+            (click)="alternarContrasenas()">
+            <mat-icon>{{ verContrasenas() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (contrasenaFormulario.controls.contrasenaActual.hasError('required')) {
+            <mat-error>La contraseña actual es obligatoria.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña nueva</mat-label>
+          <input matInput [type]="tipoContrasena" formControlName="contrasenaNueva" />
+          <mat-hint>Al menos 8 caracteres.</mat-hint>
+          @if (contrasenaFormulario.controls.contrasenaNueva.hasError('required')) {
+            <mat-error>La contraseña nueva es obligatoria.</mat-error>
+          } @else if (contrasenaFormulario.controls.contrasenaNueva.hasError('minlength')) {
+            <mat-error>La contraseña tiene que tener al menos 8 caracteres.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="acciones">
+          <button mat-flat-button type="submit" [disabled]="guardandoContrasena()">
+            <mat-icon>lock_reset</mat-icon>
+            {{ guardandoContrasena() ? 'Guardando…' : 'Cambiar la contraseña' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

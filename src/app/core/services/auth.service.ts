@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { Credenciales, RespuestaLogin } from '../../models/sesion';
-import { Usuario } from '../../models/usuario';
+import { CambioContrasenaDto, PerfilDto, Usuario } from '../../models/usuario';
 import { ROLES } from '../../models/rol';
 import { environment } from '../../../environments/environment';
 
@@ -70,13 +70,33 @@ export class AuthService {
     }
 
     this.http.get<Usuario>(`${this.url}/yo`).subscribe({
-      next: (usuario) => {
-        this._usuario.set(usuario);
-        localStorage.setItem(CLAVE_USUARIO, JSON.stringify(usuario));
-      },
+      next: (usuario) => this.guardarUsuario(usuario),
       // El interceptor ya se encargó de cerrar la sesión y avisarle al usuario.
       error: () => {}
     });
+  }
+
+  /**
+   * Guarda los datos propios del usuario conectado.
+   *
+   * Al volver, refresca la sesión con lo que devolvió el backend: el nombre se
+   * ve en la barra superior, así que si quedara la copia vieja el usuario
+   * seguiría viendo el nombre anterior hasta recargar.
+   */
+  actualizarPerfil(perfil: PerfilDto): Observable<Usuario> {
+    return this.http
+      .put<Usuario>(`${this.url}/yo`, perfil)
+      .pipe(tap((usuario) => this.guardarUsuario(usuario)));
+  }
+
+  /**
+   * Cambia la contraseña del usuario conectado.
+   *
+   * No toca la sesión: el token sigue valiendo después del cambio, así que no
+   * hay nada que actualizar ni motivo para echar al usuario.
+   */
+  cambiarContrasena(cambio: CambioContrasenaDto): Observable<{ mensaje: string }> {
+    return this.http.put<{ mensaje: string }>(`${this.url}/yo/contrasena`, cambio);
   }
 
   /**
@@ -94,8 +114,13 @@ export class AuthService {
 
   private guardar(respuesta: RespuestaLogin): void {
     localStorage.setItem(CLAVE_TOKEN, respuesta.token);
-    localStorage.setItem(CLAVE_USUARIO, JSON.stringify(respuesta.usuario));
-    this._usuario.set(respuesta.usuario);
+    this.guardarUsuario(respuesta.usuario);
+  }
+
+  /** Deja el usuario en memoria y en el navegador, que tienen que ir juntos. */
+  private guardarUsuario(usuario: Usuario): void {
+    localStorage.setItem(CLAVE_USUARIO, JSON.stringify(usuario));
+    this._usuario.set(usuario);
   }
 
 }
