@@ -83,6 +83,20 @@ export const etiquetaDeReserva = (reserva: Reserva): string => {
   return `${formatearFecha(reserva.fecha)}, ${reserva.horaInicio} a ${reserva.horaFin}${cancha}`;
 };
 
+/**
+ * La misma etiqueta, pero con a nombre de quién va la reserva.
+ *
+ * Es la que se usa cuando quien elige de la lista es un administrador y las
+ * reservas son de distintas personas: el día, el horario y la cancha alcanzan
+ * para distinguir una reserva de otra, pero no para saber a quién se le está
+ * cobrando. El nombre se agrega solo si el backend incluyó el usuario.
+ */
+export const etiquetaDeReservaConUsuario = (reserva: Reserva): string => {
+  const usuario = reserva.usuario ? ` · ${reserva.usuario.nombre}` : '';
+
+  return `${etiquetaDeReserva(reserva)}${usuario}`;
+};
+
 /** Filtros opcionales del listado de reservas. */
 export interface FiltrosReserva {
   usuarioId?: number;

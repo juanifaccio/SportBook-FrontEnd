@@ -14,7 +14,7 @@
       <mat-label>Reserva</mat-label>
       <mat-select formControlName="reservaId">
         @for (reserva of reservas(); track reserva.id) {
-          <mat-option [value]="reserva.id">{{ etiquetaDeReserva(reserva) }}</mat-option>
+          <mat-option [value]="reserva.id">{{ etiquetaDeReservaConUsuario(reserva) }}</mat-option>
         }
       </mat-select>
       <mat-hint>Solo se ofrecen las reservas vigentes que todavía deben plata.</mat-hint>

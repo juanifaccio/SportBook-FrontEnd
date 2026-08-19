@@ -104,6 +104,20 @@ test.describe('Pagos', () => {
     await expect(opciones.first()).not.toContainText('18:00 a 19:00');
   });
 
+  // El que cobra es el administrador, que no sabe de memoria de quién es cada
+  // turno: sin el nombre, el día y la cancha no le dicen a quién le está
+  // registrando el pago.
+  test('ofrece cada reserva con el nombre de quien la hizo', async ({ page }) => {
+    await abrirComo(page, ADMINISTRADOR, '/pagos');
+
+    await page.getByRole('button', { name: 'Registrar un pago' }).click();
+    await page.getByRole('combobox', { name: 'Reserva' }).click();
+
+    // La #2 es de Bruno y la #3 de Ana.
+    await expect(page.getByRole('option', { name: new RegExp(BRUNO.nombre) })).toBeVisible();
+    await expect(page.getByRole('option', { name: new RegExp(ANA.nombre) })).toBeVisible();
+  });
+
   test('anular el pago devuelve la reserva a pendiente', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 
