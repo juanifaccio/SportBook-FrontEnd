@@ -55,9 +55,6 @@
       <td mat-cell *matCellDef="let evento">
         @if (evento.reserva; as reserva) {
           {{ etiquetaDeReserva(reserva) }}
-          @if (reserva.cancha?.tipoCancha; as tipo) {
-            <span class="tipo-cancha">({{ tipo.nombre }})</span>
-          }
         }
       </td>
     </ng-container>
@@ -118,9 +115,6 @@
           @if (evento.reserva; as reserva) {
             <mat-card-subtitle>
               {{ etiquetaDeReserva(reserva) }}
-              @if (reserva.cancha?.tipoCancha; as tipo) {
-                <span class="tipo-cancha">({{ tipo.nombre }})</span>
-              }
             </mat-card-subtitle>
           }
         </mat-card-header>
