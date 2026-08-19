@@ -104,9 +104,11 @@ describe('EventoComponent', () => {
 
     expect(texto()).toContain('Cumpleaños de 15');
     expect(texto()).toContain(tipoEvento.nombre);
-    // La reserva se identifica por día, horario y cancha.
+    // La reserva se identifica por día, horario y cancha, con el tipo entre
+    // paréntesis: dos canchas pueden llamarse parecido y ser de deportes
+    // distintos. El tipo lo pone la etiqueta, no la plantilla.
     expect(texto()).toContain('20/08/2026');
-    expect(texto()).toContain(cancha.nombre);
+    expect(texto()).toContain(`${cancha.nombre} (${cancha.tipoCancha.nombre})`);
   });
 
   it('muestra el estado vacío cuando no hay eventos cargados', async () => {

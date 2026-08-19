@@ -73,12 +73,21 @@ export interface ReprogramarDto {
 }
 
 /**
+ * La cancha con su tipo entre paréntesis, como en los selectores de cancha: el
+ * nombre solo no distingue dos canchas —"Cancha 2" y "Cancha 3" pueden ser las
+ * dos de pádel—, y en una lista de reservas la misma cancha se repite en varias
+ * filas. El tipo se agrega solo si el backend lo incluyó.
+ */
+const nombreDeLaCancha = (cancha: Cancha): string =>
+  cancha.tipoCancha ? `${cancha.nombre} (${cancha.tipoCancha.nombre})` : cancha.nombre;
+
+/**
  * Cómo se nombra una reserva cuando hay que elegirla de una lista o
  * identificarla en una fila: el día, el horario y la cancha alcanzan para
  * distinguirla de las demás.
  */
 export const etiquetaDeReserva = (reserva: Reserva): string => {
-  const cancha = reserva.cancha ? ` · ${reserva.cancha.nombre}` : '';
+  const cancha = reserva.cancha ? ` · ${nombreDeLaCancha(reserva.cancha)}` : '';
 
   return `${formatearFecha(reserva.fecha)}, ${reserva.horaInicio} a ${reserva.horaFin}${cancha}`;
 };

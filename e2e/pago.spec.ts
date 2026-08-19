@@ -1,4 +1,4 @@
-import { ADMINISTRADOR, ANA, BRUNO } from './apoyo/datos';
+import { ADMINISTRADOR, ANA, BRUNO, CANCHA_2, PADEL } from './apoyo/datos';
 import {
   abrirComo,
   dialogo,
@@ -113,8 +113,13 @@ test.describe('Pagos', () => {
     await page.getByRole('button', { name: 'Registrar un pago' }).click();
     await page.getByRole('combobox', { name: 'Reserva' }).click();
 
-    // La #2 es de Bruno y la #3 de Ana.
-    await expect(page.getByRole('option', { name: new RegExp(BRUNO.nombre) })).toBeVisible();
+    // La #2 es de Bruno, en la Cancha 2, que es de pádel. La etiqueta entera:
+    // el día y el horario distinguen la reserva, el tipo distingue la cancha y
+    // el nombre dice a quién se le cobra.
+    await expect(page.getByRole('option').first()).toContainText(
+      `20:00 a 21:00 · ${CANCHA_2.nombre} (${PADEL.nombre}) · ${BRUNO.nombre}`
+    );
+    // La #3 es de Ana.
     await expect(page.getByRole('option', { name: new RegExp(ANA.nombre) })).toBeVisible();
   });
 
