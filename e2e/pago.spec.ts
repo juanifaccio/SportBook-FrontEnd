@@ -123,6 +123,21 @@ test.describe('Pagos', () => {
     await expect(page.getByRole('option', { name: new RegExp(ANA.nombre) })).toBeVisible();
   });
 
+  // El campo cerrado es de un renglón y recorta con puntos suspensivos: con la
+  // etiqueta entera de una sola línea, lo primero en perderse era el nombre,
+  // justo después de elegirlo. Se muestra en dos renglones, con el dueño abajo.
+  test('el campo cerrado sigue mostrando el nombre después de elegir', async ({ page }) => {
+    await abrirComo(page, ADMINISTRADOR, '/pagos');
+
+    await page.getByRole('button', { name: 'Registrar un pago' }).click();
+    await elegirOpcion(page, 'Reserva', /20:00 a 21:00/);
+
+    const campo = page.getByRole('combobox', { name: 'Reserva' });
+
+    await expect(campo).toContainText(`${CANCHA_2.nombre} (${PADEL.nombre})`);
+    await expect(campo).toContainText(BRUNO.nombre);
+  });
+
   test('anular el pago devuelve la reserva a pendiente', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 

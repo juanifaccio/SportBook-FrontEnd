@@ -14,7 +14,11 @@ import {
   PagoDto,
   saldoDe
 } from '../../../models/pago';
-import { Reserva, etiquetaDeReservaConUsuario } from '../../../models/reserva';
+import {
+  Reserva,
+  etiquetaDeReserva,
+  etiquetaDeReservaConUsuario
+} from '../../../models/reserva';
 
 /**
  * Formulario de registro y corrección de un pago.
@@ -61,6 +65,7 @@ export class PagoFormComponent {
   // Con el nombre del dueño: el que cobra es el administrador, y sin él no
   // sabría a quién le está registrando el pago.
   protected readonly etiquetaDeReservaConUsuario = etiquetaDeReservaConUsuario;
+  protected readonly etiquetaDeReserva = etiquetaDeReserva;
 
   // El monto y la reserva arrancan en `null` y no en cero: `required` da por
   // válido un 0, así que un control numérico vacío tiene que ser nulo para que
@@ -115,11 +120,16 @@ export class PagoFormComponent {
    * mandar el request.
    */
   protected get saldo(): number | null {
-    const reserva = this.reservas().find(
-      (candidata) => candidata.id === this.formulario.controls.reservaId.value
-    );
+    const reserva = this.reservaElegida;
 
     return reserva ? saldoDe(reserva) : null;
+  }
+
+  /** La reserva del selector, para el campo cerrado y para el saldo. */
+  protected get reservaElegida(): Reserva | null {
+    const id = this.formulario.controls.reservaId.value;
+
+    return this.reservas().find((candidata) => candidata.id === id) ?? null;
   }
 
   protected get superaElSaldo(): boolean {
