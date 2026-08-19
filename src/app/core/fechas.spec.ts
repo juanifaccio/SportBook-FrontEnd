@@ -1,4 +1,13 @@
-import { aDate, aDateHora, aHora, aTexto, formatearFecha, hoyLocal, yaEmpezo } from './fechas';
+import {
+  aDate,
+  aDateHora,
+  aHora,
+  aTexto,
+  formatearFecha,
+  hoyLocal,
+  minutosEntre,
+  yaEmpezo
+} from './fechas';
 
 describe('utilidades de fecha', () => {
   describe('aDate / aTexto — el borde entre el texto de la API y el calendario', () => {
@@ -78,6 +87,23 @@ describe('utilidades de fecha', () => {
     it('reconoce un turno pasado y uno futuro', () => {
       expect(yaEmpezo('2020-01-01', '10:00')).toBe(true);
       expect(yaEmpezo('2099-01-01', '10:00')).toBe(false);
+    });
+  });
+
+  describe('minutosEntre', () => {
+    it('mide un rango en minutos', () => {
+      expect(minutosEntre('08:00', '12:00')).toBe(240);
+      expect(minutosEntre('08:15', '09:00')).toBe(45);
+    });
+
+    it('cuenta cero cuando las dos horas son la misma', () => {
+      expect(minutosEntre('10:00', '10:00')).toBe(0);
+    });
+
+    // Es lo que permite usarlo para validar: un rango invertido da negativo y
+    // así no llega a parecer un rango corto pero válido.
+    it('da negativo cuando el rango está invertido', () => {
+      expect(minutosEntre('12:00', '08:00')).toBe(-240);
     });
   });
 });

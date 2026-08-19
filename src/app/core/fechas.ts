@@ -107,3 +107,20 @@ export const aDateHora = (hora: string): Date | null => {
 
   return fecha;
 };
+
+/** Los minutos transcurridos desde la medianoche hasta una hora `"HH:mm"`. */
+const aMinutos = (hora: string): number => {
+  const [horas, minutos] = hora.split(':').map(Number);
+
+  return horas * 60 + minutos;
+};
+
+/**
+ * Cuántos minutos hay entre dos horas `"HH:mm"` del mismo día.
+ *
+ * Se calcula sobre el texto y no sobre dos `Date`, porque las horas del
+ * formulario traen además una parte de fecha que no significa nada: restarlas
+ * como instantes daría cualquier cosa si esas fechas no coinciden.
+ */
+export const minutosEntre = (desde: string, hasta: string): number =>
+  aMinutos(hasta) - aMinutos(desde);

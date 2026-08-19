@@ -1,11 +1,5 @@
 import { Component, effect, inject, input, output } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -16,33 +10,7 @@ import { MatTimepickerModule } from '@angular/material/timepicker';
 import { Horario, HorarioDto } from '../../../models/horario';
 import { Cancha } from '../../../models/cancha';
 import { aDate, aDateHora, aHora, aTexto } from '../../../core/fechas';
-
-/**
- * Valida que el turno no termine antes de empezar.
- *
- * El error se marca sobre la hora de fin y no sobre el grupo porque Material
- * solo muestra el `mat-error` de un campo cuando ese campo es el inválido: con
- * el error en el grupo, el formulario se negaba a enviarse sin decir por qué.
- */
-const posteriorAlInicio = (control: AbstractControl): ValidationErrors | null => {
-  const horaInicio: Date | null = control.parent?.get('horaInicio')?.value;
-  const horaFin: Date | null = control.value;
-
-  if (!horaInicio || !horaFin) {
-    return null;
-  }
-
-  // Con una hora que el usuario escribió mal, el timepicker deja en el control
-  // una fecha inválida. De eso ya avisa `matTimepickerParse`: comparar acá solo
-  // agregaría un segundo error para el mismo problema.
-  if (isNaN(horaInicio.getTime()) || isNaN(horaFin.getTime())) {
-    return null;
-  }
-
-  // Se comparan como el "HH:mm" que se va a guardar y no como instantes, porque
-  // los dos `Date` traen además una fecha que no significa nada acá.
-  return aHora(horaFin) > aHora(horaInicio) ? null : { horasInvertidas: true };
-};
+import { posteriorAlInicio } from '../../../core/validadores';
 
 /**
  * Formulario de alta y edición de un turno.

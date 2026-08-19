@@ -15,11 +15,15 @@ import { map } from 'rxjs';
 import { HorarioService } from '../../services/horario.service';
 import { CanchaService } from '../../services/cancha.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
-import { Horario } from '../../models/horario';
+import { Horario, ResultadoLote } from '../../models/horario';
 import { Cancha } from '../../models/cancha';
 import { BREAKPOINT_MD } from '../../core/breakpoints';
 import { formatearFecha } from '../../core/fechas';
 import { DatosHorarioDialog, HorarioDialogComponent } from './horario-dialog/horario-dialog';
+import {
+  DatosLoteDialog,
+  HorarioLoteDialogComponent
+} from './horario-lote-dialog/horario-lote-dialog';
 import {
   ConfirmacionComponent,
   DatosConfirmacion
@@ -178,6 +182,57 @@ export class HorarioComponent implements OnInit {
       // elegida en vez de tocar la lista en memoria.
       this.cargarHorarios();
     });
+  }
+
+  /**
+   * Genera de una vez todos los turnos de un día. Es la misma alta repetida:
+   * llenar un día de a uno son doce formularios idénticos salvo por la hora.
+   */
+  protected abrirGeneracion(): void {
+    const dialogRef = this.dialog.open<
+      HorarioLoteDialogComponent,
+      DatosLoteDialog,
+      ResultadoLote
+    >(HorarioLoteDialogComponent, {
+      data: {
+        canchas: this.canchas(),
+        canchaSeleccionada: this.canchaSeleccionada()
+      },
+      width: '32rem',
+      maxWidth: '95vw'
+    });
+
+    dialogRef.afterClosed().subscribe((resultado) => {
+      if (!resultado) {
+        return;
+      }
+
+      this.notificacion.exito(this.resumenDelLote(resultado));
+
+      // El lote puede haber caído en otra cancha, y entonces sus turnos no
+      // pertenecen a la lista que se está mostrando: se recarga la de la cancha
+      // elegida en vez de tocar la lista en memoria.
+      this.cargarHorarios();
+    });
+  }
+
+  /**
+   * Cuántos turnos se crearon y cuántos ya estaban.
+   *
+   * Los salteados se nombran solo cuando los hubo: aclarar que ya estaban cero
+   * es ruido, y el caso normal es el día vacío.
+   */
+  private resumenDelLote({ creados, omitidos }: ResultadoLote): string {
+    const turnos = `${creados.length} ${creados.length === 1 ? 'turno' : 'turnos'}`;
+
+    if (omitidos === 0) {
+      return `Se generaron ${turnos}.`;
+    }
+
+    const yaEstaban =
+      omitidos === 1 ? 'Otro ya estaba cargado' : `Otros ${omitidos} ya estaban cargados`;
+
+    return `Se generaron ${turnos}. ${yaEstaban}.`;
   }
 
   protected confirmarEliminacion(horario: Horario): void {

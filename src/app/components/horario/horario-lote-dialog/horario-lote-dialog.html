@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Generar turnos</h2>
+
+<mat-dialog-content>
+  <app-horario-lote-form
+    [canchas]="datos.canchas"
+    [canchaPorDefecto]="datos.canchaSeleccionada"
+    [generando]="generando()"
+    (generar)="alGenerar($event)"
+    (cancelar)="alCancelar()"
+  />
+</mat-dialog-content>

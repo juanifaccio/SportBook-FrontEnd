@@ -1,7 +1,7 @@
 import { Page, Route } from '@playwright/test';
 import { Cancha } from '../../src/app/models/cancha';
 import { Evento } from '../../src/app/models/evento';
-import { Horario } from '../../src/app/models/horario';
+import { Horario, ResultadoLote } from '../../src/app/models/horario';
 import { MetodoPago, Pago } from '../../src/app/models/pago';
 import { Reserva } from '../../src/app/models/reserva';
 import { Usuario } from '../../src/app/models/usuario';
@@ -83,6 +83,13 @@ const minutosDe = (hora: string): number => {
   const [horas, minutos] = hora.split(':').map(Number);
 
   return horas * 60 + minutos;
+};
+
+/** La vuelta de `minutosDe`: los minutos desde la medianoche, como "HH:mm". */
+const comoHora = (minutos: number): string => {
+  const horas = `${Math.floor(minutos / 60)}`.padStart(2, '0');
+
+  return `${horas}:${`${minutos % 60}`.padStart(2, '0')}`;
 };
 
 /** Si un turno ya arrancó, en hora local, que es la del complejo. */
@@ -834,6 +841,10 @@ export class ApiFalsa {
       return prohibido;
     }
 
+    if (metodo === 'POST' && ruta === '/horarios/lote') {
+      return this.generarHorarios(cuerpo);
+    }
+
     const id = idDe(ruta, '/horarios');
 
     if (metodo === 'GET' && ruta === '/horarios') {
@@ -992,6 +1003,92 @@ export class ApiFalsa {
     }
 
     reserva.estado = this.saldoDe(reserva) <= 0 ? 'CONFIRMADA' : 'PENDIENTE';
+  }
+
+  /**
+   * Genera los turnos de un día con las mismas reglas que el backend: el rango
+   * se parte en turnos de la duración pedida, el último se descarta si no entra
+   * completo, y los que se pisan con alguno ya cargado se saltean en vez de
+   * hacer fallar el lote entero.
+   */
+  private generarHorarios(cuerpo: Record<string, unknown>): Respuesta {
+    const fecha = `${cuerpo['fecha'] ?? ''}`;
+    const horaInicio = `${cuerpo['horaInicio'] ?? ''}`;
+    const horaFin = `${cuerpo['horaFin'] ?? ''}`;
+    const canchaId = Number(cuerpo['canchaId']);
+    const duracion = Number(cuerpo['duracion']);
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return falla(400, 'La fecha es obligatoria y debe tener el formato AAAA-MM-DD');
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(horaInicio) || !/^\d{2}:\d{2}$/.test(horaFin)) {
+      return falla(400, 'Las horas son obligatorias y deben tener el formato HH:mm');
+    }
+
+    if (minutosDe(horaFin) <= minutosDe(horaInicio)) {
+      return falla(400, 'La hora de fin debe ser posterior a la de inicio');
+    }
+
+    if (!this.estado.canchas.some((cancha) => cancha.id === canchaId)) {
+      return falla(400, 'La cancha indicada no existe');
+    }
+
+    if (!duracion || duracion < 15 || duracion > 480) {
+      return falla(
+        400,
+        'La duración del turno es obligatoria y debe estar entre 15 y 480 minutos'
+      );
+    }
+
+    const turnos: { horaInicio: string; horaFin: string }[] = [];
+
+    for (
+      let desde = minutosDe(horaInicio);
+      desde + duracion <= minutosDe(horaFin);
+      desde += duracion
+    ) {
+      turnos.push({ horaInicio: comoHora(desde), horaFin: comoHora(desde + duracion) });
+    }
+
+    if (turnos.length === 0) {
+      return falla(400, 'El rango horario es más corto que la duración del turno');
+    }
+
+    const aCrear = turnos.filter(
+      (turno) =>
+        !this.estado.horarios.some(
+          (horario) =>
+            horario.canchaId === canchaId &&
+            horario.fecha === fecha &&
+            minutosDe(horario.horaInicio) < minutosDe(turno.horaFin) &&
+            minutosDe(turno.horaInicio) < minutosDe(horario.horaFin)
+        )
+    );
+
+    if (aCrear.length === 0) {
+      return falla(409, 'Todos los turnos de ese rango ya estaban cargados');
+    }
+
+    const resultado: ResultadoLote = {
+      creados: aCrear.map((turno) => {
+        const horario: Horario = {
+          id: proximoId(this.estado.horarios),
+          fecha: fecha,
+          horaInicio: turno.horaInicio,
+          horaFin: turno.horaFin,
+          disponible: true,
+          canchaId: canchaId
+        };
+
+        this.estado.horarios.push(horario);
+
+        return this.conCancha(horario);
+      }),
+      omitidos: turnos.length - aCrear.length
+    };
+
+    return ok(resultado, 201);
   }
 
   private reservas(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
