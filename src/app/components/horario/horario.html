@@ -4,8 +4,19 @@
   <!-- Un turno no puede existir sin una cancha: si todavía no hay ninguna, el
        alta queda deshabilitada y el tooltip explica por qué. -->
   <span
+    class="acciones-encabezado"
     [matTooltip]="hayCanchas() ? '' : 'Primero tenés que crear una cancha'"
     [matTooltipDisabled]="hayCanchas()">
+    <!-- Llenar un día de a un turno son doce altas idénticas salvo por la hora:
+         esta es la misma alta pedida de una sola vez. -->
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="!hayCanchas()"
+      (click)="abrirGeneracion()">
+      <mat-icon>auto_awesome_motion</mat-icon>
+      Generar turnos
+    </button>
     <button mat-flat-button type="button" [disabled]="!hayCanchas()" (click)="abrirAlta()">
       <mat-icon>add</mat-icon>
       Nuevo horario
@@ -61,10 +72,18 @@
     <mat-icon>schedule</mat-icon>
     <h2>Esta cancha todavía no tiene horarios</h2>
     <p>Cargá los turnos que vas a ofrecer para que se puedan reservar.</p>
-    <button mat-flat-button type="button" (click)="abrirAlta()">
-      <mat-icon>add</mat-icon>
-      Nuevo horario
-    </button>
+    <div class="acciones-vacio">
+      <!-- Acá la generación va primero: un día entero por delante es justo el
+           caso en el que cargar los turnos de a uno no tiene sentido. -->
+      <button mat-flat-button type="button" (click)="abrirGeneracion()">
+        <mat-icon>auto_awesome_motion</mat-icon>
+        Generar turnos
+      </button>
+      <button mat-stroked-button type="button" (click)="abrirAlta()">
+        <mat-icon>add</mat-icon>
+        Nuevo horario
+      </button>
+    </div>
   </div>
 } @else if (esPantallaAncha()) {
   <table mat-table [dataSource]="horarios()" class="tabla">

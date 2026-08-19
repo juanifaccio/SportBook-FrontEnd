@@ -1,0 +1,94 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <mat-form-field appearance="outline">
+    <mat-label>Cancha</mat-label>
+    <!-- El tipo va al lado del nombre: es lo que evita llenarle el día a la
+         cancha equivocada cuando hay varias con nombres parecidos. -->
+    <mat-select formControlName="canchaId">
+      @for (cancha of canchas(); track cancha.id) {
+        <mat-option [value]="cancha.id">
+          {{ cancha.nombre }}
+          @if (cancha.tipoCancha; as tipo) {
+            <span class="tipo-cancha">({{ tipo.nombre }})</span>
+          }
+        </mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.canchaId.hasError('required')) {
+      <mat-error>La cancha es obligatoria.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Fecha</mat-label>
+    <input matInput [matDatepicker]="calendario" formControlName="fecha" placeholder="DD/MM/AAAA" />
+    <mat-datepicker-toggle matIconSuffix [for]="calendario" />
+    <mat-datepicker #calendario />
+    <!-- El error de formato va primero: cuando lo escrito no se entiende,
+         Material deja el control en `null` y salta también `required`. -->
+    @if (formulario.controls.fecha.hasError('matDatepickerParse')) {
+      <mat-error>Escribí la fecha como DD/MM/AAAA, o elegila del calendario.</mat-error>
+    } @else if (formulario.controls.fecha.hasError('required')) {
+      <mat-error>La fecha es obligatoria.</mat-error>
+    }
+  </mat-form-field>
+
+  <!-- Acá el rango no es un turno sino el horario en que abre la cancha ese día:
+       de ahí que las etiquetas hablen de abrir y cerrar. -->
+  <div class="horas">
+    <mat-form-field appearance="outline">
+      <mat-label>Abre a las</mat-label>
+      <input matInput [matTimepicker]="desde" formControlName="horaInicio" placeholder="HH:mm" />
+      <mat-timepicker-toggle matIconSuffix [for]="desde" aria-label="Elegir la hora de apertura" />
+      <mat-timepicker #desde interval="30m" />
+      @if (formulario.controls.horaInicio.hasError('matTimepickerParse')) {
+        <mat-error>Escribí la hora como HH:mm, o elegila de la lista.</mat-error>
+      } @else if (formulario.controls.horaInicio.hasError('required')) {
+        <mat-error>La hora de apertura es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Cierra a las</mat-label>
+      <input matInput [matTimepicker]="hasta" formControlName="horaFin" placeholder="HH:mm" />
+      <mat-timepicker-toggle matIconSuffix [for]="hasta" aria-label="Elegir la hora de cierre" />
+      <mat-timepicker #hasta interval="30m" />
+      @if (formulario.controls.horaFin.hasError('matTimepickerParse')) {
+        <mat-error>Escribí la hora como HH:mm, o elegila de la lista.</mat-error>
+      } @else if (formulario.controls.horaFin.hasError('required')) {
+        <mat-error>La hora de cierre es obligatoria.</mat-error>
+      } @else if (formulario.controls.horaFin.hasError('horasInvertidas')) {
+        <mat-error>Tiene que ser posterior a la hora de apertura.</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Duración de cada turno</mat-label>
+    <mat-select formControlName="duracion">
+      @for (duracion of duraciones; track duracion) {
+        <mat-option [value]="duracion">{{ etiquetaDuracion(duracion) }}</mat-option>
+      }
+    </mat-select>
+    @if (formulario.controls.duracion.hasError('required')) {
+      <mat-error>La duración es obligatoria.</mat-error>
+    } @else if (formulario.controls.duracion.hasError('rangoCorto')) {
+      <mat-error>No entra ningún turno de esa duración en ese horario.</mat-error>
+    }
+  </mat-form-field>
+
+  <!-- Adelanta cuántos turnos salen del rango cargado. Cuántos se van a crear de
+       verdad lo dice el backend al volver, porque depende de los que ya estén. -->
+  @if (cuantosTurnos; as cuantos) {
+    <p class="resumen">
+      Se van a generar {{ cuantos }} {{ cuantos === 1 ? 'turno' : 'turnos' }}. Los que ya estén
+      cargados se saltean.
+    </p>
+  }
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="generando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="generando()">Generar</button>
+  </div>
+</form>

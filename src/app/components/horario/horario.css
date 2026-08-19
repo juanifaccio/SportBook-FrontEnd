@@ -1,6 +1,20 @@
 /* Mobile-first: la vista base es la de tarjetas apiladas. La tabla solo aparece
    a partir de MD, donde hay ancho suficiente para las columnas. */
 
+/* Los dos botones del encabezado comparten el `span` que hospeda el tooltip de
+   "primero creá una cancha", así que la fila la arma este contenedor. En mobile
+   se apilan, que es donde no entran uno al lado del otro. */
+.acciones-encabezado,
+.acciones-vacio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.acciones-vacio {
+  justify-content: center;
+}
+
 .selector-cancha {
   width: 100%;
   max-width: 20rem;

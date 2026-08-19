@@ -79,6 +79,30 @@ describe('HorarioService', () => {
     req.flush({ id: 7, ...dto });
   });
 
+  it('manda la generación en lote a su propio endpoint', () => {
+    const lote = {
+      fecha: '2026-08-20',
+      horaInicio: '08:00',
+      horaFin: '12:00',
+      canchaId: 3,
+      duracion: 60
+    };
+
+    let recibido: unknown;
+
+    service.generar(lote).subscribe((resultado) => (recibido = resultado));
+
+    const req = httpMock.expectOne(`${url}/lote`);
+    expect(req.request.method).toBe('POST');
+    // El cuerpo va tal cual: el rango y la duración son del lote, no de un turno.
+    expect(req.request.body).toEqual(lote);
+
+    const respuesta = { creados: [{ id: 1, ...dto }], omitidos: 2 };
+    req.flush(respuesta);
+
+    expect(recibido).toEqual(respuesta);
+  });
+
   it('apunta al recurso por id al actualizar y eliminar', () => {
     service.actualizar(3, dto).subscribe();
     const reqPut = httpMock.expectOne(`${url}/3`);
