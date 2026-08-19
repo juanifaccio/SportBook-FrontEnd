@@ -8,6 +8,22 @@
   min-width: 0;
 }
 
+/* La reserva elegida en el campo cerrado del selector: dos renglones, con el
+   dueño abajo. `white-space` vuelve a normal porque Material deja el valor en
+   una sola línea, que es justamente lo que había que partir. */
+.reserva-elegida {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.reserva-elegida .dueno {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 /* La reserva y el monto al corregir: se leen como campos más, pero no se tocan. */
 .solo-lectura {
   display: flex;

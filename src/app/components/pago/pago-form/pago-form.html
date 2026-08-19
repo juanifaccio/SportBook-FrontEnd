@@ -13,6 +13,22 @@
     <mat-form-field appearance="outline">
       <mat-label>Reserva</mat-label>
       <mat-select formControlName="reservaId">
+        <!-- El campo cerrado es de un renglón y recorta con puntos suspensivos,
+             así que la etiqueta entera se comía justo el final: el nombre. Acá
+             se parte en dos, con el dueño abajo, y lo que se recorta es cada
+             renglón por su cuenta. En la lista abierta no hace falta: la opción
+             crece a los renglones que necesite. -->
+        <mat-select-trigger>
+          @if (reservaElegida; as reserva) {
+            <span class="reserva-elegida">
+              <span>{{ etiquetaDeReserva(reserva) }}</span>
+              @if (reserva.usuario; as usuario) {
+                <span class="dueno">{{ usuario.nombre }}</span>
+              }
+            </span>
+          }
+        </mat-select-trigger>
+
         @for (reserva of reservas(); track reserva.id) {
           <mat-option [value]="reserva.id">{{ etiquetaDeReservaConUsuario(reserva) }}</mat-option>
         }
