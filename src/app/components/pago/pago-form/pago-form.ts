@@ -14,7 +14,7 @@ import {
   PagoDto,
   saldoDe
 } from '../../../models/pago';
-import { Reserva, etiquetaDeReserva } from '../../../models/reserva';
+import { Reserva, etiquetaDeReservaConUsuario } from '../../../models/reserva';
 
 /**
  * Formulario de registro y corrección de un pago.
@@ -58,7 +58,9 @@ export class PagoFormComponent {
 
   protected readonly metodos = METODOS_PAGO;
   protected readonly etiquetasMetodo = ETIQUETAS_METODO_PAGO;
-  protected readonly etiquetaDeReserva = etiquetaDeReserva;
+  // Con el nombre del dueño: el que cobra es el administrador, y sin él no
+  // sabría a quién le está registrando el pago.
+  protected readonly etiquetaDeReservaConUsuario = etiquetaDeReservaConUsuario;
 
   // El monto y la reserva arrancan en `null` y no en cero: `required` da por
   // válido un 0, así que un control numérico vacío tiene que ser nulo para que
@@ -135,7 +137,9 @@ export class PagoFormComponent {
       return '';
     }
 
-    return pago.reserva ? etiquetaDeReserva(pago.reserva) : `Reserva #${pago.reservaId}`;
+    return pago.reserva
+      ? etiquetaDeReservaConUsuario(pago.reserva)
+      : `Reserva #${pago.reservaId}`;
   }
 
   protected alEnviar(): void {
