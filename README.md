@@ -20,7 +20,10 @@ través de una API REST en JSON. El backend vive en su propio repositorio,
 
 ## Requisitos previos
 
-- **Node.js 20 o superior** y **npm 10 o superior**. Verificalo con:
+- **Node.js 22.22.3 o superior** y **npm 10 o superior**. El mínimo lo pone
+  Angular 22, que admite `^22.22.3 || ^24.15.0 || >=26.0.0`: con Node 20 el CLI
+  se niega a compilar. El proyecto se desarrolla sobre el **LTS 24**, que es lo
+  recomendable si estás instalando de cero. Verificalo con:
 
   ```bash
   node --version
@@ -78,13 +81,14 @@ Dos suites, que prueban cosas distintas y se corren por separado.
 
 ### Unitarios (`npm test`)
 
-**238 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
-más el adaptador de fechas, la sesión, el interceptor de errores, los guards y el
-login. Se ejecutan sobre el DOM simulado de jsdom, sin navegador.
+**257 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
+más el adaptador de fechas, la sesión, el interceptor de errores, los guards, el
+login y el perfil propio. Se ejecutan sobre el DOM simulado de jsdom, sin
+navegador.
 
 ### End-to-end (`npm run e2e`)
 
-**97 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
+**107 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
 manejan desde un navegador como lo haría una persona. Recorren los flujos
 completos —entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse—
 sobre el bundle real, con el router, los guards y los diálogos de Material.
@@ -126,6 +130,7 @@ e2e/
   niveles-de-acceso.spec.ts qué ve y a dónde entra cada rol
   navegacion.spec.ts        ruteo, títulos, 404 y menú lateral responsive
   tipo-cancha.spec.ts       el ABM de referencia, de punta a punta
+  horario.spec.ts           los turnos de una cancha y la generación en lote
   reservar.spec.ts          el caso de uso central
   gestion-reservas.spec.ts  listar, filtrar, reprogramar y cancelar
   evento.spec.ts            el evento de una reserva, con los dos roles
