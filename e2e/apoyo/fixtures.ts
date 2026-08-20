@@ -1,4 +1,4 @@
-import { Locator, Page, test as base } from '@playwright/test';
+import { Locator, Page, expect as esperar, test as base } from '@playwright/test';
 import { ApiFalsa } from './api-falsa';
 import { UsuarioSembrado } from './datos';
 
@@ -90,8 +90,18 @@ export const elegirOpcion = async (
   etiqueta: string,
   opcion: string | RegExp
 ): Promise<void> => {
+  // Si se viene de elegir en otro select —o en este mismo—, su panel todavía
+  // puede estar cerrándose. Sin esperar a que se vaya, el click caería en una
+  // opción de ese panel viejo, que se desprende del DOM a mitad de camino.
+  //
+  // Se lo busca por su clase y no por el rol `listbox`: la pantalla de reservar
+  // muestra los turnos en una lista que tiene ese mismo rol y nunca se cierra.
+  const panel = pagina.locator('.mat-mdc-select-panel');
+
+  await esperar(panel).toHaveCount(0);
+
   await pagina.getByRole('combobox', { name: etiqueta }).click();
-  await pagina.getByRole('option', { name: opcion }).click();
+  await panel.getByRole('option', { name: opcion }).click();
 };
 
 /**

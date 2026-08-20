@@ -711,7 +711,7 @@ export class ApiFalsa {
   }
 
   private canchas(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
-    const { metodo, ruta, cuerpo } = pedido;
+    const { metodo, ruta, parametros, cuerpo } = pedido;
     const prohibido = this.soloLeeElCliente(metodo, sesion);
 
     if (prohibido) {
@@ -721,7 +721,25 @@ export class ApiFalsa {
     const id = idDe(ruta, '/canchas');
 
     if (metodo === 'GET' && ruta === '/canchas') {
-      return ok(this.estado.canchas.map((cancha) => this.conTipo(cancha)));
+      const tipoCanchaId = parametros.get('tipoCanchaId');
+
+      // Un tipo que no es un número es un dato inválido; uno que no existe no,
+      // porque no es un error sino una búsqueda sin resultados.
+      if (tipoCanchaId !== null && !/^\d+$/.test(tipoCanchaId)) {
+        return falla(400, 'El id del tipo de cancha debe ser un número');
+      }
+
+      const filtradas = this.estado.canchas.filter(
+        (cancha) => tipoCanchaId === null || cancha.tipoCanchaId === Number(tipoCanchaId)
+      );
+
+      // Ordenadas por nombre, como el backend: el listado se usa para encontrar
+      // una cancha y el orden de alta no ayuda a eso.
+      return ok(
+        [...filtradas]
+          .sort((una, otra) => una.nombre.localeCompare(otra.nombre))
+          .map((cancha) => this.conTipo(cancha))
+      );
     }
 
     const datos = {

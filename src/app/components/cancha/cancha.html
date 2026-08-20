@@ -13,6 +13,26 @@
   </span>
 </header>
 
+<!-- El filtro necesita los tipos cargados, así que no aparece hasta que
+     llegaron. Se queda a la vista mientras se recarga la lista: es lo que
+     explica por qué se están viendo esas canchas y no todas. -->
+@if (hayTipos()) {
+  <div class="filtros">
+    <!-- "Tipo" y no "Tipo de cancha": es el nombre corto que usan los filtros de
+         /reservas, y así no se confunde con el campo del formulario, que se
+         abre encima de este. -->
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo</mat-label>
+      <mat-select [value]="tipoFiltro()" (valueChange)="alCambiarTipo($event)">
+        <mat-option [value]="null">Todos</mat-option>
+        @for (tipo of tipos(); track tipo.id) {
+          <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+}
+
 @if (cargando()) {
   <div class="estado-mensaje">
     <mat-spinner diameter="48" />
@@ -39,15 +59,29 @@
     </button>
   </div>
 } @else if (canchas().length === 0) {
-  <div class="estado-mensaje">
-    <mat-icon>stadium</mat-icon>
-    <h2>Todavía no hay canchas</h2>
-    <p>Creá la primera para poder empezar a recibir reservas.</p>
-    <button mat-flat-button type="button" (click)="abrirAlta()">
-      <mat-icon>add</mat-icon>
-      Nueva cancha
-    </button>
-  </div>
+  <!-- Una lista vacía por el filtro no es lo mismo que no tener ninguna cancha:
+       en un caso hay que ampliar la búsqueda y en el otro, cargar la primera. -->
+  @if (hayFiltro()) {
+    <div class="estado-mensaje">
+      <mat-icon>filter_alt_off</mat-icon>
+      <h2>Ninguna cancha es de {{ nombreDelTipoFiltrado() }}</h2>
+      <p>Probá con otro tipo o mirá todas las canchas del complejo.</p>
+      <button mat-stroked-button type="button" (click)="limpiarFiltro()">
+        <mat-icon>clear</mat-icon>
+        Ver todas
+      </button>
+    </div>
+  } @else {
+    <div class="estado-mensaje">
+      <mat-icon>stadium</mat-icon>
+      <h2>Todavía no hay canchas</h2>
+      <p>Creá la primera para poder empezar a recibir reservas.</p>
+      <button mat-flat-button type="button" (click)="abrirAlta()">
+        <mat-icon>add</mat-icon>
+        Nueva cancha
+      </button>
+    </div>
+  }
 } @else if (esPantallaAncha()) {
   <table mat-table [dataSource]="canchas()" class="tabla">
     <ng-container matColumnDef="nombre">
