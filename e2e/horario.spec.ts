@@ -43,6 +43,20 @@ test.describe('horarios de una cancha', () => {
     }
   };
 
+  /**
+   * Elige la cancha **del diálogo**, que tiene su propio selector: el de la
+   * pantalla sigue ahí atrás, así que buscarlo por su etiqueta a secas devuelve
+   * dos. La opción, en cambio, se abre en el overlay de Material, fuera del
+   * diálogo.
+   */
+  const elegirCanchaDelDialogo = async (
+    formulario: ReturnType<typeof dialogo>,
+    nombre: string
+  ) => {
+    await formulario.getByRole('combobox', { name: 'Cancha' }).click();
+    await formulario.page().getByRole('option', { name: new RegExp(nombre) }).click();
+  };
+
   test('lista los turnos de la cancha elegida', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/horarios');
 
@@ -92,6 +106,59 @@ test.describe('horarios de una cancha', () => {
     ]);
     // Un turno recién generado nace libre, listo para reservarse.
     expect(generados.every((horario) => horario.disponible)).toBe(true);
+  });
+
+  /**
+   * La cancha se elige en dos lugares: en la pantalla y adentro del diálogo, que
+   * viene propuesto con la de la pantalla pero se puede cambiar. Sin esto, el
+   * aviso decía que se habían generado los turnos y la tabla no se movía, porque
+   * seguía listando los de la cancha de la pantalla: parecía que no había
+   * funcionado.
+   */
+  test('sigue al lote cuando se genera para otra cancha', async ({ page }) => {
+    await abrirComo(page, ADMINISTRADOR, '/horarios');
+
+    // Arranca en la Cancha 1, con sus cuatro turnos.
+    await expect(page.locator('table tbody tr')).toHaveCount(4);
+
+    await botonGenerar(page).click();
+
+    const formulario = dialogo(page);
+
+    await elegirCanchaDelDialogo(formulario, CANCHA_3.nombre);
+    await generar(formulario, '08:00', '10:00');
+    await formulario.getByRole('button', { name: 'Generar' }).click();
+
+    await expect(formulario).toBeHidden();
+    await expect(notificacion(page)).toContainText('Se generaron 2 turnos.');
+
+    // La pantalla pasó a la cancha del lote, y los turnos nuevos están a la
+    // vista: son los únicos que tiene la Cancha 3.
+    await expect(page.getByRole('combobox', { name: 'Cancha' })).toContainText(CANCHA_3.nombre);
+    await expect(page.locator('table tbody tr')).toHaveCount(2);
+    await expect(page.locator('table')).toContainText('08:00');
+  });
+
+  /** Lo mismo con el alta de a uno, que también deja elegir cancha. */
+  test('sigue al turno cargado en otra cancha', async ({ page }) => {
+    await abrirComo(page, ADMINISTRADOR, '/horarios');
+
+    await page.getByRole('button', { name: 'Nuevo horario' }).click();
+
+    const formulario = dialogo(page);
+
+    await elegirCanchaDelDialogo(formulario, CANCHA_3.nombre);
+    await escribirFecha(formulario, 'Fecha', MANANA);
+    await formulario.getByLabel('Desde').fill('16:00');
+    await formulario.getByLabel('Hasta').fill('17:00');
+    await formulario.getByRole('button', { name: 'Crear' }).click();
+
+    await expect(formulario).toBeHidden();
+    await expect(notificacion(page)).toContainText('Horario creado correctamente.');
+
+    await expect(page.getByRole('combobox', { name: 'Cancha' })).toContainText(CANCHA_3.nombre);
+    await expect(page.locator('table tbody tr')).toHaveCount(1);
+    await expect(page.locator('table')).toContainText('16:00');
   });
 
   test('saltea los turnos que ya estaban y avisa cuántos', async ({ page, api }) => {

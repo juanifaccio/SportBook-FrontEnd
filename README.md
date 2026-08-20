@@ -88,7 +88,7 @@ navegador.
 
 ### End-to-end (`npm run e2e`)
 
-**107 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
+**109 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
 manejan desde un navegador como lo haría una persona. Recorren los flujos
 completos —entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse—
 sobre el bundle real, con el router, los guards y los diálogos de Material.
