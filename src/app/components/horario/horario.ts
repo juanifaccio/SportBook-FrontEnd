@@ -113,6 +113,20 @@ export class HorarioComponent implements OnInit {
   }
 
   protected alCambiarCancha(canchaId: number): void {
+    this.mostrarTurnosDe(canchaId);
+  }
+
+  /**
+   * Deja a la vista los turnos de una cancha, sea porque el usuario la eligió en
+   * el selector o porque acaba de guardar algo en ella.
+   *
+   * Lo segundo es lo que hace que la pantalla siga a lo que se guardó: tanto el
+   * formulario como el lote dejan elegir cancha, así que lo recién creado puede
+   * no pertenecer a la lista que se está mostrando. Recargar la cancha elegida y
+   * nada más dejaba la tabla igual que antes, con un cartel diciendo que se
+   * habían creado doce turnos: parecía que no había funcionado.
+   */
+  private mostrarTurnosDe(canchaId: number): void {
     this.canchaSeleccionada.set(canchaId);
     this.cargarHorarios();
   }
@@ -177,10 +191,9 @@ export class HorarioComponent implements OnInit {
         horario ? 'Horario actualizado correctamente.' : 'Horario creado correctamente.'
       );
 
-      // El turno guardado puede haber quedado en otra cancha, y entonces ya no
-      // pertenece a la lista que se está mostrando: se recarga la de la cancha
-      // elegida en vez de tocar la lista en memoria.
-      this.cargarHorarios();
+      // El formulario también deja elegir cancha, así que el turno guardado
+      // puede haber quedado en otra: la pantalla lo sigue hasta ahí.
+      this.mostrarTurnosDe(guardado.canchaId);
     });
   }
 
@@ -209,9 +222,18 @@ export class HorarioComponent implements OnInit {
 
       this.notificacion.exito(this.resumenDelLote(resultado));
 
-      // El lote puede haber caído en otra cancha, y entonces sus turnos no
-      // pertenecen a la lista que se está mostrando: se recarga la de la cancha
-      // elegida en vez de tocar la lista en memoria.
+      // Todos los turnos del lote son de la misma cancha, así que el primero
+      // alcanza para saber a cuál seguir. La lista nunca viene vacía —si no
+      // quedaba ninguno por crear, el backend responde 409 y el diálogo no se
+      // cierra—, pero si lo estuviera igual hay que recargar: pudo haber
+      // cambiado algo de la cancha que se está mirando.
+      const primero = resultado.creados[0];
+
+      if (primero) {
+        this.mostrarTurnosDe(primero.canchaId);
+        return;
+      }
+
       this.cargarHorarios();
     });
   }
