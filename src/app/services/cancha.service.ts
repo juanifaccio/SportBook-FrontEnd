@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Cancha, CanchaDto } from '../models/cancha';
+import { Cancha, CanchaDto, FiltrosCancha } from '../models/cancha';
 import { environment } from '../../environments/environment';
 
 /**
@@ -19,8 +19,21 @@ export class CanchaService {
 
   private readonly url = `${environment.apiUrl}/canchas`;
 
-  listar(): Observable<Cancha[]> {
-    return this.http.get<Cancha[]>(this.url);
+  /**
+   * El listado, opcionalmente filtrado. Las claves sin valor no se mandan: una
+   * `tipoCanchaId=` vacía en la query es un filtro inválido para el backend,
+   * no la ausencia de filtro.
+   */
+  listar(filtros: FiltrosCancha = {}): Observable<Cancha[]> {
+    let params = new HttpParams();
+
+    for (const [clave, valor] of Object.entries(filtros)) {
+      if (valor !== undefined) {
+        params = params.set(clave, valor);
+      }
+    }
+
+    return this.http.get<Cancha[]>(this.url, { params });
   }
 
   obtener(id: number): Observable<Cancha> {

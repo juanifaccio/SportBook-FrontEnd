@@ -12,6 +12,7 @@ describe('CanchaComponent', () => {
   const urlTipos = `${environment.apiUrl}/tipos-cancha`;
 
   const tipo = { id: 2, nombre: 'Fútbol 5', descripcion: 'Césped sintético' };
+  const padel = { id: 5, nombre: 'Pádel', descripcion: 'Cancha con paredes' };
 
   const cancha = {
     id: 1,
@@ -44,6 +45,9 @@ describe('CanchaComponent', () => {
   afterEach(() => {
     httpMock.verify();
   });
+
+  /** El listado filtrado llega con query, así que se lo busca por camino. */
+  const pedidoDeCanchas = () => httpMock.expectOne((pedido) => pedido.url === urlCanchas);
 
   it('se crea correctamente', () => {
     fixture.detectChanges();
@@ -82,6 +86,69 @@ describe('CanchaComponent', () => {
 
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('Todavía no hay tipos de cancha');
+  });
+
+  it('ofrece el filtro con los tipos cargados', async () => {
+    fixture.detectChanges();
+
+    responder([cancha], [tipo, padel]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Por el selector y no por su texto: las opciones las dibuja Material en un
+    // overlay recién cuando se lo abre, así que en el DOM todavía no están.
+    const filtro = (fixture.nativeElement as HTMLElement).querySelector('.filtros mat-select');
+    expect(filtro).not.toBeNull();
+  });
+
+  it('manda el tipo elegido al backend en vez de filtrar la lista en memoria', async () => {
+    fixture.detectChanges();
+
+    responder([cancha], [tipo, padel]);
+    await fixture.whenStable();
+
+    fixture.componentInstance['alCambiarTipo'](padel.id);
+
+    const req = pedidoDeCanchas();
+    expect(req.request.params.get('tipoCanchaId')).toBe(`${padel.id}`);
+    req.flush([]);
+    await fixture.whenStable();
+  });
+
+  // Sin valor, `tipoCanchaId=` en la query es un filtro inválido para el
+  // backend, no la ausencia de filtro.
+  it('no manda el parámetro cuando se vuelve a ver todas', async () => {
+    fixture.detectChanges();
+
+    responder([cancha], [tipo, padel]);
+    await fixture.whenStable();
+
+    fixture.componentInstance['alCambiarTipo'](padel.id);
+    pedidoDeCanchas().flush([]);
+    await fixture.whenStable();
+
+    fixture.componentInstance['limpiarFiltro']();
+
+    const req = pedidoDeCanchas();
+    expect(req.request.params.has('tipoCanchaId')).toBe(false);
+    req.flush([cancha]);
+    await fixture.whenStable();
+  });
+
+  it('distingue la lista vacía por el filtro de la lista vacía de verdad', async () => {
+    fixture.detectChanges();
+
+    responder([cancha], [tipo, padel]);
+    await fixture.whenStable();
+
+    fixture.componentInstance['alCambiarTipo'](padel.id);
+    pedidoDeCanchas().flush([]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Ninguna cancha es de Pádel');
+    expect(texto).not.toContain('Todavía no hay canchas');
   });
 
   it('ofrece reintentar cuando la carga falla', async () => {

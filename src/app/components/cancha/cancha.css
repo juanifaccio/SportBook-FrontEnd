@@ -1,5 +1,17 @@
-/* Mobile-first: la vista base es la de tarjetas apiladas. La tabla solo aparece
-   a partir de MD, donde hay ancho suficiente para las cinco columnas. */
+/* Mobile-first: el filtro arranca a lo ancho de la pantalla y la vista base es
+   la de tarjetas apiladas. La tabla solo aparece a partir de MD, donde hay
+   ancho suficiente para las cinco columnas. */
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filtros mat-form-field {
+  width: 100%;
+}
 
 .tarjetas {
   display: flex;
@@ -28,6 +40,10 @@
 }
 
 @media (min-width: 600px) {
+  .filtros mat-form-field {
+    width: 14rem;
+  }
+
   .tarjetas {
     /* En tablet vertical entran dos tarjetas por fila. */
     display: grid;

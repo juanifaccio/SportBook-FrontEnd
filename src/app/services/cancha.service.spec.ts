@@ -50,6 +50,25 @@ describe('CanchaService', () => {
     expect(recibidas).toEqual(esperados);
   });
 
+  it('manda el tipo como query cuando se filtra el listado', () => {
+    service.listar({ tipoCanchaId: 5 }).subscribe();
+
+    const req = httpMock.expectOne((pedido) => pedido.url === url);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('tipoCanchaId')).toBe('5');
+    req.flush([]);
+  });
+
+  // Una `tipoCanchaId=` vacía en la query es un filtro inválido para el
+  // backend, no la ausencia de filtro.
+  it('no manda claves sin valor', () => {
+    service.listar({ tipoCanchaId: undefined }).subscribe();
+
+    const req = httpMock.expectOne((pedido) => pedido.url === url);
+    expect(req.request.params.has('tipoCanchaId')).toBe(false);
+    req.flush([]);
+  });
+
   it('envía el alta con el tipo como id y sin el objeto anidado', () => {
     const dto = {
       nombre: 'Cancha 2',

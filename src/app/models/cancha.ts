@@ -29,3 +29,12 @@ export interface Cancha {
  * del cuerpo del request.
  */
 export type CanchaDto = Omit<Cancha, 'id' | 'tipoCancha'>;
+
+/**
+ * Filtros del listado, tal como los espera el backend en la query. Se filtra
+ * allá y no acá: traer todas las canchas del complejo para descartar la
+ * mayoría en el navegador es trabajo que crece con cada cancha que se sume.
+ */
+export interface FiltrosCancha {
+  tipoCanchaId?: number;
+}
