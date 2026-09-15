@@ -48,3 +48,8 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Configuración local de asistentes de código (no es código del proyecto)
+.claude/
+.agents/
+.windsurf/
