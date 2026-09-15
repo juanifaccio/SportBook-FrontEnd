@@ -1,5 +1,6 @@
 import { Page, Route } from '@playwright/test';
 import { Cancha } from '../../src/app/models/cancha';
+import { Equipamiento } from '../../src/app/models/equipamiento';
 import { Evento } from '../../src/app/models/evento';
 import { Horario, ResultadoLote } from '../../src/app/models/horario';
 import { MetodoPago, Pago } from '../../src/app/models/pago';
@@ -284,6 +285,10 @@ export class ApiFalsa {
 
     if (ruta.startsWith('/pagos')) {
       return this.pagos(pedido, sesion);
+    }
+
+    if (ruta.startsWith('/equipamientos')) {
+      return this.equipamientos(pedido, sesion);
     }
 
     if (ruta.startsWith('/canchas')) {
@@ -693,6 +698,113 @@ export class ApiFalsa {
       this.estado.tiposEvento.splice(indice, 1);
 
       return ok({ mensaje: 'Tipo de evento eliminado correctamente' });
+    }
+
+    return falla(404, 'No se encontró el recurso solicitado');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Equipamiento
+  // ---------------------------------------------------------------------------
+
+  private equipamientos(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
+    const { metodo, ruta, cuerpo } = pedido;
+    const prohibido = this.soloLeeElCliente(metodo, sesion);
+
+    if (prohibido) {
+      return prohibido;
+    }
+
+    const id = idDe(ruta, '/equipamientos');
+    const nombre = `${cuerpo['nombre'] ?? ''}`.trim();
+    const descripcion = `${cuerpo['descripcion'] ?? ''}`.trim();
+    const precio = Number(cuerpo['precio']);
+    const stock = Number(cuerpo['stock']);
+
+    const repetido = (): boolean =>
+      this.estado.equipamientos.some(
+        (equipamiento) =>
+          equipamiento.nombre.toLowerCase() === nombre.toLowerCase() && equipamiento.id !== id
+      );
+
+    /** Las mismas validaciones del controller, con sus mismos mensajes. */
+    const invalido = (): Respuesta | null => {
+      if (!nombre) {
+        return falla(400, 'El nombre es obligatorio');
+      }
+
+      if (!descripcion) {
+        return falla(400, 'La descripción es obligatoria');
+      }
+
+      if (isNaN(precio) || precio <= 0) {
+        return falla(400, 'El precio debe ser un número mayor a cero');
+      }
+
+      if (isNaN(stock) || !Number.isInteger(stock) || stock < 0) {
+        return falla(400, 'El stock debe ser un número entero mayor o igual a cero');
+      }
+
+      return repetido() ? falla(409, 'Ya existe un equipamiento con ese nombre') : null;
+    };
+
+    if (metodo === 'GET' && ruta === '/equipamientos') {
+      // Ordenado por nombre, como lo devuelve el backend.
+      return ok(
+        [...this.estado.equipamientos].sort((uno, otro) => uno.nombre.localeCompare(otro.nombre))
+      );
+    }
+
+    if (metodo === 'POST') {
+      const error = invalido();
+
+      if (error) {
+        return error;
+      }
+
+      const creado: Equipamiento = {
+        id: proximoId(this.estado.equipamientos),
+        nombre,
+        descripcion,
+        precio,
+        stock
+      };
+
+      this.estado.equipamientos.push(creado);
+
+      return ok(creado, 201);
+    }
+
+    const indice = this.estado.equipamientos.findIndex(
+      (equipamiento) => equipamiento.id === id
+    );
+
+    if (indice === -1) {
+      return falla(404, 'Equipamiento no encontrado');
+    }
+
+    if (metodo === 'GET') {
+      return ok(this.estado.equipamientos[indice]);
+    }
+
+    if (metodo === 'PUT') {
+      const error = invalido();
+
+      if (error) {
+        return error;
+      }
+
+      const actualizado: Equipamiento = { id: id as number, nombre, descripcion, precio, stock };
+
+      this.estado.equipamientos[indice] = actualizado;
+
+      return ok(actualizado);
+    }
+
+    if (metodo === 'DELETE') {
+      this.estado.equipamientos.splice(indice, 1);
+
+      return ok({ mensaje: 'Equipamiento eliminado correctamente' });
     }
 
     return falla(404, 'No se encontró el recurso solicitado');

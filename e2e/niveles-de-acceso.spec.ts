@@ -14,6 +14,7 @@ import { abrirComo, expect, notificacion, test } from './apoyo/fixtures';
 const PANTALLAS_DE_ADMIN = [
   { ruta: '/canchas', titulo: 'Canchas' },
   { ruta: '/horarios', titulo: 'Horarios' },
+  { ruta: '/equipamientos', titulo: 'Equipamiento' },
   { ruta: '/usuarios', titulo: 'Usuarios' },
   { ruta: '/tipos-cancha', titulo: 'Tipos de cancha' },
   { ruta: '/tipos-evento', titulo: 'Tipos de evento' }
@@ -21,7 +22,7 @@ const PANTALLAS_DE_ADMIN = [
 
 test.describe('Niveles de acceso', () => {
 
-  test('el administrador tiene en el menú las nueve pantallas', async ({ page }) => {
+  test('el administrador tiene en el menú las diez pantallas', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/reservar');
 
     // Se miran las etiquetas y no el nombre accesible del enlace: ese incluye
@@ -35,6 +36,7 @@ test.describe('Niveles de acceso', () => {
       'Pagos',
       'Canchas',
       'Horarios',
+      'Equipamiento',
       'Usuarios',
       'Tipos de cancha',
       'Tipos de evento'

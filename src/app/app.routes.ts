@@ -94,6 +94,15 @@ export const routes: Routes = [
         loadComponent: () => import('./components/horario/horario').then((m) => m.HorarioComponent)
       },
       {
+        path: 'equipamientos',
+        title: 'Equipamiento — SportBook',
+        // Con `adminGuard`: el stock y los precios los maneja el complejo. El
+        // cliente ve el equipamiento al reservar, no en esta pantalla.
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./components/equipamiento/equipamiento').then((m) => m.EquipamientoComponent)
+      },
+      {
         path: 'usuarios',
         title: 'Usuarios — SportBook',
         canActivate: [adminGuard],

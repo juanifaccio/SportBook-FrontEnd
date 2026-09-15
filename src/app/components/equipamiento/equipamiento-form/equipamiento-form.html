@@ -1,0 +1,58 @@
+<form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" maxlength="60" placeholder="Ej.: Pelota de fútbol" />
+    @if (formulario.controls.nombre.hasError('required')) {
+      <mat-error>El nombre es obligatorio.</mat-error>
+    } @else if (formulario.controls.nombre.hasError('maxlength')) {
+      <mat-error>El nombre no puede superar los 60 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Descripción</mat-label>
+    <input
+      matInput
+      formControlName="descripcion"
+      maxlength="255"
+      placeholder="Ej.: Número 5, de cuero sintético" />
+    @if (formulario.controls.descripcion.hasError('required')) {
+      <mat-error>La descripción es obligatoria.</mat-error>
+    } @else if (formulario.controls.descripcion.hasError('maxlength')) {
+      <mat-error>La descripción no puede superar los 255 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Precio por unidad</mat-label>
+    <span matTextPrefix>$&nbsp;</span>
+    <input matInput type="number" formControlName="precio" min="0.01" step="0.01" placeholder="Ej.: 1500" />
+    @if (formulario.controls.precio.hasError('required')) {
+      <mat-error>El precio es obligatorio.</mat-error>
+    } @else if (formulario.controls.precio.hasError('min')) {
+      <mat-error>El precio tiene que ser mayor a cero.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Stock</mat-label>
+    <input matInput type="number" formControlName="stock" min="0" step="1" placeholder="Ej.: 10" />
+    <!-- El cero es un valor válido y conviene decirlo: si no, parece que el
+         campo está mal cargado cuando el artículo está agotado. -->
+    <mat-hint>Cantidad de unidades. Puede ser cero si está agotado.</mat-hint>
+    @if (formulario.controls.stock.hasError('required')) {
+      <mat-error>El stock es obligatorio.</mat-error>
+    } @else if (formulario.controls.stock.hasError('min')) {
+      <mat-error>El stock no puede ser negativo.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="acciones">
+    <button mat-button type="button" [disabled]="guardando()" (click)="alCancelar()">
+      Cancelar
+    </button>
+    <button mat-flat-button type="submit" [disabled]="guardando()">
+      {{ esEdicion ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>
