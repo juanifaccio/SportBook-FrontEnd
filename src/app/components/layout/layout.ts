@@ -85,13 +85,14 @@ export class LayoutComponent {
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'payments' },
     { etiqueta: 'Canchas', ruta: '/canchas', icono: 'stadium', soloAdmin: true },
     { etiqueta: 'Horarios', ruta: '/horarios', icono: 'schedule', soloAdmin: true },
+    // En singular aunque la ruta sea plural: "Equipamiento" es como se lo nombra
+    // en el complejo, y la ruta sigue la convención del resto de la API.
+    { etiqueta: 'Equipamiento', ruta: '/equipamientos', icono: 'sports_soccer', soloAdmin: true },
     { etiqueta: 'Usuarios', ruta: '/usuarios', icono: 'group', soloAdmin: true },
     { etiqueta: 'Tipos de cancha', ruta: '/tipos-cancha', icono: 'category', soloAdmin: true },
     // `label` y no `celebration`: ese ícono pasó a ser el de Eventos, y repetirlo
     // haría que las dos entradas se confundan de un vistazo.
     { etiqueta: 'Tipos de evento', ruta: '/tipos-evento', icono: 'label', soloAdmin: true }
-    // A medida que se sumen entidades (Equipamiento, Reservas...) se agregan
-    // acá siguiendo este mismo formato.
   ];
 
   /**

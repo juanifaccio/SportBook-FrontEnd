@@ -1,4 +1,5 @@
 import { Cancha } from '../../src/app/models/cancha';
+import { Equipamiento } from '../../src/app/models/equipamiento';
 import { Evento } from '../../src/app/models/evento';
 import { Horario } from '../../src/app/models/horario';
 import { Pago } from '../../src/app/models/pago';
@@ -28,6 +29,7 @@ export interface EstadoApi {
   usuarios: UsuarioSembrado[];
   tiposCancha: TipoCancha[];
   tiposEvento: TipoEvento[];
+  equipamientos: Equipamiento[];
   canchas: Cancha[];
   horarios: Horario[];
   reservas: Reserva[];
@@ -107,6 +109,23 @@ export const PADEL: TipoCancha = {
   id: 2,
   nombre: 'Pádel',
   descripcion: 'Muro de vidrio y césped sintético'
+};
+
+export const PELOTA: Equipamiento = {
+  id: 1,
+  nombre: 'Pelota de fútbol',
+  descripcion: 'Número 5, de cuero sintético',
+  precio: 1500,
+  stock: 10
+};
+
+/** Uno agotado, para poder ejercitar el aviso de "Sin stock" del listado. */
+export const PECHERAS: Equipamiento = {
+  id: 2,
+  nombre: 'Juego de pecheras',
+  descripcion: 'Diez unidades, talle único',
+  precio: 800,
+  stock: 0
 };
 
 export const CANCHA_1: Cancha = {
@@ -250,6 +269,7 @@ export const datosIniciales = (): EstadoApi =>
     usuarios: [ADMINISTRADOR, ANA, BRUNO],
     tiposCancha: [FUTBOL_5, PADEL],
     tiposEvento: [CUMPLEANIOS, TORNEO],
+    equipamientos: [PECHERAS, PELOTA],
     canchas: [CANCHA_1, CANCHA_2, CANCHA_3],
     horarios: TURNOS,
     reservas: RESERVAS,
