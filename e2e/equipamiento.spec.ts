@@ -1,3 +1,4 @@
+import { Locator, Page } from '@playwright/test';
 import { ADMINISTRADOR, PECHERAS, PELOTA } from './apoyo/datos';
 import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures';
 
@@ -9,6 +10,27 @@ import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures
  * el stock —donde el cero es un valor válido y no un campo vacío— y que el
  * catálogo sea de administración aunque el cliente vaya a leerlo al reservar.
  */
+
+/**
+ * Abre un diálogo del ABM y espera a que el foco haya terminado de moverse.
+ *
+ * El diálogo de Material atrapa el foco y lo lleva al primer campo al abrirse.
+ * `fill` reemplaza el contenido en dos pasos —selecciona y después inserta—, así
+ * que si ese movimiento del foco le cae en el medio, el texto termina en el
+ * campo equivocado. Con cuatro campos para completar es fácil que pase, y en
+ * una corrida en paralelo pasaba de a ratos: esperar a que el primer campo tenga
+ * el foco es lo que dice que el diálogo ya terminó de abrirse.
+ */
+const abrirDialogo = async (pagina: Page, boton: string | RegExp): Promise<Locator> => {
+  await pagina.getByRole('button', { name: boton }).click();
+
+  const formulario = dialogo(pagina);
+
+  await expect(formulario.getByLabel('Nombre')).toBeFocused();
+
+  return formulario;
+};
+
 test.describe('ABM de equipamiento', () => {
 
   test('lista en una tabla lo que devuelve la API, ordenado por nombre', async ({ page }) => {
@@ -34,9 +56,7 @@ test.describe('ABM de equipamiento', () => {
   test('crea uno nuevo y lo suma a la tabla', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
-    await page.getByRole('button', { name: 'Nuevo equipamiento' }).click();
-
-    const formulario = dialogo(page);
+    const formulario = await abrirDialogo(page, 'Nuevo equipamiento');
 
     await expect(formulario.getByRole('heading', { name: 'Nuevo equipamiento' })).toBeVisible();
 
@@ -63,9 +83,7 @@ test.describe('ABM de equipamiento', () => {
   test('deja crear uno con stock cero', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
-    await page.getByRole('button', { name: 'Nuevo equipamiento' }).click();
-
-    const formulario = dialogo(page);
+    const formulario = await abrirDialogo(page, 'Nuevo equipamiento');
 
     await formulario.getByLabel('Nombre').fill('Red de vóley');
     await formulario.getByLabel('Descripción').fill('Reglamentaria');
@@ -80,23 +98,22 @@ test.describe('ABM de equipamiento', () => {
   test('no deja crear uno vacío', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
-    await page.getByRole('button', { name: 'Nuevo equipamiento' }).click();
-    await dialogo(page).getByRole('button', { name: 'Crear' }).click();
+    const formulario = await abrirDialogo(page, 'Nuevo equipamiento');
+
+    await formulario.getByRole('button', { name: 'Crear' }).click();
 
     await expect(page.getByText('El nombre es obligatorio.')).toBeVisible();
     await expect(page.getByText('La descripción es obligatoria.')).toBeVisible();
     await expect(page.getByText('El precio es obligatorio.')).toBeVisible();
     await expect(page.getByText('El stock es obligatorio.')).toBeVisible();
     // El diálogo sigue abierto: no se pierde lo que el usuario venía cargando.
-    await expect(dialogo(page)).toBeVisible();
+    await expect(formulario).toBeVisible();
   });
 
   test('no deja cargar un precio de cero', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
-    await page.getByRole('button', { name: 'Nuevo equipamiento' }).click();
-
-    const formulario = dialogo(page);
+    const formulario = await abrirDialogo(page, 'Nuevo equipamiento');
 
     await formulario.getByLabel('Nombre').fill('Silbato');
     await formulario.getByLabel('Descripción').fill('Metálico');
@@ -105,7 +122,7 @@ test.describe('ABM de equipamiento', () => {
     await formulario.getByRole('button', { name: 'Crear' }).click();
 
     await expect(page.getByText('El precio tiene que ser mayor a cero.')).toBeVisible();
-    await expect(dialogo(page)).toBeVisible();
+    await expect(formulario).toBeVisible();
   });
 
   test('el diálogo queda abierto y con los datos cuando el backend rechaza el alta', async ({
@@ -113,9 +130,7 @@ test.describe('ABM de equipamiento', () => {
   }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
-    await page.getByRole('button', { name: 'Nuevo equipamiento' }).click();
-
-    const formulario = dialogo(page);
+    const formulario = await abrirDialogo(page, 'Nuevo equipamiento');
 
     // El nombre es único: la API responde 409 con su propio mensaje.
     await formulario.getByLabel('Nombre').fill(PELOTA.nombre);
@@ -132,9 +147,7 @@ test.describe('ABM de equipamiento', () => {
   test('edita uno existente', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
-    await page.getByRole('button', { name: `Editar ${PELOTA.nombre}` }).click();
-
-    const formulario = dialogo(page);
+    const formulario = await abrirDialogo(page, `Editar ${PELOTA.nombre}`);
 
     await expect(formulario.getByRole('heading', { name: 'Editar equipamiento' })).toBeVisible();
     await expect(formulario.getByLabel('Nombre')).toHaveValue(PELOTA.nombre);
