@@ -81,14 +81,14 @@ Dos suites, que prueban cosas distintas y se corren por separado.
 
 ### Unitarios (`npm test`)
 
-**257 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
+**291 tests con Vitest**: el servicio, el componente y el diálogo de cada CRUD,
 más el adaptador de fechas, la sesión, el interceptor de errores, los guards, el
 login y el perfil propio. Se ejecutan sobre el DOM simulado de jsdom, sin
 navegador.
 
 ### End-to-end (`npm run e2e`)
 
-**109 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
+**135 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
 manejan desde un navegador como lo haría una persona. Recorren los flujos
 completos —entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse—
 sobre el bundle real, con el router, los guards y los diálogos de Material.

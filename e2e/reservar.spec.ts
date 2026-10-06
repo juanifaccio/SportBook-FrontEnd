@@ -1,5 +1,14 @@
 import { Locator, Page } from '@playwright/test';
-import { ADMINISTRADOR, ANA, CANCHA_1, CANCHA_2, CANCHA_3, MANANA } from './apoyo/datos';
+import {
+  ADMINISTRADOR,
+  ANA,
+  CANCHA_1,
+  CANCHA_2,
+  CANCHA_3,
+  MANANA,
+  PECHERAS,
+  PELOTA
+} from './apoyo/datos';
 import {
   abrirComo,
   dialogo,
@@ -246,6 +255,103 @@ test.describe('Reservar una cancha', () => {
     ).toBeVisible();
     expect(api.estado.reservas).toHaveLength(5);
     expect(api.estado.eventos).toHaveLength(1);
+  });
+
+  // La #13: el equipamiento va en el mismo request de la reserva, porque cambia
+  // el precio total.
+  test('reserva alquilando equipamiento y el total lo suma', async ({ page, api }) => {
+    await abrirComo(page, ANA, '/reservar');
+    await elegirDia(page, MANANA);
+    await turnos(page).first().click();
+
+    await page.getByRole('checkbox', { name: 'Alquilar equipamiento' }).check();
+
+    const lista = page.getByRole('list', { name: 'Equipamiento para alquilar' });
+
+    await expect(lista).toContainText(`${PELOTA.nombre}`);
+    await expect(lista).toContainText('quedan 10');
+    // Las pecheras tienen stock cero: siguen en el catálogo, pero no se ofrecen.
+    await expect(lista).toContainText('sin unidades para este turno');
+    await expect(
+      page.getByRole('button', { name: `Agregar una unidad de ${PECHERAS.nombre}` })
+    ).toBeDisabled();
+
+    const agregarPelota = page.getByRole('button', { name: `Agregar una unidad de ${PELOTA.nombre}` });
+
+    await agregarPelota.click();
+    await agregarPelota.click();
+
+    // Una hora a 8000 más dos pelotas a 1500.
+    const resumen = page.locator('.resumen');
+
+    await expect(resumen).toContainText(`2 × ${PELOTA.nombre}`);
+    await expect(resumen).toContainText('11.000');
+
+    await page.getByRole('button', { name: 'Reservar' }).click();
+
+    const confirmacion = dialogo(page);
+
+    await expect(confirmacion).toContainText(`2 × ${PELOTA.nombre}`);
+    await expect(confirmacion).toContainText('3.000');
+
+    await confirmacion.getByRole('button', { name: 'Confirmar reserva' }).click();
+
+    await expect(confirmacion).toBeHidden();
+    await expect(notificacion(page)).toContainText('Reserva confirmada correctamente.');
+
+    const creada = api.estado.reservas.at(-1);
+
+    expect(creada?.precioTotal).toBe(11000);
+    expect(api.estado.reservaEquipamientos).toEqual([
+      { id: 1, reservaId: creada?.id, equipamientoId: PELOTA.id, cantidad: 2, subtotal: 3000 }
+    ]);
+  });
+
+  // El stock son las unidades del complejo: lo que alquila una reserva no está
+  // en los turnos que se le superponen, en ninguna cancha, pero sí en los demás.
+  test('lo alquilado en un turno no se ofrece en los que se le superponen', async ({
+    page,
+    api
+  }) => {
+    api.estado.reservas.push({
+      id: 5,
+      fecha: MANANA,
+      horaInicio: '10:00',
+      horaFin: '11:00',
+      estado: 'PENDIENTE',
+      precioTotal: 23000,
+      usuarioId: ANA.id,
+      canchaId: CANCHA_1.id,
+      horarioId: 1
+    });
+    api.estado.reservaEquipamientos.push({
+      id: 1,
+      cantidad: 10,
+      subtotal: 15000,
+      reservaId: 5,
+      equipamientoId: PELOTA.id
+    });
+
+    await abrirComo(page, ANA, '/reservar');
+    await elegirDia(page, MANANA);
+    await elegirOpcion(page, 'Cancha', /Cancha 2/);
+
+    await page.getByRole('checkbox', { name: 'Alquilar equipamiento' }).check();
+
+    const lista = page.getByRole('list', { name: 'Equipamiento para alquilar' });
+    const agregarPelota = page.getByRole('button', { name: `Agregar una unidad de ${PELOTA.nombre}` });
+
+    // De 09:00 a 10:30 se pisa con la reserva de 10:00 a 11:00 de la Cancha 1.
+    await turnos(page).filter({ hasText: '09:00 a 10:30' }).click();
+
+    await expect(lista).not.toContainText('quedan');
+    await expect(agregarPelota).toBeDisabled();
+
+    // De 08:00 a 09:00 no se pisa con nada: las diez pelotas están libres.
+    await turnos(page).filter({ hasText: '08:00 a 09:00' }).click();
+
+    await expect(lista).toContainText('quedan 10');
+    await expect(agregarPelota).toBeEnabled();
   });
 
   test('con el backend caído ofrece reintentar', async ({ page, api }) => {

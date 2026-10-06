@@ -27,6 +27,20 @@
         <span class="secundario">{{ evento.cantidadPersonas }} personas</span>
       </dd>
     }
+
+    @if (datos.equipamiento.length > 0) {
+      <dt>Equipamiento</dt>
+      <dd>
+        <ul class="equipamiento">
+          @for (elegido of datos.equipamiento; track elegido.equipamiento.id) {
+            <li>
+              <span>{{ elegido.cantidad }} × {{ elegido.equipamiento.nombre }}</span>
+              <span>{{ elegido.subtotal | currency: 'ARS' }}</span>
+            </li>
+          }
+        </ul>
+      </dd>
+    }
   </dl>
 
   <p class="total">

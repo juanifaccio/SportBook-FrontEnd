@@ -11,11 +11,11 @@ import { formatearFecha } from '../../../core/fechas';
  *
  * Cubre el requisito de la cátedra de mostrar un detalle al seleccionar un
  * elemento del listado: la tabla muestra lo que entra en una fila, y acá está
- * todo lo demás —el tipo de cancha, el contacto del usuario, el precio por hora
- * del que sale el total—.
+ * todo lo demás —el tipo de cancha, el contacto del usuario, el evento, el
+ * equipamiento alquilado y el precio por hora del que sale el total—.
  *
  * Es de solo lectura y no hace requests: la reserva ya vino completa en el
- * listado, con sus tres relaciones incluidas.
+ * listado, con sus relaciones incluidas.
  */
 @Component({
   selector: 'app-reserva-detalle-dialog',
@@ -33,6 +33,9 @@ export class ReservaDetalleDialogComponent {
 
   /** Los cobros de la reserva, los anulados incluidos: el detalle es historial. */
   protected readonly pagos = computed(() => this.reserva.pagos ?? []);
+
+  /** Lo alquilado con la reserva, con el subtotal que se cobró por cada artículo. */
+  protected readonly equipamiento = computed(() => this.reserva.equipamientos ?? []);
 
   /**
    * Lo que falta pagar. Es el mismo cálculo que hace el backend para decidir si

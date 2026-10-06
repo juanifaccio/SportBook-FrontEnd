@@ -14,14 +14,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { forkJoin, of } from 'rxjs';
+import { Subscription, forkJoin, of } from 'rxjs';
 import { HorarioService } from '../../services/horario.service';
 import { CanchaService } from '../../services/cancha.service';
 import { UsuarioService } from '../../services/usuario.service';
 import { TipoEventoService } from '../../services/tipo-evento.service';
+import { EquipamientoService } from '../../services/equipamiento.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificacionService } from '../../core/services/notificacion.service';
 import { Cancha } from '../../models/cancha';
+import { Equipamiento } from '../../models/equipamiento';
 import { Horario } from '../../models/horario';
 import { TipoEvento } from '../../models/tipo-evento';
 import { Usuario } from '../../models/usuario';
@@ -29,6 +31,7 @@ import { aDate, aTexto, formatearFecha, hoyLocal } from '../../core/fechas';
 import { entero } from '../../core/validadores';
 import {
   DatosReservaDialog,
+  EquipamientoElegido,
   EventoDeclarado,
   ReservaDialogComponent,
   ResultadoReserva
@@ -43,6 +46,9 @@ const minutosDe = (hora: string): number => {
 
   return horas * 60 + minutos;
 };
+
+/** Redondea un importe a centavos, como lo hace el backend. */
+const aCentavos = (importe: number): number => Math.round(importe * 100) / 100;
 
 /**
  * Pantalla del caso de uso central: reservar una cancha.
@@ -77,6 +83,7 @@ export class ReservaComponent implements OnInit {
   private horarioService = inject(HorarioService);
   private usuarioService = inject(UsuarioService);
   private tipoEventoService = inject(TipoEventoService);
+  private equipamientoService = inject(EquipamientoService);
   private auth = inject(AuthService);
   private notificacion = inject(NotificacionService);
   private dialog = inject(MatDialog);
@@ -127,13 +134,8 @@ export class ReservaComponent implements OnInit {
     this.usuarios().find((usuario) => usuario.id === this.usuarioSeleccionado())
   );
 
-  /**
-   * Precio por hora de la cancha por la duración del turno. Es solo el adelanto
-   * que ve el usuario antes de confirmar: el precio que se guarda lo calcula el
-   * backend con los mismos datos, porque un total que sale del navegador no se
-   * puede creer.
-   */
-  protected readonly precioTotal = computed(() => {
+  /** Precio por hora de la cancha por la duración del turno. */
+  protected readonly precioTurno = computed(() => {
     const turno = this.turnoActual();
     const cancha = this.canchaActual();
 
@@ -143,7 +145,57 @@ export class ReservaComponent implements OnInit {
 
     const horas = (minutosDe(turno.horaFin) - minutosDe(turno.horaInicio)) / 60;
 
-    return cancha.precioPorHora * horas;
+    return aCentavos(cancha.precioPorHora * horas);
+  });
+
+  /**
+   * El turno más el equipamiento. Es solo el adelanto que ve el usuario antes de
+   * confirmar: el precio que se guarda lo calcula el backend con los mismos
+   * datos, porque un total que sale del navegador no se puede creer.
+   */
+  protected readonly precioTotal = computed(() =>
+    this.equipamientoElegido().reduce(
+      (total, elegido) => aCentavos(total + elegido.subtotal),
+      this.precioTurno()
+    )
+  );
+
+  /**
+   * El equipamiento también es opcional y arranca plegado, como el evento: la
+   * mayoría de los que reservan traen lo suyo.
+   */
+  protected readonly conEquipamiento = signal(false);
+
+  /** El catálogo con las unidades que quedan libres durante el turno elegido. */
+  protected readonly equipamientos = signal<Equipamiento[]>([]);
+  protected readonly cargandoEquipamiento = signal(false);
+  protected readonly errorEquipamiento = signal(false);
+
+  /** Cuántas unidades de cada artículo se eligieron, por id. Los que no están, cero. */
+  protected readonly cantidades = signal<Record<number, number>>({});
+
+  /**
+   * El pedido del equipamiento en curso. Se corta al pedir el de otro turno: si
+   * el usuario cambia rápido de turno, la respuesta vieja llegaría después y
+   * mostraría las unidades libres de un turno que ya no está elegido.
+   */
+  private pedidoEquipamiento?: Subscription;
+
+  /** Lo que se va a alquilar, con su subtotal, en el orden del catálogo. */
+  protected readonly equipamientoElegido = computed((): EquipamientoElegido[] => {
+    if (!this.conEquipamiento()) {
+      return [];
+    }
+
+    const cantidades = this.cantidades();
+
+    return this.equipamientos()
+      .filter((equipamiento) => (cantidades[equipamiento.id] ?? 0) > 0)
+      .map((equipamiento) => ({
+        equipamiento: equipamiento,
+        cantidad: cantidades[equipamiento.id],
+        subtotal: aCentavos(equipamiento.precio * cantidades[equipamiento.id])
+      }));
   });
 
   /**
@@ -181,7 +233,10 @@ export class ReservaComponent implements OnInit {
       this.usuarioActual() !== undefined &&
       // Con el evento marcado pero incompleto se reservaría sin él y sin avisar:
       // o se completa, o se destilda.
-      (!this.conEvento() || this.estadoEvento() === 'VALID')
+      (!this.conEvento() || this.estadoEvento() === 'VALID') &&
+      // Mientras llegan las unidades libres del turno, lo elegido puede no
+      // alcanzar todavía: se espera a saberlo.
+      !(this.conEquipamiento() && this.cargandoEquipamiento())
   );
 
   ngOnInit(): void {
@@ -265,6 +320,12 @@ export class ReservaComponent implements OnInit {
 
   protected alElegirTurno(turnoId: number | null): void {
     this.turnoSeleccionado.set(turnoId);
+
+    // Lo que queda libre depende del turno: con otro turno elegido, hay que
+    // volver a preguntar.
+    if (this.conEquipamiento()) {
+      this.cargarEquipamiento();
+    }
   }
 
   protected alElegirUsuario(usuarioId: number): void {
@@ -281,6 +342,89 @@ export class ReservaComponent implements OnInit {
     }
   }
 
+  protected alCambiarConEquipamiento(marcado: boolean): void {
+    this.conEquipamiento.set(marcado);
+
+    // Igual que con el evento: al destildarlo se descarta lo elegido.
+    if (marcado) {
+      this.cargarEquipamiento();
+    } else {
+      this.cantidades.set({});
+    }
+  }
+
+  /** Cuántas unidades de un artículo hay elegidas. */
+  protected cantidadDe(equipamiento: Equipamiento): number {
+    return this.cantidades()[equipamiento.id] ?? 0;
+  }
+
+  /**
+   * Suma o resta una unidad, sin bajar de cero ni pasar de lo que queda libre
+   * en el turno. Los botones ya se deshabilitan en los dos topes; esto es para
+   * que el estado no pueda quedar fuera de rango aunque se llame igual.
+   */
+  protected cambiarCantidad(equipamiento: Equipamiento, delta: number): void {
+    const maximo = equipamiento.disponibles ?? 0;
+    const cantidad = Math.min(maximo, Math.max(0, this.cantidadDe(equipamiento) + delta));
+
+    this.cantidades.update((cantidades) => ({ ...cantidades, [equipamiento.id]: cantidad }));
+  }
+
+  /**
+   * Las unidades libres de cada artículo durante el turno elegido. Sin turno no
+   * hay nada que preguntar: la sección le pide al usuario que elija uno.
+   */
+  protected cargarEquipamiento(): void {
+    this.pedidoEquipamiento?.unsubscribe();
+
+    const turnoId = this.turnoSeleccionado();
+
+    if (turnoId === null) {
+      this.equipamientos.set([]);
+      this.cargandoEquipamiento.set(false);
+      return;
+    }
+
+    this.cargandoEquipamiento.set(true);
+    this.errorEquipamiento.set(false);
+
+    this.pedidoEquipamiento = this.equipamientoService.listar(turnoId).subscribe({
+      next: (equipamientos) => {
+        this.equipamientos.set(equipamientos);
+        this.ajustarCantidades(equipamientos);
+        this.cargandoEquipamiento.set(false);
+      },
+      error: () => {
+        this.equipamientos.set([]);
+        this.errorEquipamiento.set(true);
+        this.cargandoEquipamiento.set(false);
+      }
+    });
+  }
+
+  /**
+   * Al cambiar de turno, lo elegido puede no alcanzar en el nuevo: se recorta a
+   * lo que queda libre y se avisa, para que el total que cambia no sorprenda.
+   */
+  private ajustarCantidades(equipamientos: Equipamiento[]): void {
+    let recortado = false;
+    const ajustadas: Record<number, number> = {};
+
+    for (const equipamiento of equipamientos) {
+      const elegida = this.cantidadDe(equipamiento);
+      const permitida = Math.min(elegida, equipamiento.disponibles ?? 0);
+
+      recortado ||= permitida < elegida;
+      ajustadas[equipamiento.id] = permitida;
+    }
+
+    this.cantidades.set(ajustadas);
+
+    if (recortado) {
+      this.notificacion.error('Algunas cantidades se ajustaron a lo que queda libre en ese turno.');
+    }
+  }
+
   /** Turnos que quedan libres en la cancha y el día elegidos. */
   protected cargarTurnos(): void {
     const canchaId = this.canchaSeleccionada();
@@ -290,8 +434,12 @@ export class ReservaComponent implements OnInit {
     }
 
     // Al cambiar de cancha o de día, el turno que estaba elegido ya no está en
-    // la lista: dejarlo seleccionado reservaría uno que el usuario no ve.
+    // la lista: dejarlo seleccionado reservaría uno que el usuario no ve. Lo
+    // libre del equipamiento era de ese turno, así que se descarta también.
     this.turnoSeleccionado.set(null);
+    this.pedidoEquipamiento?.unsubscribe();
+    this.equipamientos.set([]);
+    this.cargandoEquipamiento.set(false);
     this.cargandoTurnos.set(true);
     this.errorTurnos.set(false);
 
@@ -329,7 +477,8 @@ export class ReservaComponent implements OnInit {
       horario: horario,
       usuario: usuario,
       precioTotal: this.precioTotal(),
-      evento: this.eventoDeclarado()
+      evento: this.eventoDeclarado(),
+      equipamiento: this.equipamientoElegido()
     };
 
     const dialogRef = this.dialog.open<
@@ -352,6 +501,7 @@ export class ReservaComponent implements OnInit {
       }
 
       this.alCambiarConEvento(false);
+      this.alCambiarConEquipamiento(false);
 
       // El turno reservado dejó de estar libre: se vuelven a pedir los del día
       // para que desaparezca de la lista.

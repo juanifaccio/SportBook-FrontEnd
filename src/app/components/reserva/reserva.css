@@ -47,6 +47,62 @@
   resize: vertical;
 }
 
+.aviso-equipamiento {
+  margin: 0.75rem 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Un renglón por artículo: nombre y precio a la izquierda, la cantidad a la
+   derecha. Con botones de más y menos en vez de un campo numérico, que en el
+   celular abre el teclado para cambiar un número de a uno y deja escribir una
+   cantidad que no hay. */
+.lista-equipamiento {
+  max-width: 28rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-equipamiento li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.articulo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.articulo-nombre {
+  font: var(--mat-sys-body-large);
+}
+
+.articulo-detalle {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.agotado .articulo-nombre {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.cantidad {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cantidad-valor {
+  min-width: 2ch;
+  text-align: center;
+  font: var(--mat-sys-title-medium);
+}
+
 .resumen-linea {
   display: flex;
   align-items: center;

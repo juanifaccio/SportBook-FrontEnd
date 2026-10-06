@@ -4,6 +4,7 @@ import { Evento } from '../../src/app/models/evento';
 import { Horario } from '../../src/app/models/horario';
 import { Pago } from '../../src/app/models/pago';
 import { Reserva } from '../../src/app/models/reserva';
+import { ReservaEquipamiento } from '../../src/app/models/reserva-equipamiento';
 import { Rol } from '../../src/app/models/rol';
 import { TipoCancha } from '../../src/app/models/tipo-cancha';
 import { TipoEvento } from '../../src/app/models/tipo-evento';
@@ -35,6 +36,8 @@ export interface EstadoApi {
   reservas: Reserva[];
   eventos: Evento[];
   pagos: Pago[];
+  /** Lo alquilado en cada reserva. Arranca vacío: lo llenan los tests al reservar. */
+  reservaEquipamientos: ReservaEquipamiento[];
 }
 
 /**
@@ -274,5 +277,6 @@ export const datosIniciales = (): EstadoApi =>
     horarios: TURNOS,
     reservas: RESERVAS,
     eventos: EVENTOS,
-    pagos: PAGOS
+    pagos: PAGOS,
+    reservaEquipamientos: []
   });
