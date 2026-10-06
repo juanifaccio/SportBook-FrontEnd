@@ -37,6 +37,22 @@
       </dd>
     }
 
+    <!-- Lo mismo con el equipamiento: si la reserva es la cancha y nada más, no
+         hay fila. -->
+    @if (equipamiento().length > 0) {
+      <dt>Equipamiento</dt>
+      <dd>
+        <ul class="equipamiento">
+          @for (fila of equipamiento(); track fila.id) {
+            <li>
+              <span>{{ fila.cantidad }} × {{ fila.equipamiento?.nombre }}</span>
+              <span>{{ fila.subtotal | currency: 'ARS' }}</span>
+            </li>
+          }
+        </ul>
+      </dd>
+    }
+
     @if (reserva.cancha; as cancha) {
       <dt>Precio por hora</dt>
       <dd>{{ cancha.precioPorHora | currency: 'ARS' }}</dd>

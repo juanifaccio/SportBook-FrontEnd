@@ -188,6 +188,26 @@ test.describe('ABM de equipamiento', () => {
     expect(api.estado.equipamientos.map((item) => item.id)).toEqual([PECHERAS.id]);
   });
 
+  // Ya alquilado en una reserva, queda en su historial: la base no deja borrarlo.
+  test('no borra uno que alguna reserva incluye, y lo dice', async ({ page, api }) => {
+    api.estado.reservaEquipamientos.push({
+      id: 1,
+      cantidad: 2,
+      subtotal: 3000,
+      reservaId: 2,
+      equipamientoId: PELOTA.id
+    });
+
+    await abrirComo(page, ADMINISTRADOR, '/equipamientos');
+
+    await page.getByRole('button', { name: `Eliminar ${PELOTA.nombre}` }).click();
+    await dialogo(page).getByRole('button', { name: 'Eliminar' }).click();
+
+    await expect(notificacion(page)).toContainText('hay reservas que lo incluyen');
+    await expect(page.locator('table tbody tr')).toHaveCount(2);
+    expect(api.estado.equipamientos).toHaveLength(2);
+  });
+
   test('con el backend caído ofrece reintentar, y al reintentar carga', async ({ page, api }) => {
     api.fallar('GET', '/equipamientos', 0);
 

@@ -73,6 +73,10 @@ describe('ReservaDetalleDialogComponent', () => {
     expect(texto()).not.toContain('Evento');
   });
 
+  it('no muestra la fila de equipamiento si la reserva no alquila nada', () => {
+    expect(texto()).not.toContain('Equipamiento');
+  });
+
   describe('los pagos de la reserva', () => {
     const montar = async (pagos: unknown[]) => {
       TestBed.resetTestingModule();
@@ -167,6 +171,54 @@ describe('ReservaDetalleDialogComponent', () => {
     it('lo muestra con su tipo, descripción y cantidad de personas', () => {
       expect(texto()).toContain('Cumpleaños de 15');
       expect(texto()).toContain('40 personas');
+    });
+  });
+
+  describe('el equipamiento de la reserva', () => {
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+
+      await TestBed.configureTestingModule({
+        imports: [ReservaDetalleDialogComponent],
+        providers: [
+          { provide: MatDialogRef, useValue: { close: () => {} } },
+          {
+            provide: MAT_DIALOG_DATA,
+            useValue: {
+              ...reserva,
+              precioTotal: 11400,
+              equipamientos: [
+                {
+                  id: 5,
+                  cantidad: 2,
+                  subtotal: 3000,
+                  reservaId: reserva.id,
+                  equipamientoId: 4,
+                  equipamiento: {
+                    id: 4,
+                    nombre: 'Pelota de pádel',
+                    descripcion: 'Tubo de tres',
+                    precio: 1500,
+                    stock: 10
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(ReservaDetalleDialogComponent);
+      fixture.detectChanges();
+    });
+
+    // Es la otra parte de lo que pide la propuesta del detalle: los datos
+    // completos de la reserva, del evento y del equipamiento.
+    it('lo muestra con la cantidad, el artículo y el subtotal', () => {
+      expect(texto()).toContain('Equipamiento');
+      expect(texto()).toContain('2 × Pelota de pádel');
+      // El separador de miles depende del locale con el que corren los tests.
+      expect(texto()).toMatch(/3[.,]000/);
     });
   });
 });

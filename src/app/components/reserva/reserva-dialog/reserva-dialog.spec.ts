@@ -53,7 +53,24 @@ describe('ReservaDialogComponent', () => {
     horario: horario,
     usuario: usuario,
     precioTotal: 8400,
-    evento: null
+    evento: null,
+    equipamiento: []
+  };
+
+  const pelota = {
+    id: 4,
+    nombre: 'Pelota de pádel',
+    descripcion: 'Tubo de tres',
+    precio: 1500,
+    stock: 10,
+    disponibles: 8
+  };
+
+  /** La misma reserva, alquilando además dos tubos de pelotas. */
+  const datosConEquipamiento: DatosReservaDialog = {
+    ...datos,
+    precioTotal: 11400,
+    equipamiento: [{ equipamiento: pelota, cantidad: 2, subtotal: 3000 }]
   };
 
   /** La misma reserva, pero declarando además el evento que se va a festejar. */
@@ -276,6 +293,53 @@ describe('ReservaDialogComponent', () => {
       await fixture.whenStable();
 
       httpMock.expectNone(urlEventos);
+      expect(cierres).toEqual([]);
+    });
+  });
+
+  describe('cuando además se alquila equipamiento', () => {
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+      await preparar(USUARIO_ADMIN, datosConEquipamiento);
+    });
+
+    it('lo muestra en el resumen con su subtotal', () => {
+      const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+      expect(texto).toContain('2 × Pelota de pádel');
+      // El separador de miles depende del locale con el que corren los tests.
+      expect(texto).toMatch(/3[.,]000/);
+      expect(texto).toMatch(/11[.,]400/);
+    });
+
+    // A diferencia del evento, va en el mismo request: cambia el precio total,
+    // y el backend tiene que guardar las dos cosas juntas o ninguna.
+    it('lo manda en el mismo request de la reserva, sin subtotales', async () => {
+      await confirmar();
+
+      const req = httpMock.expectOne(url);
+      expect(req.request.body).toEqual({
+        horarioId: horario.id,
+        usuarioId: usuario.id,
+        equipamientos: [{ equipamientoId: pelota.id, cantidad: 2 }]
+      });
+      req.flush(reserva);
+      await fixture.whenStable();
+
+      expect(cierres).toEqual([{ eventoPendiente: false }]);
+    });
+
+    it('se mantiene abierto si el equipamiento ya no alcanza', async () => {
+      await confirmar();
+
+      httpMock
+        .expectOne(url)
+        .flush(
+          { mensaje: 'No quedan suficientes unidades de Pelota de pádel para ese turno' },
+          { status: 409, statusText: 'Conflict' }
+        );
+      await fixture.whenStable();
+
       expect(cierres).toEqual([]);
     });
   });

@@ -8,6 +8,7 @@ import { ReservaService } from '../../../services/reserva.service';
 import { EventoService } from '../../../services/evento.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Cancha } from '../../../models/cancha';
+import { Equipamiento } from '../../../models/equipamiento';
 import { EventoDto } from '../../../models/evento';
 import { Horario } from '../../../models/horario';
 import { TipoEvento } from '../../../models/tipo-evento';
@@ -23,6 +24,17 @@ export interface EventoDeclarado extends Omit<EventoDto, 'reservaId'> {
   tipoEvento: TipoEvento;
 }
 
+/**
+ * Un artículo que se va a alquilar con la reserva. El artículo entero viaja para
+ * nombrarlo en el resumen; al backend le llegan solo el id y la cantidad.
+ */
+export interface EquipamientoElegido {
+  equipamiento: Equipamiento;
+  cantidad: number;
+  /** Calculado en la pantalla, solo para mostrarlo: el que vale es el del backend. */
+  subtotal: number;
+}
+
 /** Lo que hay que mostrar en el resumen antes de confirmar. */
 export interface DatosReservaDialog {
   cancha: Cancha;
@@ -32,6 +44,8 @@ export interface DatosReservaDialog {
   precioTotal: number;
   /** El evento a cargarle a la reserva, si se declaró uno. */
   evento: EventoDeclarado | null;
+  /** Lo que se alquila con la reserva; vacío si es la cancha y nada más. */
+  equipamiento: EquipamientoElegido[];
 }
 
 /**
@@ -53,7 +67,9 @@ export interface ResultadoReserva {
  * cuando la reserva quedó guardada, y con `undefined` si se cancela.
  *
  * Si además se declaró un evento son dos requests encadenados, porque el evento
- * necesita el id de una reserva que todavía no existe.
+ * necesita el id de una reserva que todavía no existe. El equipamiento, en
+ * cambio, va en el mismo request de la reserva: cambia el precio total, así que
+ * el backend lo guarda junto con ella o no guarda nada.
  *
  * No reutiliza `ConfirmacionComponent`: ese es genérico para acciones
  * destructivas y no hace requests.
@@ -97,7 +113,16 @@ export class ReservaDialogComponent {
         // Solo el administrador reserva a nombre de otro. Para el cliente el
         // dueño sale de su sesión en el backend, así que mandarlo sería sugerir
         // que puede elegirlo.
-        ...(this.auth.esAdmin() ? { usuarioId: this.datos.usuario.id } : {})
+        ...(this.auth.esAdmin() ? { usuarioId: this.datos.usuario.id } : {}),
+        // Sin equipamiento no se manda el campo: es opcional para el backend.
+        ...(this.datos.equipamiento.length > 0
+          ? {
+              equipamientos: this.datos.equipamiento.map(({ equipamiento, cantidad }) => ({
+                equipamientoId: equipamiento.id,
+                cantidad: cantidad
+              }))
+            }
+          : {})
       })
       .pipe(switchMap((reserva) => this.cargarEvento(reserva.id)))
       .subscribe({

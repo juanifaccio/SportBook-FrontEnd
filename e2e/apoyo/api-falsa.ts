@@ -5,6 +5,7 @@ import { Evento } from '../../src/app/models/evento';
 import { Horario, ResultadoLote } from '../../src/app/models/horario';
 import { MetodoPago, Pago } from '../../src/app/models/pago';
 import { Reserva } from '../../src/app/models/reserva';
+import { ReservaEquipamiento } from '../../src/app/models/reserva-equipamiento';
 import { Usuario } from '../../src/app/models/usuario';
 import { EstadoApi, UsuarioSembrado, datosIniciales } from './datos';
 
@@ -750,8 +751,33 @@ export class ApiFalsa {
 
     if (metodo === 'GET' && ruta === '/equipamientos') {
       // Ordenado por nombre, como lo devuelve el backend.
+      const ordenados = [...this.estado.equipamientos].sort((uno, otro) =>
+        uno.nombre.localeCompare(otro.nombre)
+      );
+      const horarioId = pedido.parametros.get('horarioId');
+
+      if (horarioId === null) {
+        return ok(ordenados);
+      }
+
+      if (isNaN(Number(horarioId))) {
+        return falla(400, 'El id del turno debe ser un número');
+      }
+
+      const turno = this.estado.horarios.find((horario) => horario.id === Number(horarioId));
+
+      if (!turno) {
+        return falla(404, 'Turno no encontrado');
+      }
+
+      // Con un turno, cada artículo viene con las unidades libres durante él.
+      const alquilado = this.alquiladoEn(turno);
+
       return ok(
-        [...this.estado.equipamientos].sort((uno, otro) => uno.nombre.localeCompare(otro.nombre))
+        ordenados.map((equipamiento) => ({
+          ...equipamiento,
+          disponibles: Math.max(0, equipamiento.stock - (alquilado.get(equipamiento.id) ?? 0))
+        }))
       );
     }
 
@@ -802,6 +828,11 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
+      // La FK de ReservaEquipamiento impide borrar un artículo ya alquilado.
+      if (this.estado.reservaEquipamientos.some((fila) => fila.equipamientoId === id)) {
+        return falla(409, 'No se puede eliminar el equipamiento porque hay reservas que lo incluyen');
+      }
+
       this.estado.equipamientos.splice(indice, 1);
 
       return ok({ mensaje: 'Equipamiento eliminado correctamente' });
@@ -1107,8 +1138,115 @@ export class ApiFalsa {
       // El backend lo incluye en todas sus respuestas de reserva, y viene `null`
       // en las que son un partido y nada más.
       evento: this.estado.eventos.find((evento) => evento.reservaId === reserva.id) ?? null,
-      pagos: this.estado.pagos.filter((pago) => pago.reservaId === reserva.id)
+      pagos: this.estado.pagos.filter((pago) => pago.reservaId === reserva.id),
+      equipamientos: this.estado.reservaEquipamientos
+        .filter((fila) => fila.reservaId === reserva.id)
+        .map((fila) => ({
+          ...fila,
+          equipamiento: this.estado.equipamientos.find((item) => item.id === fila.equipamientoId)
+        }))
     };
+  }
+
+  /**
+   * Unidades de cada artículo que ya ocupan las reservas no canceladas del mismo
+   * día cuyo horario se superpone con el turno. Es la regla del stock del
+   * backend: no se descuenta, cada reserva ocupa sus unidades durante su turno.
+   */
+  private alquiladoEn(
+    turno: { fecha: string; horaInicio: string; horaFin: string },
+    reservaExcluida?: number
+  ): Map<number, number> {
+    const alquilado = new Map<number, number>();
+
+    for (const reserva of this.estado.reservas) {
+      const ocupa =
+        reserva.id !== reservaExcluida &&
+        reserva.estado !== 'CANCELADA' &&
+        reserva.fecha === turno.fecha &&
+        reserva.horaInicio < turno.horaFin &&
+        turno.horaInicio < reserva.horaFin;
+
+      if (!ocupa) {
+        continue;
+      }
+
+      for (const fila of this.estado.reservaEquipamientos) {
+        if (fila.reservaId === reserva.id) {
+          alquilado.set(fila.equipamientoId, (alquilado.get(fila.equipamientoId) ?? 0) + fila.cantidad);
+        }
+      }
+    }
+
+    return alquilado;
+  }
+
+  /**
+   * Valida lo pedido y comprueba que alcance en el turno, con los mismos
+   * mensajes que el backend. Devuelve las filas a guardar (sin `id` ni
+   * `reservaId`) o la falla.
+   */
+  private armarEquipamiento(
+    lista: unknown,
+    turno: { fecha: string; horaInicio: string; horaFin: string },
+    reservaExcluida?: number
+  ): { filas: Omit<ReservaEquipamiento, 'id' | 'reservaId'>[] } | { falla: Respuesta } {
+    if (lista === undefined || lista === null) {
+      return { filas: [] };
+    }
+
+    if (!Array.isArray(lista)) {
+      return { falla: falla(400, 'El equipamiento debe ser una lista') };
+    }
+
+    const alquilado = this.alquiladoEn(turno, reservaExcluida);
+    const filas: Omit<ReservaEquipamiento, 'id' | 'reservaId'>[] = [];
+
+    for (const pedido of lista as Record<string, unknown>[]) {
+      const equipamientoId = Number(pedido?.['equipamientoId']);
+      const cantidad = Number(pedido?.['cantidad']);
+
+      if (!Number.isInteger(equipamientoId)) {
+        return { falla: falla(400, 'Cada artículo debe indicar un equipamiento') };
+      }
+
+      if (!Number.isInteger(cantidad) || cantidad < 1) {
+        return {
+          falla: falla(400, 'La cantidad de cada artículo debe ser un número entero mayor a cero')
+        };
+      }
+
+      if (filas.some((fila) => fila.equipamientoId === equipamientoId)) {
+        return { falla: falla(400, 'Un artículo no puede aparecer dos veces en la misma reserva') };
+      }
+
+      const equipamiento = this.estado.equipamientos.find((item) => item.id === equipamientoId);
+
+      if (!equipamiento) {
+        return { falla: falla(400, 'El equipamiento indicado no existe') };
+      }
+
+      if (equipamiento.stock - (alquilado.get(equipamientoId) ?? 0) < cantidad) {
+        return {
+          falla: falla(409, `No quedan suficientes unidades de ${equipamiento.nombre} para ese turno`)
+        };
+      }
+
+      filas.push({
+        equipamientoId,
+        cantidad,
+        subtotal: Math.round(equipamiento.precio * cantidad * 100) / 100
+      });
+    }
+
+    return { filas };
+  }
+
+  /** Lo que suman los subtotales del equipamiento de una reserva. */
+  private totalEquipamientoDe(reservaId: number): number {
+    return this.estado.reservaEquipamientos
+      .filter((fila) => fila.reservaId === reservaId)
+      .reduce((total, fila) => total + fila.subtotal, 0);
   }
 
   /** Lo que falta pagar de una reserva; los pagos anulados no cuentan. */
@@ -1321,6 +1459,16 @@ export class ApiFalsa {
       return invalido;
     }
 
+    // Va en la misma "transacción": si el equipamiento no alcanza, no se
+    // reserva nada.
+    const equipamiento = this.armarEquipamiento(cuerpo['equipamientos'], horario);
+
+    if ('falla' in equipamiento) {
+      return equipamiento.falla;
+    }
+
+    const totalEquipamiento = equipamiento.filas.reduce((total, fila) => total + fila.subtotal, 0);
+
     const creada: Reserva = {
       id: proximoId(this.estado.reservas),
       // Se copian del turno en vez de leerse por la relación: así la reserva
@@ -1330,7 +1478,7 @@ export class ApiFalsa {
       horaFin: horario.horaFin,
       // Nace PENDIENTE: la confirman sus pagos.
       estado: 'PENDIENTE',
-      precioTotal: this.precioDe(horario),
+      precioTotal: this.precioDe(horario) + totalEquipamiento,
       usuarioId: usuarioId,
       canchaId: horario.canchaId,
       horarioId: horario.id
@@ -1338,6 +1486,14 @@ export class ApiFalsa {
 
     horario.disponible = false;
     this.estado.reservas.push(creada);
+
+    for (const fila of equipamiento.filas) {
+      this.estado.reservaEquipamientos.push({
+        id: proximoId(this.estado.reservaEquipamientos),
+        reservaId: creada.id,
+        ...fila
+      });
+    }
 
     return ok(this.conRelaciones(creada), 201);
   }
@@ -1365,6 +1521,17 @@ export class ApiFalsa {
       return invalido;
     }
 
+    // Lo alquilado viaja con la reserva y tiene que alcanzar en el turno nuevo;
+    // la propia reserva no compite consigo misma.
+    const alquilado = this.estado.reservaEquipamientos
+      .filter((fila) => fila.reservaId === reserva.id)
+      .map(({ equipamientoId, cantidad }) => ({ equipamientoId, cantidad }));
+    const equipamiento = this.armarEquipamiento(alquilado, nuevo, reserva.id);
+
+    if ('falla' in equipamiento) {
+      return equipamiento.falla;
+    }
+
     const viejo = this.estado.horarios.find((item) => item.id === reserva.horarioId);
 
     // Se toma el turno nuevo antes de soltar el viejo, igual que la transacción
@@ -1380,7 +1547,9 @@ export class ApiFalsa {
     reserva.horaFin = nuevo.horaFin;
     reserva.canchaId = nuevo.canchaId;
     reserva.horarioId = nuevo.id;
-    reserva.precioTotal = this.precioDe(nuevo);
+    // El precio del turno se vuelve a copiar; los subtotales del equipamiento
+    // quedan como se cobraron.
+    reserva.precioTotal = this.precioDe(nuevo) + this.totalEquipamientoDe(reserva.id);
 
     return ok(this.conRelaciones(reserva));
   }

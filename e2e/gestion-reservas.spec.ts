@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { ADMINISTRADOR, ANA, BRUNO, MANANA } from './apoyo/datos';
+import { ADMINISTRADOR, ANA, BRUNO, MANANA, PELOTA } from './apoyo/datos';
 import {
   abrirComo,
   contenedorDe,
@@ -124,6 +124,29 @@ test.describe('Gestión de reservas', () => {
 
     await expect(detalle.getByRole('heading', { name: 'Reserva #2' })).toBeVisible();
     await expect(detalle).not.toContainText('Evento');
+    await expect(detalle).not.toContainText('Equipamiento');
+  });
+
+  // Es lo que pide la propuesta del detalle del listado: los datos completos de
+  // la reserva, del evento y del equipamiento.
+  test('el detalle muestra el equipamiento alquilado con su subtotal', async ({ page, api }) => {
+    api.estado.reservaEquipamientos.push({
+      id: 1,
+      cantidad: 3,
+      subtotal: 4500,
+      reservaId: 2,
+      equipamientoId: PELOTA.id
+    });
+
+    await abrirComo(page, ADMINISTRADOR, '/reservas');
+
+    await fila(page, '20:00 a 21:00').getByRole('button', { name: 'Ver el detalle' }).click();
+
+    const detalle = dialogo(page);
+
+    await expect(detalle).toContainText('Equipamiento');
+    await expect(detalle).toContainText(`3 × ${PELOTA.nombre}`);
+    await expect(detalle).toContainText('4.500');
   });
 
   test('cancelar deja la reserva en el historial y devuelve el turno a los libres', async ({

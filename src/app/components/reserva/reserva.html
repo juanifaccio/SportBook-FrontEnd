@@ -203,6 +203,81 @@
     </section>
   }
 
+  <!-- También opcional y plegado. Lo que se ofrece depende del turno: el stock
+       son las unidades del complejo, y las que ya alquilan otras reservas a esa
+       hora no se pueden volver a ofrecer. -->
+  <section class="seccion">
+    <h2>Equipamiento</h2>
+
+    <mat-checkbox
+      [checked]="conEquipamiento()"
+      (change)="alCambiarConEquipamiento($event.checked)">
+      Alquilar equipamiento (pelotas, pecheras…)
+    </mat-checkbox>
+
+    @if (conEquipamiento()) {
+      @if (turnoSeleccionado() === null) {
+        <p class="aviso-equipamiento">Elegí un turno para ver qué equipamiento queda libre.</p>
+      } @else if (cargandoEquipamiento()) {
+        <div class="estado-mensaje">
+          <mat-spinner diameter="32" />
+          <p>Buscando equipamiento libre…</p>
+        </div>
+      } @else if (errorEquipamiento()) {
+        <div class="estado-mensaje">
+          <mat-icon>cloud_off</mat-icon>
+          <p>No se pudo cargar el equipamiento.</p>
+          <button mat-stroked-button type="button" (click)="cargarEquipamiento()">
+            <mat-icon>refresh</mat-icon>
+            Reintentar
+          </button>
+        </div>
+      } @else if (equipamientos().length === 0) {
+        <p class="aviso-equipamiento">El complejo no tiene equipamiento para alquilar.</p>
+      } @else {
+        <ul class="lista-equipamiento" aria-label="Equipamiento para alquilar">
+          @for (equipamiento of equipamientos(); track equipamiento.id) {
+            <li [class.agotado]="!equipamiento.disponibles">
+              <div class="articulo">
+                <span class="articulo-nombre">{{ equipamiento.nombre }}</span>
+                <span class="articulo-detalle">
+                  {{ equipamiento.precio | currency: 'ARS' }} c/u ·
+                  @if (equipamiento.disponibles) {
+                    quedan {{ equipamiento.disponibles }}
+                  } @else {
+                    sin unidades para este turno
+                  }
+                </span>
+              </div>
+
+              <div class="cantidad">
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Quitar una unidad de ' + equipamiento.nombre"
+                  [disabled]="cantidadDe(equipamiento) === 0"
+                  (click)="cambiarCantidad(equipamiento, -1)">
+                  <mat-icon>remove</mat-icon>
+                </button>
+                <span class="cantidad-valor" aria-live="polite">
+                  {{ cantidadDe(equipamiento) }}
+                </span>
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Agregar una unidad de ' + equipamiento.nombre"
+                  [disabled]="cantidadDe(equipamiento) >= (equipamiento.disponibles ?? 0)"
+                  (click)="cambiarCantidad(equipamiento, 1)">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </section>
+
   <mat-card appearance="outlined" class="resumen">
     <mat-card-content>
       @if (turnoActual(); as turno) {
@@ -221,6 +296,12 @@
           <mat-icon>event</mat-icon>
           <span>{{ formatearFecha(turno.fecha) }}, de {{ turno.horaInicio }} a {{ turno.horaFin }}</span>
         </p>
+        @for (elegido of equipamientoElegido(); track elegido.equipamiento.id) {
+          <p class="resumen-linea">
+            <mat-icon>sports_soccer</mat-icon>
+            <span>{{ elegido.cantidad }} × {{ elegido.equipamiento.nombre }}</span>
+          </p>
+        }
         <p class="resumen-total">
           <span>Total</span>
           <strong>{{ precioTotal() | currency: 'ARS' }}</strong>

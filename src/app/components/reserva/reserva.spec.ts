@@ -19,6 +19,7 @@ describe('ReservaComponent', () => {
   const urlUsuarios = `${environment.apiUrl}/usuarios`;
   const urlHorarios = `${environment.apiUrl}/horarios`;
   const urlTiposEvento = `${environment.apiUrl}/tipos-evento`;
+  const urlEquipamientos = `${environment.apiUrl}/equipamientos`;
 
   const tipoCancha = { id: 17, nombre: 'Pádel', descripcion: 'Cancha de pádel' };
 
@@ -341,6 +342,141 @@ describe('ReservaComponent', () => {
       expect(controles.cantidadPersonas.value).toBeNull();
       // Sin evento marcado, el botón vuelve a depender solo del turno.
       expect(botonReservar()?.disabled).toBe(false);
+    });
+  });
+
+  describe('el equipamiento de la reserva', () => {
+    const pelota = { id: 4, nombre: 'Pelota de pádel', descripcion: 'Tubo de tres', precio: 1500, stock: 10 };
+    const paleta = { id: 5, nombre: 'Paleta', descripcion: 'De fibra', precio: 2000, stock: 2 };
+
+    const otroTurno = { ...turno, id: 3, horaInicio: '15:00', horaFin: '16:00' };
+
+    /** El pedido del equipamiento lleva el turno elegido. */
+    const pedidoDeEquipamiento = (horarioId: number) =>
+      httpMock.expectOne(
+        (pedido) => pedido.url === urlEquipamientos && pedido.params.get('horarioId') === String(horarioId)
+      );
+
+    /** Deja la pantalla con un turno elegido y la sección de equipamiento abierta. */
+    const conEquipamientoAbierto = async (disponibles = [
+      { ...pelota, disponibles: 8 },
+      { ...paleta, disponibles: 0 }
+    ]) => {
+      fixture.detectChanges();
+      await responder([cancha], [usuario], [turno, otroTurno]);
+
+      fixture.componentInstance['alElegirTurno'](turno.id);
+      fixture.componentInstance['alElegirUsuario'](usuario.id);
+      fixture.componentInstance['alCambiarConEquipamiento'](true);
+
+      pedidoDeEquipamiento(turno.id).flush(disponibles);
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+
+    const sumar = (equipamiento: { id: number }, veces = 1) => {
+      const componente = fixture.componentInstance;
+      const articulo = componente['equipamientos']().find((candidato) => candidato.id === equipamiento.id)!;
+
+      for (let i = 0; i < veces; i++) {
+        componente['cambiarCantidad'](articulo, 1);
+      }
+
+      fixture.detectChanges();
+    };
+
+    // Plegado, no pide nada: la mayoría de los que reservan traen lo suyo.
+    it('no pide el equipamiento hasta que se marca la sección', async () => {
+      fixture.detectChanges();
+      await responder([cancha], [usuario], [turno]);
+
+      fixture.componentInstance['alElegirTurno'](turno.id);
+      fixture.detectChanges();
+
+      httpMock.expectNone((pedido) => pedido.url === urlEquipamientos);
+      expect(texto()).toContain('Alquilar equipamiento');
+    });
+
+    it('muestra lo que queda libre en el turno y marca lo que no tiene unidades', async () => {
+      await conEquipamientoAbierto();
+
+      expect(texto()).toContain('Pelota de pádel');
+      expect(texto()).toContain('quedan 8');
+      expect(texto()).toContain('sin unidades para este turno');
+    });
+
+    it('suma el equipamiento al total', async () => {
+      await conEquipamientoAbierto();
+
+      sumar(pelota, 2);
+
+      // Dos horas a 4200, más dos tubos a 1500.
+      expect(fixture.componentInstance['precioTotal']()).toBe(11400);
+      expect(texto()).toContain('2 × Pelota de pádel');
+    });
+
+    it('no deja pasar de las unidades libres', async () => {
+      await conEquipamientoAbierto([{ ...pelota, disponibles: 2 }]);
+
+      sumar(pelota, 5);
+
+      expect(fixture.componentInstance['cantidadDe']({ ...pelota, disponibles: 2 })).toBe(2);
+    });
+
+    it('al cambiar de turno vuelve a preguntar y recorta lo que ya no alcanza', async () => {
+      await conEquipamientoAbierto();
+      sumar(pelota, 5);
+
+      fixture.componentInstance['alElegirTurno'](otroTurno.id);
+      pedidoDeEquipamiento(otroTurno.id).flush([{ ...pelota, disponibles: 3 }]);
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance['cantidadDe'](pelota)).toBe(3);
+    });
+
+    it('bloquea el botón mientras llegan las unidades libres', async () => {
+      fixture.detectChanges();
+      await responder([cancha], [usuario], [turno]);
+
+      fixture.componentInstance['alElegirTurno'](turno.id);
+      fixture.componentInstance['alElegirUsuario'](usuario.id);
+      fixture.componentInstance['alCambiarConEquipamiento'](true);
+      fixture.detectChanges();
+
+      expect(botonReservar()?.disabled).toBe(true);
+
+      pedidoDeEquipamiento(turno.id).flush([{ ...pelota, disponibles: 8 }]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(botonReservar()?.disabled).toBe(false);
+    });
+
+    it('olvida lo elegido al destildarlo', async () => {
+      await conEquipamientoAbierto();
+      sumar(pelota, 2);
+
+      fixture.componentInstance['alCambiarConEquipamiento'](false);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance['equipamientoElegido']()).toEqual([]);
+      expect(fixture.componentInstance['precioTotal']()).toBe(8400);
+    });
+
+    it('muestra el error con reintento si no se pudo cargar', async () => {
+      fixture.detectChanges();
+      await responder([cancha], [usuario], [turno]);
+
+      fixture.componentInstance['alElegirTurno'](turno.id);
+      fixture.componentInstance['alCambiarConEquipamiento'](true);
+      pedidoDeEquipamiento(turno.id).flush(
+        { mensaje: 'Error al listar el equipamiento' },
+        { status: 500, statusText: 'Server Error' }
+      );
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(texto()).toContain('No se pudo cargar el equipamiento');
     });
   });
 });

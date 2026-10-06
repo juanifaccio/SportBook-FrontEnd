@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Equipamiento, EquipamientoDto } from '../models/equipamiento';
 import { environment } from '../../environments/environment';
@@ -8,9 +8,7 @@ import { environment } from '../../environments/environment';
  * Acceso a los endpoints de equipamiento del backend.
  *
  * Sigue el mismo criterio que `TipoCanchaService`: la URL sale del ambiente y
- * los errores quedan a cargo del interceptor, así que acá no se atrapan. Sin
- * `HttpParams` porque este listado no lleva filtro: el que pide la propuesta es
- * el de canchas.
+ * los errores quedan a cargo del interceptor, así que acá no se atrapan.
  */
 @Injectable({
   providedIn: 'root'
@@ -21,8 +19,15 @@ export class EquipamientoService {
 
   private readonly url = `${environment.apiUrl}/equipamientos`;
 
-  listar(): Observable<Equipamiento[]> {
-    return this.http.get<Equipamiento[]>(this.url);
+  /**
+   * El catálogo. Con un turno, cada artículo viene además con las unidades que
+   * le quedan libres durante ese turno (`disponibles`), que es lo que necesita
+   * la pantalla de reservar.
+   */
+  listar(horarioId?: number): Observable<Equipamiento[]> {
+    const params = horarioId === undefined ? undefined : new HttpParams().set('horarioId', horarioId);
+
+    return this.http.get<Equipamiento[]>(this.url, { params });
   }
 
   obtener(id: number): Observable<Equipamiento> {

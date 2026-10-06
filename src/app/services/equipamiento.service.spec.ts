@@ -68,13 +68,21 @@ describe('EquipamientoService', () => {
     reqDelete.flush({ mensaje: 'Equipamiento eliminado correctamente' });
   });
 
-  // El listado no lleva filtro, así que la URL tiene que ir limpia: una query
-  // vacía sería un filtro inválido para el backend y no la ausencia de filtro.
-  it('no agrega parámetros de query al listar', () => {
+  // Sin turno la URL tiene que ir limpia: una query vacía sería un filtro
+  // inválido para el backend y no la ausencia de filtro.
+  it('no agrega parámetros de query al listar sin turno', () => {
     service.listar().subscribe();
 
     const req = httpMock.expectOne(url);
     expect(req.request.params.keys().length).toBe(0);
+    req.flush([]);
+  });
+
+  it('pide las unidades libres de un turno con horarioId', () => {
+    service.listar(7).subscribe();
+
+    const req = httpMock.expectOne((pedido) => pedido.url === url);
+    expect(req.request.params.get('horarioId')).toBe('7');
     req.flush([]);
   });
 });

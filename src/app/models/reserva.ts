@@ -2,6 +2,7 @@ import { Cancha } from './cancha';
 import { Evento } from './evento';
 import { Horario } from './horario';
 import { Pago } from './pago';
+import { EquipamientoPedido, ReservaEquipamiento } from './reserva-equipamiento';
 import { Usuario } from './usuario';
 import { formatearFecha } from '../core/fechas';
 
@@ -25,7 +26,10 @@ export interface Reserva {
   /** Hora de fin en formato `HH:mm`. */
   horaFin: string;
   estado: EstadoReserva;
-  /** Precio por hora de la cancha por la duración del turno, calculado en el backend. */
+  /**
+   * Precio por hora de la cancha por la duración del turno, más los subtotales
+   * del equipamiento. Lo calcula el backend.
+   */
   precioTotal: number;
   usuarioId: number;
   canchaId: number;
@@ -41,6 +45,8 @@ export interface Reserva {
   evento?: Evento | null;
   /** Los cobros de la reserva, incluidos los anulados. */
   pagos?: Pago[];
+  /** Lo que se alquila con la reserva; vacío si es la cancha y nada más. */
+  equipamientos?: ReservaEquipamiento[];
 }
 
 /**
@@ -59,6 +65,12 @@ export interface ReservaDto {
    * usuario de su sesión, y mandarlo no cambiaría nada.
    */
   usuarioId?: number;
+  /**
+   * Lo que se alquila con la reserva. Viaja en el mismo request —y no después,
+   * como el evento— porque cambia el precio total: el backend guarda las dos
+   * cosas juntas o ninguna.
+   */
+  equipamientos?: EquipamientoPedido[];
 }
 
 /**
