@@ -135,7 +135,7 @@
         <mat-label>Usuario</mat-label>
         <mat-select [value]="usuarioSeleccionado()" (valueChange)="alElegirUsuario($event)">
           @for (usuario of usuarios(); track usuario.id) {
-            <mat-option [value]="usuario.id">{{ usuario.nombre }} — {{ usuario.email }}</mat-option>
+            <mat-option [value]="usuario.id">{{ usuario.nombre }} ({{ usuario.email }})</mat-option>
           }
         </mat-select>
       </mat-form-field>
