@@ -7,7 +7,7 @@ import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures
  *
  * Replica el recorrido del ABM de tipos de cancha, que es la implementación de
  * referencia; lo propio de esta pantalla es el precio con su formato de moneda,
- * el stock —donde el cero es un valor válido y no un campo vacío— y que el
+ * el stock (donde el cero es un valor válido y no un campo vacío) y que el
  * catálogo sea de administración aunque el cliente vaya a leerlo al reservar.
  */
 
@@ -15,7 +15,7 @@ import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures
  * Abre un diálogo del ABM y espera a que el foco haya terminado de moverse.
  *
  * El diálogo de Material atrapa el foco y lo lleva al primer campo al abrirse.
- * `fill` reemplaza el contenido en dos pasos —selecciona y después inserta—, así
+ * `fill` reemplaza el contenido en dos pasos (selecciona y después inserta), así
  * que si ese movimiento del foco le cae en el medio, el texto termina en el
  * campo equivocado. Con cuatro campos para completar es fácil que pase, y en
  * una corrida en paralelo pasaba de a ratos: esperar a que el primer campo tenga
@@ -44,7 +44,7 @@ test.describe('ABM de equipamiento', () => {
     await expect(filas.nth(1)).toContainText(PELOTA.descripcion);
   });
 
-  // El cero es un valor real —agotado, pero en catálogo—, así que la fila no
+  // El cero es un valor real (agotado, pero en catálogo), así que la fila no
   // desaparece: se avisa, que es lo que permite reponerlo a tiempo.
   test('avisa cuál está sin stock', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
@@ -232,7 +232,7 @@ test.describe('ABM de equipamiento', () => {
     await expect(page.locator('table')).toBeHidden();
   });
 
-  // El cliente no entra acá —el stock y los precios los maneja el complejo— y
+  // El cliente no entra acá (el stock y los precios los maneja el complejo) y
   // eso lo cubre `niveles-de-acceso.spec.ts`, junto con el resto de las
   // pantallas de administración.
 

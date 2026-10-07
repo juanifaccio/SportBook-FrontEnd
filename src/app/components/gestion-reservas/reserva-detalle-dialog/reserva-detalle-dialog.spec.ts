@@ -122,7 +122,7 @@ describe('ReservaDetalleDialogComponent', () => {
       expect(fixture.componentInstance['saldo']()).toBe(5400);
     });
 
-    // Un pago anulado se sigue mostrando —es historial— pero deja de contar.
+    // Un pago anulado se sigue mostrando (es historial) pero deja de contar.
     it('no descuenta los pagos anulados', async () => {
       await montar([pago(3000), { ...pago(5400), id: 2, estado: 'ANULADO' }]);
 

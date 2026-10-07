@@ -34,7 +34,7 @@ describe('AuthService', () => {
 
   /**
    * El servicio lee la sesión guardada al construirse, así que hay que dejarla
-   * armada —o no— antes de pedirlo.
+   * armada (o no) antes de pedirlo.
    */
   const preparar = () => {
     navegaciones = [];

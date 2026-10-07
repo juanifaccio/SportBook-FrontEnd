@@ -15,8 +15,8 @@ import { EstadoApi, UsuarioSembrado, datosIniciales } from './datos';
  * Intercepta todo lo que la aplicación le pide a `/api` y lo responde desde un
  * estado en memoria, reproduciendo el contrato real: los mismos códigos HTTP,
  * los mismos `{ mensaje }` en español y las mismas reglas de negocio que la API
- * de verdad —quién puede llamar a qué, el turno que se ocupa al reservar y se
- * libera al cancelar, la reserva que ya empezó y no se puede tocar—.
+ * de verdad (quién puede llamar a qué, el turno que se ocupa al reservar y se
+ * libera al cancelar, la reserva que ya empezó y no se puede tocar).
  *
  * No es un stub que devuelve listas fijas: guarda lo que se crea, se edita y se
  * borra, así que un test puede reservar un turno y comprobar después que dejó de
@@ -57,7 +57,7 @@ interface Pedido {
  *
  * Va como expresión regular y no como el glob `**\/api/**`: desde que Playwright
  * empareja los globs por segmento de ruta, ese patrón no llega a coincidir con
- * una URL completa —protocolo y host incluidos— y las llamadas se le escapan al
+ * una URL completa (protocolo y host incluidos) y las llamadas se le escapan al
  * servidor de desarrollo, que responde un 404 en HTML.
  */
 const RUTA_API = /\/api\//;
@@ -313,8 +313,8 @@ export class ApiFalsa {
   }
 
   /**
-   * Consultar canchas, horarios y tipos lo puede hacer cualquiera —el cliente
-   * los necesita para reservar—; administrarlos, solo un `ADMIN`.
+   * Consultar canchas, horarios y tipos lo puede hacer cualquiera (el cliente
+   * los necesita para reservar); administrarlos, solo un `ADMIN`.
    */
   private soloLeeElCliente(metodo: string, sesion: UsuarioSembrado): Respuesta | null {
     return metodo === 'GET' ? null : this.exigirAdmin(sesion);

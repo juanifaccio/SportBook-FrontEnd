@@ -85,8 +85,8 @@ export const aHora = (fecha: Date): string => {
  *
  * El día que se usa es el de **hoy**, y no uno fijo, porque es el mismo que
  * elige `NativeDateAdapter.parseTime` cuando el usuario escribe la hora a mano:
- * así todas las horas del formulario —las que vienen del backend, las escritas
- * y las elegidas de la lista— comparten la parte de fecha y se pueden comparar
+ * así todas las horas del formulario (las que vienen del backend, las escritas
+ * y las elegidas de la lista) comparten la parte de fecha y se pueden comparar
  * entre sí. De la fecha nadie lee nada: la del turno es un campo aparte.
  */
 export const aDateHora = (hora: string): Date | null => {

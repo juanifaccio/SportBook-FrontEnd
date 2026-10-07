@@ -23,7 +23,7 @@ import {
 /**
  * Reservar una cancha: el caso de uso central de la aplicación.
  *
- * Todo pasa en una sola pantalla —cancha, día, turno libre y a nombre de quién—
+ * Todo pasa en una sola pantalla (cancha, día, turno libre y a nombre de quién)
  * y el diálogo muestra el resumen antes de mandarlo. Los turnos sembrados son de
  * mañana, así que la pantalla arranca en el día de hoy y sin nada que ofrecer:
  * elegir el día es parte del recorrido.
@@ -36,7 +36,7 @@ const turnos = (page: Page): Locator =>
  * Cambia el día ya con la pantalla cargada.
  *
  * La espera no es de adorno: el campo aparece apenas llegan las canchas, y la
- * primera búsqueda de turnos —la de hoy— todavía está viajando. Escribir la
+ * primera búsqueda de turnos (la de hoy) todavía está viajando. Escribir la
  * fecha antes dejaría dos pedidos en el aire y la lista mostraría el que llegue
  * último.
  */

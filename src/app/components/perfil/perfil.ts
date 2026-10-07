@@ -15,7 +15,7 @@ const LARGO_MINIMO_CONTRASENA = 8;
 /**
  * Mi perfil: los datos de la cuenta de quien está conectado.
  *
- * Sirve a los dos roles por igual —la cuenta propia la gestiona cualquiera— y es
+ * Sirve a los dos roles por igual (la cuenta propia la gestiona cualquiera) y es
  * lo que evita que un cliente dependa del complejo para corregir un teléfono mal
  * cargado.
  *

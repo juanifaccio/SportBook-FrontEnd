@@ -141,7 +141,7 @@ export class ReservaDialogComponent {
    * Segundo request: el evento de la reserva recién creada.
    *
    * Si falla, el diálogo se cierra igual. La reserva ya está hecha y volver a
-   * confirmar la duplicaría —el turno además ya no está libre—, así que en vez de
+   * confirmar la duplicaría (el turno además ya no está libre), así que en vez de
    * reintentar se avisa que el evento quedó pendiente y se lo puede cargar
    * después desde la pantalla de eventos.
    */

@@ -11,8 +11,8 @@ import { AuthService } from '../services/auth.service';
  * olvidara de mandarlo fallaría con un 401 imposible de explicar.
  *
  * El `401` es el único que desloguea. Un `403` significa que la sesión es válida
- * pero ese usuario no puede hacer eso —un cliente tocando una pantalla de
- * administración—, y echarlo por eso sería castigar un permiso que le falta como
+ * pero ese usuario no puede hacer eso (un cliente tocando una pantalla de
+ * administración), y echarlo por eso sería castigar un permiso que le falta como
  * si fuera una sesión vencida.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {

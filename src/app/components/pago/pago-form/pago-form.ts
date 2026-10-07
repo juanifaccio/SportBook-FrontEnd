@@ -27,7 +27,7 @@ import {
  * reservas del selector llegan por `input`, así que tampoco las pide él.
  *
  * Al corregir, lo único editable es el método: el monto de un pago no se edita
- * —para eso se anula y se registra el correcto— y la reserva tampoco, porque un
+ * (para eso se anula y se registra el correcto) y la reserva tampoco, porque un
  * pago no se muda.
  */
 @Component({
@@ -91,7 +91,7 @@ export class PagoFormComponent {
     // El tope del monto depende de la reserva elegida, así que no puede ser un
     // `Validators.max` fijo. Se marca el error a mano en cada cambio: hace falta
     // que el control quede inválido de verdad, porque si no Material no muestra
-    // el `mat-error` —solo lo hace cuando el campo está en estado de error—.
+    // el `mat-error` (solo lo hace cuando el campo está en estado de error).
     this.formulario.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.revisarSaldo());
   }
 

@@ -36,8 +36,8 @@ export interface Pago {
 /**
  * Datos que se envían al registrar un cobro.
  *
- * No es un `Omit<Pago, 'id'>`: la fecha y el estado los pone el servidor —un pago
- * se registra el día en que se cobra y nace REGISTRADO—, así que ni siquiera
+ * No es un `Omit<Pago, 'id'>`: la fecha y el estado los pone el servidor (un pago
+ * se registra el día en que se cobra y nace REGISTRADO), así que ni siquiera
  * viajan.
  */
 export interface PagoDto {
@@ -48,7 +48,7 @@ export interface PagoDto {
 
 /**
  * Datos que se envían al corregir un pago. Lo único editable es el método: el
- * monto no se edita —para eso se anula y se registra el correcto— y la reserva
+ * monto no se edita (para eso se anula y se registra el correcto) y la reserva
  * tampoco, porque un pago no se muda.
  */
 export interface PagoEdicionDto {

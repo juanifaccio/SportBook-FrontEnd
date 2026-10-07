@@ -54,7 +54,7 @@ export class HorarioFormComponent {
 
   // El calendario y el timepicker de Material trabajan con objetos `Date`, así
   // que los tres campos de tiempo son `Date` mientras se los edita y se
-  // convierten al texto que espera el backend —"AAAA-MM-DD" y "HH:mm"— recién al
+  // convierten al texto que espera el backend ("AAAA-MM-DD" y "HH:mm") recién al
   // emitir el DTO. Las conversiones viven en `core/fechas.ts`.
   protected formulario = this.fb.group({
     fecha: this.fb.control<Date | null>(null, Validators.required),

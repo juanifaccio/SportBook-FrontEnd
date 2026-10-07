@@ -50,7 +50,7 @@ export const FORMATOS_FECHA: MatDateFormats = {
  *
  * Existe por una razón concreta: **el adaptador nativo interpreta lo que se
  * escribe a mano con `Date.parse`**, que ante un `"08/12/2026"` no sabe si es el
- * 8 de diciembre o el 12 de agosto —depende del navegador—. Como la cátedra pide
+ * 8 de diciembre o el 12 de agosto (depende del navegador). Como la cátedra pide
  * que la fecha también se pueda ingresar por teclado, esa ambigüedad no es
  * aceptable: acá el formato es explícitamente día/mes/año.
  *
@@ -61,7 +61,7 @@ export const FORMATOS_FECHA: MatDateFormats = {
  * `parseTime` propio**: una hora escrita no tiene la ambigüedad que tiene una
  * fecha, así que el `parseTime` heredado alcanza. Reconoce `19:00` y `9:30`,
  * valida los rangos, devuelve `null` con el campo vacío y una fecha inválida
- * cuando no entiende lo escrito — que es exactamente el contrato que el `parse`
+ * cuando no entiende lo escrito, que es exactamente el contrato que el `parse`
  * de acá abajo tuvo que construir a mano para la fecha.
  */
 @Injectable()

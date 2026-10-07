@@ -17,8 +17,8 @@ export interface DatosLoteDialog {
  * generar.
  *
  * El request se hace acá y no en el listado, igual que en el alta de a uno: si
- * el backend rechaza el lote —un rango mal cargado, o un día que ya estaba
- * completo— el diálogo tiene que seguir abierto con lo que el usuario cargó. Se
+ * el backend rechaza el lote (un rango mal cargado, o un día que ya estaba
+ * completo) el diálogo tiene que seguir abierto con lo que el usuario cargó. Se
  * cierra con el resultado, o con `undefined` si el usuario cancela.
  */
 @Component({

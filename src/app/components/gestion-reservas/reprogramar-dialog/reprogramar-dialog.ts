@@ -18,7 +18,7 @@ export interface DatosReprogramarDialog {
  * los turnos libres y guardar el cambio.
  *
  * El `PUT` se hace acá y no en el listado porque si el backend lo rechaza
- * —alguien se adelantó y tomó ese turno— el diálogo tiene que seguir abierto
+ * (alguien se adelantó y tomó ese turno) el diálogo tiene que seguir abierto
  * para que el usuario elija otro. Se cierra con la reserva ya reprogramada, o
  * con `undefined` si el usuario cancela.
  */
@@ -55,7 +55,7 @@ export class ReprogramarDialogComponent {
 
   /**
    * Turnos libres de una cancha en un día. El turno que la reserva ocupa hoy no
-   * aparece —está marcado como no disponible—, y está bien que así sea: mover
+   * aparece (está marcado como no disponible), y está bien que así sea: mover
    * una reserva al turno que ya tiene no es un cambio.
    */
   protected buscarTurnos({ canchaId, fecha }: BusquedaTurnos): void {

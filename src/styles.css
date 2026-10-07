@@ -50,8 +50,8 @@ app-root {
  *
  * El espacio de arriba no es decorativo: sin él, la etiqueta del primer campo
  * sale cortada. Material anula el padding superior del contenido cuando el
- * diálogo tiene título —`.mat-mdc-dialog-title + .mat-mdc-dialog-content {
- * padding-top: 0 }`— y ese contenido lleva `overflow: auto`. La etiqueta
+ * diálogo tiene título (`.mat-mdc-dialog-title + .mat-mdc-dialog-content {
+ * padding-top: 0 }`) y ese contenido lleva `overflow: auto`. La etiqueta
  * flotante de un campo `outline` se dibuja por encima del borde del campo, así
  * que en el primero queda fuera de la caja de scroll y el navegador se la come.
  *

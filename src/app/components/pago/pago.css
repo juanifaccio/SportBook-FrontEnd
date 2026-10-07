@@ -30,7 +30,7 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-/* Un pago anulado sigue a la vista —es historial— pero tiene que leerse como lo
+/* Un pago anulado sigue a la vista (es historial) pero tiene que leerse como lo
    que es: algo que ya no cuenta. */
 .anulado {
   text-decoration: line-through;

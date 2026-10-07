@@ -10,7 +10,7 @@ import {
 } from './fechas';
 
 describe('utilidades de fecha', () => {
-  describe('aDate / aTexto — el borde entre el texto de la API y el calendario', () => {
+  describe('aDate / aTexto: el borde entre el texto de la API y el calendario', () => {
     it('convierte "AAAA-MM-DD" a un Date local, no a medianoche UTC', () => {
       const fecha = aDate('2026-08-20')!;
 
@@ -45,7 +45,7 @@ describe('utilidades de fecha', () => {
     });
   });
 
-  describe('aDateHora / aHora — el borde entre el texto de la API y el timepicker', () => {
+  describe('aDateHora / aHora: el borde entre el texto de la API y el timepicker', () => {
     it('vuelve al mismo texto del que salió', () => {
       for (const texto of ['00:00', '09:05', '13:30', '23:59']) {
         expect(aHora(aDateHora(texto)!)).toBe(texto);
