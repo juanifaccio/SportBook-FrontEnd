@@ -49,7 +49,7 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Configuración local de asistentes de código (no es código del proyecto)
+# Configuración local de herramientas de desarrollo (no es código del proyecto)
 .claude/
 .agents/
 .windsurf/
