@@ -13,7 +13,7 @@ import { adminGuard, invitadoGuard, sesionGuard } from './core/guards/acceso.gua
 export const routes: Routes = [
   {
     path: 'login',
-    title: 'Iniciar sesión — SportBook',
+    title: 'Iniciar sesión | SportBook',
     canActivate: [invitadoGuard],
     loadComponent: () => import('./components/login/login').then((m) => m.LoginComponent)
   },
@@ -34,12 +34,12 @@ export const routes: Routes = [
       },
       {
         path: 'reservar',
-        title: 'Reservar — SportBook',
+        title: 'Reservar | SportBook',
         loadComponent: () => import('./components/reserva/reserva').then((m) => m.ReservaComponent)
       },
       {
         path: 'reservas',
-        title: 'Reservas — SportBook',
+        title: 'Reservas | SportBook',
         loadComponent: () =>
           import('./components/gestion-reservas/gestion-reservas').then(
             (m) => m.GestionReservasComponent
@@ -47,21 +47,21 @@ export const routes: Routes = [
       },
       {
         path: 'perfil',
-        title: 'Mi perfil — SportBook',
+        title: 'Mi perfil | SportBook',
         // Sin `adminGuard`: la cuenta propia la gestiona cualquiera que tenga
         // sesión, sea del rol que sea.
         loadComponent: () => import('./components/perfil/perfil').then((m) => m.PerfilComponent)
       },
       {
         path: 'pagos',
-        title: 'Pagos — SportBook',
+        title: 'Pagos | SportBook',
         // Sin `adminGuard`: el cliente entra a ver los pagos de sus reservas. Lo
         // que no puede es registrarlos, y eso lo decide el backend.
         loadComponent: () => import('./components/pago/pago').then((m) => m.PagoComponent)
       },
       {
         path: 'eventos',
-        title: 'Eventos — SportBook',
+        title: 'Eventos | SportBook',
         // Sin `adminGuard` a propósito: el evento es de quien es la reserva, así
         // que el cliente entra a gestionar los suyos y el backend le devuelve
         // solamente esos.
@@ -69,33 +69,33 @@ export const routes: Routes = [
       },
       {
         path: 'tipos-cancha',
-        title: 'Tipos de cancha — SportBook',
+        title: 'Tipos de cancha | SportBook',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./components/tipo-cancha/tipo-cancha').then((m) => m.TipoCanchaComponent)
       },
       {
         path: 'tipos-evento',
-        title: 'Tipos de evento — SportBook',
+        title: 'Tipos de evento | SportBook',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./components/tipo-evento/tipo-evento').then((m) => m.TipoEventoComponent)
       },
       {
         path: 'canchas',
-        title: 'Canchas — SportBook',
+        title: 'Canchas | SportBook',
         canActivate: [adminGuard],
         loadComponent: () => import('./components/cancha/cancha').then((m) => m.CanchaComponent)
       },
       {
         path: 'horarios',
-        title: 'Horarios — SportBook',
+        title: 'Horarios | SportBook',
         canActivate: [adminGuard],
         loadComponent: () => import('./components/horario/horario').then((m) => m.HorarioComponent)
       },
       {
         path: 'equipamientos',
-        title: 'Equipamiento — SportBook',
+        title: 'Equipamiento | SportBook',
         // Con `adminGuard`: el stock y los precios los maneja el complejo. El
         // cliente ve el equipamiento al reservar, no en esta pantalla.
         canActivate: [adminGuard],
@@ -104,13 +104,13 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
-        title: 'Usuarios — SportBook',
+        title: 'Usuarios | SportBook',
         canActivate: [adminGuard],
         loadComponent: () => import('./components/usuario/usuario').then((m) => m.UsuarioComponent)
       },
       {
         path: '**',
-        title: 'Página no encontrada — SportBook',
+        title: 'Página no encontrada | SportBook',
         loadComponent: () =>
           import('./components/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent)
       }

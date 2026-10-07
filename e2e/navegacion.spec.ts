@@ -16,20 +16,20 @@ test.describe('Navegación', () => {
 
   test('cada pantalla tiene su propio título', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/reservar');
-    await expect(page).toHaveTitle('Reservar — SportBook');
+    await expect(page).toHaveTitle('Reservar | SportBook');
 
     await page.getByRole('link', { name: 'Reservas' }).click();
-    await expect(page).toHaveTitle('Reservas — SportBook');
+    await expect(page).toHaveTitle('Reservas | SportBook');
 
     await page.getByRole('link', { name: 'Canchas' }).click();
-    await expect(page).toHaveTitle('Canchas — SportBook');
+    await expect(page).toHaveTitle('Canchas | SportBook');
   });
 
   test('una dirección que no existe muestra la 404, con el menú a mano', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/lo-que-sea');
 
     await expect(page.getByRole('heading', { name: 'Página no encontrada' })).toBeVisible();
-    await expect(page).toHaveTitle('Página no encontrada — SportBook');
+    await expect(page).toHaveTitle('Página no encontrada | SportBook');
     // La 404 cuelga del layout: el usuario no queda sin salida.
     await expect(page.locator('mat-sidenav')).toBeVisible();
   });
