@@ -7,7 +7,7 @@ import { abrirComo, expect, notificacion, test } from './apoyo/fixtures';
  *
  * Es la pantalla que evita que un cliente dependa del complejo para corregir sus
  * propios datos. Sirve a los dos roles por igual, así que lo que hay que ver acá
- * —y no en los unitarios— es que se llegue desde el menú de la cuenta y que el
+ * (y no en los unitarios) es que se llegue desde el menú de la cuenta y que el
  * nombre cambiado se refleje en la barra superior sin recargar.
  */
 

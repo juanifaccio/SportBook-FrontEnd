@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Configuración de los tests end-to-end.
  *
- * Los e2e levantan la aplicación de verdad —`ng serve`, el bundle real, el
- * router, los guards y los diálogos de Material— y la manejan desde un navegador
+ * Los e2e levantan la aplicación de verdad (`ng serve`, el bundle real, el
+ * router, los guards y los diálogos de Material) y la manejan desde un navegador
  * como lo haría una persona. Lo único que no es real es el backend: lo responde
  * `e2e/apoyo/api-falsa.ts` interceptando el tráfico del navegador.
  *

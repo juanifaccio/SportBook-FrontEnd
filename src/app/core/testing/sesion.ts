@@ -43,7 +43,7 @@ export const iniciarSesionDePrueba = (usuario: Usuario = USUARIO_ADMIN): void =>
 
 /**
  * Borra la sesión. Va en el `afterEach` de cada suite que la use: `localStorage`
- * sobrevive entre tests, y una sesión olvidada haría pasar —o fallar— al
+ * sobrevive entre tests, y una sesión olvidada haría pasar (o fallar) al
  * siguiente por un motivo que no tiene nada que ver con lo que prueba.
  */
 export const cerrarSesionDePrueba = (): void => {

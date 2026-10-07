@@ -17,8 +17,8 @@ export interface DatosPagoDialog {
 /**
  * Envuelve al formulario en un diálogo de Material y se encarga de guardar.
  *
- * El request se hace acá y no en el listado porque si el backend lo rechaza —un
- * monto que supera el saldo, por ejemplo— el diálogo tiene que seguir abierto con
+ * El request se hace acá y no en el listado porque si el backend lo rechaza (un
+ * monto que supera el saldo, por ejemplo) el diálogo tiene que seguir abierto con
  * lo que el usuario había cargado. Se cierra con el pago ya guardado, o con
  * `undefined` si se cancela.
  */

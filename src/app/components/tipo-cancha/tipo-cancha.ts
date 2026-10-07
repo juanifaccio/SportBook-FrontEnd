@@ -24,7 +24,7 @@ import {
  *
  * Es la implementación de referencia del proyecto: el resto de las entidades del
  * dominio (TipoEvento, Equipamiento, Cancha...) se construyen replicando esta
- * estructura — estado por signals, diálogo de formulario reutilizable, listado
+ * estructura: estado por signals, diálogo de formulario reutilizable, listado
  * adaptado al tamaño de pantalla y estados explícitos de carga, vacío y error.
  */
 @Component({

@@ -5,8 +5,8 @@ import { adminGuard, invitadoGuard, sesionGuard } from './core/guards/acceso.gua
  * Cada pantalla se carga con `loadComponent` (lazy loading): así el bundle
  * inicial no crece a medida que se sumen las entidades del dominio.
  *
- * El login queda fuera del layout —no hay menú que ofrecerle a quien todavía no
- * entró— y el resto cuelga de él detrás del `sesionGuard`. Las pantallas de
+ * El login queda fuera del layout (no hay menú que ofrecerle a quien todavía no
+ * entró) y el resto cuelga de él detrás del `sesionGuard`. Las pantallas de
  * administración del complejo suman el `adminGuard`; reservar y ver las reservas
  * las usan los dos roles.
  */

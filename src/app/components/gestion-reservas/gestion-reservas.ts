@@ -40,8 +40,8 @@ const ESTADOS: EstadoReserva[] = ['PENDIENTE', 'CONFIRMADA', 'CANCELADA'];
 
 /**
  * Pantalla de gestión de reservas: el listado de lo ya reservado y las dos
- * cosas que se pueden hacer con una reserva —reprogramarla a otro turno o
- * cancelarla—.
+ * cosas que se pueden hacer con una reserva (reprogramarla a otro turno o
+ * cancelarla).
  *
  * Es la contracara de `/reservar`: ahí se ocupa un turno, acá se lo mueve o se
  * lo devuelve.

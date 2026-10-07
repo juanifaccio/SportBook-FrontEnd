@@ -21,7 +21,7 @@ test.describe('horarios de una cancha', () => {
 
   /**
    * El botón que abre la generación. Con el estado vacío en pantalla hay dos
-   * —el del encabezado y el de la tarjeta—, así que se toma el primero.
+   * (el del encabezado y el de la tarjeta), así que se toma el primero.
    */
   const botonGenerar = (page: Page) =>
     page.getByRole('button', { name: 'Generar turnos' }).first();

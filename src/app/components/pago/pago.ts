@@ -76,8 +76,8 @@ export class PagoComponent implements OnInit {
   protected readonly columnas = computed(() => {
     const base = ['fecha', 'reserva', 'monto', 'metodo', 'estado'];
 
-    // Al cliente no le hace falta la columna del dueño —todas las reservas son
-    // suyas— ni las acciones, que no puede usar.
+    // Al cliente no le hace falta la columna del dueño (todas las reservas son
+    // suyas) ni las acciones, que no puede usar.
     return this.esAdmin() ? [...base, 'usuario', 'acciones'] : base;
   });
 

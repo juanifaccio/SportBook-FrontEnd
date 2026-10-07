@@ -5,8 +5,8 @@ import { abrirComo, dialogo, elegirOpcion, expect, notificacion, test } from './
 /**
  * El listado de canchas con su filtro por tipo.
  *
- * El recorrido del ABM en sí —diálogo que se cierra cuando el backend confirma,
- * confirmación antes de borrar, estados de carga y error— ya lo cubre
+ * El recorrido del ABM en sí (diálogo que se cierra cuando el backend confirma,
+ * confirmación antes de borrar, estados de carga y error) ya lo cubre
  * `tipo-cancha.spec.ts`, que es la implementación de referencia. Lo que se
  * prueba acá es lo propio de este listado: que el filtro lo resuelva la API y
  * no la lista en memoria, y que alta y edición respeten el filtro puesto.

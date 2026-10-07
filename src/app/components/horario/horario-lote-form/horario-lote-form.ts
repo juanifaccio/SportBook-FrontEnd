@@ -86,8 +86,8 @@ export class HorarioLoteFormComponent {
   protected readonly etiquetaDuracion = etiquetaDuracion;
 
   // Como en el formulario de un turno suelto, la fecha y las horas son `Date`
-  // mientras se las edita —es lo que manejan el calendario y el timepicker de
-  // Material— y se convierten al texto que espera el backend recién al emitir.
+  // mientras se las edita (es lo que manejan el calendario y el timepicker de
+  // Material) y se convierten al texto que espera el backend recién al emitir.
   protected formulario = this.fb.group({
     canchaId: this.fb.control<number | null>(null, Validators.required),
     fecha: this.fb.control<Date | null>(null, Validators.required),

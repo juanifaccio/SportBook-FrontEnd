@@ -223,9 +223,9 @@ export class HorarioComponent implements OnInit {
       this.notificacion.exito(this.resumenDelLote(resultado));
 
       // Todos los turnos del lote son de la misma cancha, así que el primero
-      // alcanza para saber a cuál seguir. La lista nunca viene vacía —si no
+      // alcanza para saber a cuál seguir. La lista nunca viene vacía (si no
       // quedaba ninguno por crear, el backend responde 409 y el diálogo no se
-      // cierra—, pero si lo estuviera igual hay que recargar: pudo haber
+      // cierra), pero si lo estuviera igual hay que recargar: pudo haber
       // cambiado algo de la cancha que se está mirando.
       const primero = resultado.creados[0];
 

@@ -5,7 +5,7 @@ import { UsuarioSembrado } from './datos';
 /**
  * Lo que cada test recibe armado: la API falsa ya enganchada a la página.
  *
- * Se crea una por test —con su propia copia de los datos— para que puedan correr
+ * Se crea una por test (con su propia copia de los datos) para que puedan correr
  * en paralelo sin verse entre sí.
  *
  * Va como `auto`: sin eso Playwright solo armaría el accesorio en los tests que
@@ -90,7 +90,7 @@ export const elegirOpcion = async (
   etiqueta: string,
   opcion: string | RegExp
 ): Promise<void> => {
-  // Si se viene de elegir en otro select —o en este mismo—, su panel todavía
+  // Si se viene de elegir en otro select (o en este mismo), su panel todavía
   // puede estar cerrándose. Sin esperar a que se vaya, el click caería en una
   // opción de ese panel viejo, que se desprende del DOM a mitad de camino.
   //

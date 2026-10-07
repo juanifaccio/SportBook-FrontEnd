@@ -17,7 +17,7 @@ import { Usuario } from '../../src/app/models/usuario';
  * alguna cambia y la API falsa deja de responder lo que el frontend espera, esto
  * no compila. Es la forma de que un doble no se vaya quedando viejo en silencio.
  *
- * Las entidades se guardan planas —sin las relaciones anidadas— y la API falsa
+ * Las entidades se guardan planas (sin las relaciones anidadas) y la API falsa
  * las arma al responder, igual que hace Prisma con sus `include`.
  */
 
@@ -231,8 +231,8 @@ export const TORNEO: TipoEvento = { id: 2, nombre: 'Torneo' };
 
 /**
  * Un solo evento sembrado, sobre la reserva #1 de Ana: alcanza para probar que
- * el listado lo muestra, que el detalle de esa reserva lo trae y que la #2 —sin
- * evento— sigue disponible para cargarle uno.
+ * el listado lo muestra, que el detalle de esa reserva lo trae y que la #2 (sin
+ * evento) sigue disponible para cargarle uno.
  */
 export const EVENTOS: Evento[] = [
   {
@@ -248,7 +248,7 @@ export const EVENTOS: Evento[] = [
  * Una copia fresca del estado inicial.
  *
  * Se clona en cada llamada: los tests corren en paralelo y modifican lo que
- * tienen enfrente —crean, editan y borran—, así que compartir los objetos haría
+ * tienen enfrente (crean, editan y borran), así que compartir los objetos haría
  * que un test viera lo que hizo otro.
  */
 /**

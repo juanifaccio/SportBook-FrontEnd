@@ -19,8 +19,8 @@ export const CLAVE_USUARIO = 'sportbook.usuario';
  *
  * El token y el usuario se guardan en `localStorage` para que recargar la página
  * o volver al día siguiente no obligue a iniciar sesión de nuevo. El usuario
- * guardado es una copia: puede haber quedado vieja —le cambiaron el rol, lo
- * dieron de baja—, así que al arrancar se la revalida contra el backend con
+ * guardado es una copia: puede haber quedado vieja (le cambiaron el rol, lo
+ * dieron de baja), así que al arrancar se la revalida contra el backend con
  * `restaurar()`.
  *
  * Que el frontend sepa el rol sirve para no ofrecer pantallas que el usuario no
@@ -126,8 +126,8 @@ export class AuthService {
 }
 
 /**
- * Lee el usuario guardado al arrancar. Cualquier cosa rara —no hay token, el
- * JSON quedó a medias, alguien lo editó a mano— se trata como "no hay sesión":
+ * Lee el usuario guardado al arrancar. Cualquier cosa rara (no hay token, el
+ * JSON quedó a medias, alguien lo editó a mano) se trata como "no hay sesión":
  * es la opción segura, y como mucho obliga a iniciar sesión otra vez.
  */
 function leerUsuarioGuardado(): Usuario | null {

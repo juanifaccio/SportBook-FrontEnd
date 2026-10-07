@@ -66,8 +66,8 @@ export interface ReservaDto {
    */
   usuarioId?: number;
   /**
-   * Lo que se alquila con la reserva. Viaja en el mismo request —y no después,
-   * como el evento— porque cambia el precio total: el backend guarda las dos
+   * Lo que se alquila con la reserva. Viaja en el mismo request (y no después,
+   * como el evento) porque cambia el precio total: el backend guarda las dos
    * cosas juntas o ninguna.
    */
   equipamientos?: EquipamientoPedido[];
@@ -86,8 +86,8 @@ export interface ReprogramarDto {
 
 /**
  * La cancha con su tipo entre paréntesis, como en los selectores de cancha: el
- * nombre solo no distingue dos canchas —"Cancha 2" y "Cancha 3" pueden ser las
- * dos de pádel—, y en una lista de reservas la misma cancha se repite en varias
+ * nombre solo no distingue dos canchas ("Cancha 2" y "Cancha 3" pueden ser las
+ * dos de pádel), y en una lista de reservas la misma cancha se repite en varias
  * filas. El tipo se agrega solo si el backend lo incluyó.
  */
 const nombreDeLaCancha = (cancha: Cancha): string =>

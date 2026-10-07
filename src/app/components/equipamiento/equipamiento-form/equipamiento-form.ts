@@ -37,7 +37,7 @@ export class EquipamientoFormComponent {
   // de cancha: `Validators.required` da por válido un 0, así que un control
   // numérico vacío tiene que ser nulo para que el campo se marque obligatorio.
   // En el stock eso importa todavía más, porque ahí el cero es un valor real
-  // —agotado, pero en catálogo— y no la ausencia de dato.
+  // (agotado, pero en catálogo) y no la ausencia de dato.
   protected formulario = this.fb.group({
     nombre: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(60)]),
     descripcion: this.fb.nonNullable.control('', [

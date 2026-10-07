@@ -11,8 +11,8 @@ import { formatearFecha } from '../../../core/fechas';
  *
  * Cubre el requisito de la cátedra de mostrar un detalle al seleccionar un
  * elemento del listado: la tabla muestra lo que entra en una fila, y acá está
- * todo lo demás —el tipo de cancha, el contacto del usuario, el evento, el
- * equipamiento alquilado y el precio por hora del que sale el total—.
+ * todo lo demás (el tipo de cancha, el contacto del usuario, el evento, el
+ * equipamiento alquilado y el precio por hora del que sale el total).
  *
  * Es de solo lectura y no hace requests: la reserva ya vino completa en el
  * listado, con sus relaciones incluidas.
