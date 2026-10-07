@@ -17,7 +17,7 @@ describe('FechaAdapter', () => {
     adapter = TestBed.inject(FechaAdapter);
   });
 
-  describe('parse — la fecha escrita por teclado', () => {
+  describe('parse: la fecha escrita por teclado', () => {
     it('interpreta DD/MM/AAAA como día, mes y año, sin ambigüedad', () => {
       const fecha = adapter.parse('08/12/2026')!;
 
@@ -66,7 +66,7 @@ describe('FechaAdapter', () => {
     });
   });
 
-  describe('format — la fecha mostrada en el campo', () => {
+  describe('format: la fecha mostrada en el campo', () => {
     it('muestra DD/MM/AAAA con ceros a la izquierda', () => {
       expect(adapter.format(new Date(2026, 0, 5), formatoCampo)).toBe('05/01/2026');
       expect(adapter.format(new Date(2026, 7, 20), formatoCampo)).toBe('20/08/2026');

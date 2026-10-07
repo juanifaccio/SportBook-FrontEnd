@@ -1,4 +1,4 @@
-# SportBook — Frontend
+# SportBook Frontend
 
 Frontend de **SportBook**, una aplicación web para gestionar reservas de canchas
 deportivas dentro de un complejo (canchas, horarios, reservas, equipamiento,
@@ -90,7 +90,7 @@ navegador.
 
 **135 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
 manejan desde un navegador como lo haría una persona. Recorren los flujos
-completos —entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse—
+completos (entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse)
 sobre el bundle real, con el router, los guards y los diálogos de Material.
 
 La primera vez hay que bajar el navegador que usa Playwright:
@@ -111,8 +111,8 @@ en el puerto 4300 y lo apaga al terminar.
 **El backend no interviene.** `e2e/apoyo/api-falsa.ts` intercepta lo que la
 aplicación le pide a `/api` y lo responde desde un estado en memoria,
 reproduciendo el contrato real: los mismos códigos HTTP, los mismos mensajes en
-español y las mismas reglas de negocio. No es un stub de listas fijas —guarda lo
-que se crea, se edita y se borra—, así que los recorridos se pueden seguir de
+español y las mismas reglas de negocio. No es un stub de listas fijas (guarda lo
+que se crea, se edita y se borra), así que los recorridos se pueden seguir de
 punta a punta.
 
 Es a propósito: los dos proyectos son independientes y agnósticos entre sí, así
@@ -149,11 +149,11 @@ npm run e2e:reporte
 La URL de la API **no está escrita en el código**: sale de los archivos de
 ambiente, en `src/environments/`.
 
-- `environment.ts` — desarrollo. Apunta a `http://localhost:3000/api`, que es
+- `environment.ts`: desarrollo. Apunta a `http://localhost:3000/api`, que es
   donde escucha el backend por defecto.
-- `environment.production.ts` — producción. Apunta a `/api`, asumiendo que el
+- `environment.production.ts`: producción. Apunta a `/api`, asumiendo que el
   frontend se sirve detrás del mismo dominio que la API.
-- `environment.e2e.ts` — tests end-to-end. También `/api`: la API la responde el
+- `environment.e2e.ts`: tests end-to-end. También `/api`: la API la responde el
   navegador, y con un solo origen no hay CORS de por medio.
 
 Si tu backend corre en otro puerto o en otra máquina, cambiá `apiUrl` en
