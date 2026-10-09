@@ -192,7 +192,11 @@ export class EventoComponent implements OnInit {
       next: () => {
         this.eventos.update((eventos) => eventos.filter((evento) => evento.id !== id));
         this.notificacion.exito('Evento eliminado correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el evento sigue en la lista, que
+      // es lo que corresponde. Sin este manejador, el error que el interceptor
+      // relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

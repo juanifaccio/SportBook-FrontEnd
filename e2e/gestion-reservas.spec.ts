@@ -187,6 +187,23 @@ test.describe('Gestión de reservas', () => {
     ).toHaveText(['10:00 a 11:00', '11:00 a 12:00', '18:00 a 19:00']);
   });
 
+  // El turno empezó con la pantalla abierta: el botón seguía habilitado, pero el
+  // backend ya no la deja cancelar.
+  test('si la reserva empezó mientras tanto, lo avisa y no la cancela', async ({ page, api }) => {
+    api.fallar('PUT', '/reservas/1/cancelar', 400, {
+      mensaje: 'La reserva ya empezó y no se puede modificar'
+    });
+
+    await abrirComo(page, ADMINISTRADOR, '/reservas');
+
+    await fila(page, '18:00 a 19:00').getByRole('button', { name: 'Cancelar la reserva' }).click();
+    await dialogo(page).getByRole('button', { name: 'Sí, cancelar' }).click();
+
+    await expect(notificacion(page)).toContainText('La reserva ya empezó');
+    await expect(fila(page, '18:00 a 19:00')).not.toContainText('Cancelada');
+    expect(api.estado.reservas.find((reserva) => reserva.id === 1)?.estado).toBe('CONFIRMADA');
+  });
+
   test('reprogramar mueve la reserva a otro turno y libera el que tenía', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/reservas');
 

@@ -281,7 +281,11 @@ export class HorarioComponent implements OnInit {
       next: () => {
         this.horarios.update((horarios) => horarios.filter((horario) => horario.id !== id));
         this.notificacion.exito('Horario eliminado correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el turno sigue en la lista, que
+      // es lo que corresponde. Sin este manejador, el error que el interceptor
+      // relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

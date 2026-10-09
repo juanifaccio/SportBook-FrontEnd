@@ -206,7 +206,11 @@ export class PagoComponent implements OnInit {
         // Anular puede haber devuelto la reserva a PENDIENTE y liberado saldo:
         // se recarga todo para que el listado y el selector queden al día.
         this.cargar();
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el pago sigue como estaba, que
+      // es lo que corresponde. Sin este manejador, el error que el interceptor
+      // relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

@@ -145,7 +145,11 @@ export class TipoCanchaComponent implements OnInit {
       next: () => {
         this.tiposCancha.update((tipos) => tipos.filter((tipo) => tipo.id !== id));
         this.notificacion.exito('Tipo de cancha eliminado correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el tipo sigue en la lista, que
+      // es lo que corresponde. Sin este manejador, el error que el interceptor
+      // relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

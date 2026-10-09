@@ -162,7 +162,11 @@ export class UsuarioComponent implements OnInit {
       next: () => {
         this.usuarios.update((usuarios) => usuarios.filter((usuario) => usuario.id !== id));
         this.notificacion.exito('Usuario eliminado correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el usuario sigue en la lista,
+      // que es lo que corresponde. Sin este manejador, el error que el
+      // interceptor relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

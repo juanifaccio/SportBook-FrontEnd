@@ -88,7 +88,7 @@ navegador.
 
 ### End-to-end (`npm run e2e`)
 
-**135 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
+**142 tests con Playwright**: levantan la aplicación de verdad con `ng serve` y la
 manejan desde un navegador como lo haría una persona. Recorren los flujos
 completos (entrar, reservar un turno, cancelarlo y ver que vuelva a ofrecerse)
 sobre el bundle real, con el router, los guards y los diálogos de Material.
@@ -125,11 +125,15 @@ e2e/
   apoyo/
     datos.ts        datos con los que arranca cada test
     api-falsa.ts    el backend simulado dentro del navegador
-    fixtures.ts     la API ya enganchada, más ayudas de Material
+    fixtures.ts     la API ya enganchada, más ayudas de Material; falla el
+                    test que deje un error sin atrapar en la consola
   login.spec.ts             entrar, salir y la sesión que sobrevive a recargar
   niveles-de-acceso.spec.ts qué ve y a dónde entra cada rol
   navegacion.spec.ts        ruteo, títulos, 404 y menú lateral responsive
   tipo-cancha.spec.ts       el ABM de referencia, de punta a punta
+  cancha.spec.ts            el listado de canchas con su filtro por tipo
+  equipamiento.spec.ts      el ABM de equipamiento y su stock
+  usuario.spec.ts           el usuario con reservas que no se borra
   horario.spec.ts           los turnos de una cancha y la generación en lote
   reservar.spec.ts          el caso de uso central
   gestion-reservas.spec.ts  listar, filtrar, reprogramar y cancelar
