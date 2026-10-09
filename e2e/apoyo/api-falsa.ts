@@ -1104,6 +1104,36 @@ export class ApiFalsa {
         return error;
       }
 
+      // Un turno con una reserva activa solo se guarda sin cambios: moverlo
+      // dejaría la reserva con un horario que ya no está en la grilla, y
+      // ofrecerlo de nuevo dejaría que otro cliente lo reserve.
+      const anterior = this.estado.horarios[indice];
+      const reservado = this.estado.reservas.some(
+        (reserva) => reserva.horarioId === id && reserva.estado !== 'CANCELADA'
+      );
+
+      if (reservado) {
+        const loMueve =
+          anterior.fecha !== datos.fecha ||
+          anterior.horaInicio !== datos.horaInicio ||
+          anterior.horaFin !== datos.horaFin ||
+          anterior.canchaId !== datos.canchaId;
+
+        if (loMueve) {
+          return falla(
+            409,
+            'El horario tiene una reserva activa y no se puede cambiar de día, de hora ni de cancha'
+          );
+        }
+
+        if (datos.disponible) {
+          return falla(
+            409,
+            'El horario tiene una reserva activa y no se puede volver a ofrecer: para liberarlo, cancelá la reserva'
+          );
+        }
+      }
+
       const actualizado: Horario = { id: id as number, ...datos };
 
       this.estado.horarios[indice] = actualizado;
@@ -1112,6 +1142,12 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
+      // Como la clave foránea del backend: alcanza con que alguna reserva lo
+      // haya ocupado, aunque esté cancelada, porque se conserva como historial.
+      if (this.estado.reservas.some((reserva) => reserva.horarioId === id)) {
+        return falla(409, 'No se puede eliminar el horario porque tiene reservas asociadas');
+      }
+
       this.estado.horarios.splice(indice, 1);
 
       return ok({ mensaje: 'Horario eliminado correctamente' });
