@@ -246,6 +246,33 @@ test.describe('horarios de una cancha', () => {
     await expect(turnos).toContainText(['14:00 a 15:00']);
   });
 
+  // El de las 18:00 de la Cancha 1 es el de la reserva #1, que está confirmada.
+  test('no deja volver a ofrecer un turno reservado', async ({ page, api }) => {
+    await abrirComo(page, ADMINISTRADOR, '/horarios');
+
+    await page.getByRole('button', { name: 'Editar el turno de las 18:00' }).click();
+
+    const formulario = dialogo(page);
+
+    await formulario.getByRole('checkbox', { name: 'Disponible para reservar' }).check();
+    await formulario.getByRole('button', { name: 'Guardar cambios' }).click();
+
+    await expect(notificacion(page)).toContainText('no se puede volver a ofrecer');
+    await expect(formulario).toBeVisible();
+    expect(api.estado.horarios.find((horario) => horario.id === 3)?.disponible).toBe(false);
+  });
+
+  test('no deja eliminar un turno reservado', async ({ page, api }) => {
+    await abrirComo(page, ADMINISTRADOR, '/horarios');
+
+    await page.getByRole('button', { name: 'Eliminar el turno de las 18:00' }).click();
+    await dialogo(page).getByRole('button', { name: 'Eliminar' }).click();
+
+    await expect(notificacion(page)).toContainText('tiene reservas asociadas');
+    await expect(page.locator('table tbody tr')).toHaveCount(4);
+    expect(api.estado.horarios.some((horario) => horario.id === 3)).toBe(true);
+  });
+
   test.describe('en pantalla chica', () => {
 
     test.use({ viewport: { width: 390, height: 844 } });
