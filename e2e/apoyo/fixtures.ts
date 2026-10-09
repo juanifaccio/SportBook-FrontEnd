@@ -12,14 +12,29 @@ import { UsuarioSembrado } from './datos';
  * lo nombran, y a los que piden únicamente `page` la aplicación les quedaría
  * hablándole al servidor de desarrollo, que a todo lo que no sea un GET le
  * contesta un 404 en HTML.
+ *
+ * De paso controla que ningún test termine con un error que nadie atrapó. Es lo
+ * que Angular escribe en la consola con el prefijo `ERROR` y no lo ve el
+ * usuario, así que sin este control pasaría desapercibido: un request rechazado
+ * cuya suscripción solo tiene `next` se avisa bien por el interceptor y, además,
+ * deja el error suelto.
  */
 export const test = base.extend<{ api: ApiFalsa }>({
   api: [
     async ({ page }, usar) => {
       const api = new ApiFalsa();
+      const sinAtrapar: string[] = [];
+
+      page.on('console', (mensaje) => {
+        if (mensaje.type() === 'error' && mensaje.text().startsWith('ERROR')) {
+          sinAtrapar.push(mensaje.text());
+        }
+      });
 
       await api.instalar(page);
       await usar(api);
+
+      esperar(sinAtrapar, 'errores sin atrapar en la consola').toEqual([]);
     },
     { auto: true }
   ]

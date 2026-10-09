@@ -158,6 +158,20 @@ test.describe('Pagos', () => {
     expect(api.estado.reservas.find((reserva) => reserva.id === 1)?.estado).toBe('PENDIENTE');
   });
 
+  // Otro administrador lo anuló con la pantalla abierta: el backend lo rechaza.
+  test('si el pago ya estaba anulado, lo avisa y la reserva no cambia', async ({ page, api }) => {
+    api.fallar('PUT', '/pagos/1/anular', 409, { mensaje: 'El pago ya está anulado' });
+
+    await abrirComo(page, ADMINISTRADOR, '/pagos');
+
+    await page.getByRole('button', { name: /^Anular el pago/ }).click();
+    await dialogo(page).getByRole('button', { name: 'Anular' }).click();
+
+    await expect(notificacion(page)).toContainText('El pago ya está anulado');
+    expect(api.estado.pagos[0].estado).toBe('REGISTRADO');
+    expect(api.estado.reservas.find((reserva) => reserva.id === 1)?.estado).toBe('CONFIRMADA');
+  });
+
   test('corrige el método de un pago ya registrado', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 

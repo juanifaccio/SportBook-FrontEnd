@@ -152,7 +152,11 @@ export class EquipamientoComponent implements OnInit {
       next: () => {
         this.equipamientos.update((lista) => lista.filter((item) => item.id !== id));
         this.notificacion.exito('Equipamiento eliminado correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el artículo sigue en la lista,
+      // que es lo que corresponde. Sin este manejador, el error que el
+      // interceptor relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

@@ -143,6 +143,19 @@ test.describe('ABM de eventos', () => {
     await expect(page.getByRole('option')).toHaveCount(3);
   });
 
+  test('si el servidor no responde, avisa y el evento sigue en la lista', async ({ page, api }) => {
+    api.fallar('DELETE', '/eventos/1', 0);
+
+    await abrirComo(page, ADMINISTRADOR, '/eventos');
+
+    await page.getByRole('button', { name: 'Eliminar Cumpleaños de 15' }).click();
+    await dialogo(page).getByRole('button', { name: 'Eliminar' }).click();
+
+    await expect(notificacion(page)).toContainText('No se pudo conectar con el servidor');
+    await expect(page.getByRole('button', { name: 'Eliminar Cumpleaños de 15' })).toBeVisible();
+    expect(api.estado.eventos).toHaveLength(1);
+  });
+
   test('al cliente le muestra solamente los eventos de sus reservas', async ({ page }) => {
     await abrirComo(page, ANA, '/eventos');
 

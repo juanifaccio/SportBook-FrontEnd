@@ -138,4 +138,14 @@ test.describe('Listado de canchas con filtro por tipo', () => {
     await expect(page.locator('table')).not.toContainText(CANCHA_2.nombre);
   });
 
+  test('no borra una cancha que tiene turnos, y lo dice', async ({ page, api }) => {
+    await abrirComo(page, ADMINISTRADOR, '/canchas');
+
+    await page.getByRole('button', { name: `Eliminar ${CANCHA_1.nombre}` }).click();
+    await dialogo(page).getByRole('button', { name: 'Eliminar' }).click();
+
+    await expect(notificacion(page)).toContainText('tiene horarios asociados');
+    await expect(page.getByRole('button', { name: `Eliminar ${CANCHA_1.nombre}` })).toBeVisible();
+    expect(api.estado.canchas.some((cancha) => cancha.id === CANCHA_1.id)).toBe(true);
+  });
 });

@@ -145,7 +145,11 @@ export class TipoEventoComponent implements OnInit {
       next: () => {
         this.tiposEvento.update((tipos) => tipos.filter((tipo) => tipo.id !== id));
         this.notificacion.exito('Tipo de evento eliminado correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y el tipo sigue en la lista, que
+      // es lo que corresponde. Sin este manejador, el error que el interceptor
+      // relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

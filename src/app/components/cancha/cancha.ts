@@ -269,7 +269,11 @@ export class CanchaComponent implements OnInit {
       next: () => {
         this.canchas.update((canchas) => canchas.filter((cancha) => cancha.id !== id));
         this.notificacion.exito('Cancha eliminada correctamente.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y la cancha sigue en la lista, que
+      // es lo que corresponde. Sin este manejador, el error que el interceptor
+      // relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 

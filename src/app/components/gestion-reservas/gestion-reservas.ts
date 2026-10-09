@@ -300,7 +300,11 @@ export class GestionReservasComponent implements OnInit {
       next: (cancelada) => {
         this.reemplazar(cancelada);
         this.notificacion.exito('Reserva cancelada. El turno volvió a quedar libre.');
-      }
+      },
+      // El aviso ya lo mostró el interceptor y la reserva sigue como estaba,
+      // que es lo que corresponde. Sin este manejador, el error que el
+      // interceptor relanza quedaría sin atrapar.
+      error: () => {}
     });
   }
 
