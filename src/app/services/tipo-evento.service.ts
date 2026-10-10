@@ -4,13 +4,6 @@ import { Observable } from 'rxjs';
 import { TipoEvento, TipoEventoDto } from '../models/tipo-evento';
 import { environment } from '../../environments/environment';
 
-/**
- * Acceso a los endpoints de tipos de evento del backend.
- *
- * Sigue el patrón de `TipoCanchaService`: la URL sale siempre del ambiente
- * (nunca literal en el código) y el manejo de errores queda a cargo del
- * interceptor, así que acá no se atrapan.
- */
 @Injectable({
   providedIn: 'root'
 })

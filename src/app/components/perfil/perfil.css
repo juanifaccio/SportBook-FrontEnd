@@ -1,6 +1,3 @@
-/* Mobile-first: las dos tarjetas van apiladas y comparten fila desde LG, donde
-   hay ancho para las dos sin que los campos queden angostos. */
-
 .tarjetas {
   display: flex;
   flex-direction: column;
@@ -11,13 +8,10 @@
 .formulario {
   display: flex;
   flex-direction: column;
-  /* Aire entre campos: sin esto, el mensaje de error de uno queda pegado a la
-     caja del siguiente. */
   gap: 0.5rem;
   min-width: 0;
 }
 
-/* Lo que se muestra pero no se edita: el rol y el estado de la cuenta. */
 .solo-lectura {
   margin: 0 0 0.5rem;
   padding-top: 0.5rem;

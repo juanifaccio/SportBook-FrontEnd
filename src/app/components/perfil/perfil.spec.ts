@@ -25,8 +25,6 @@ describe('PerfilComponent', () => {
     ).find((candidato) => candidato.textContent?.includes(etiqueta));
 
   beforeEach(async () => {
-    // La pantalla se llena con el usuario de la sesión, así que hay que armarla
-    // antes del `TestBed`: `AuthService` la lee al construirse.
     iniciarSesionDePrueba(USUARIO_CLIENTE);
 
     await TestBed.configureTestingModule({
@@ -44,8 +42,6 @@ describe('PerfilComponent', () => {
     cerrarSesionDePrueba();
   });
 
-  // El usuario ya está en memoria desde el login: la pantalla no lo pide, y
-  // `httpMock.verify()` del afterEach falla si saliera algún pedido.
   it('se llena con el usuario de la sesión sin pedirlo al backend', () => {
     const datos = fixture.componentInstance['datosFormulario'].getRawValue();
 
@@ -54,7 +50,6 @@ describe('PerfilComponent', () => {
     expect(datos.telefono).toBe(USUARIO_CLIENTE.telefono);
   });
 
-  // Se muestran pero no se editan: los administra el complejo.
   it('muestra el nivel de acceso y el estado de la cuenta como solo lectura', () => {
     expect(texto()).toContain('Cliente');
     expect(texto()).toContain('Activa');
@@ -90,7 +85,6 @@ describe('PerfilComponent', () => {
     boton('Guardar cambios')?.click();
     await fixture.whenStable();
 
-    // `httpMock.verify()` del afterEach falla si hubiera salido algún pedido.
     expect(fixture.componentInstance['guardandoDatos']()).toBe(false);
   });
 
@@ -111,8 +105,6 @@ describe('PerfilComponent', () => {
     req.flush({ mensaje: 'Contraseña actualizada correctamente' });
     await fixture.whenStable();
 
-    // Dejar las contraseñas escritas en pantalla después de guardarlas no le
-    // sirve a nadie.
     expect(formulario.controls.contrasenaActual.value).toBe('');
     expect(formulario.controls.contrasenaNueva.value).toBe('');
   });
@@ -129,8 +121,6 @@ describe('PerfilComponent', () => {
     expect(fixture.componentInstance['guardandoContrasena']()).toBe(false);
   });
 
-  // El backend responde 400 y no 401 justamente para que la sesión sobreviva a
-  // un error de tipeo: el formulario tiene que quedar como estaba.
   it('si la contraseña actual es incorrecta, no vacía el formulario', async () => {
     const formulario = fixture.componentInstance['contrasenaFormulario'];
 

@@ -26,8 +26,6 @@ describe('authInterceptor', () => {
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
-        // Cerrar sesión navega al login: sin la ruta declarada, la navegación
-        // fallaría por un motivo ajeno a lo que se está probando.
         provideRouter([{ path: 'login', children: [] }])
       ]
     });
@@ -88,8 +86,6 @@ describe('authInterceptor', () => {
       .expectOne(url)
       .flush({ mensaje: 'No tenés permisos' }, { status: 403, statusText: 'Forbidden' });
 
-    // Un permiso que falta no es una sesión vencida: echarlo por eso lo dejaría
-    // afuera de todo lo que sí puede hacer.
     expect(auth.autenticado()).toBe(true);
   });
 
@@ -106,7 +102,6 @@ describe('authInterceptor', () => {
         { status: 401, statusText: 'Unauthorized' }
       );
 
-    // Ahí el 401 significa "esa contraseña no es", no "tu sesión venció".
     expect(auth.autenticado()).toBe(true);
   });
 });

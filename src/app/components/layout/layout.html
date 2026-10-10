@@ -19,8 +19,6 @@
       aria-label="Menú de la cuenta"
       [matMenuTriggerFor]="menuCuenta">
       <mat-icon>account_circle</mat-icon>
-      <!-- Desde SM entra el nombre al lado del ícono; en pantalla chica el ícono
-           solo, para no comerse la barra. -->
       <span class="nombre-cuenta">{{ conectado.nombre }}</span>
     </button>
 
@@ -33,8 +31,6 @@
 
       <mat-divider />
 
-      <!-- El perfil va acá y no en el menú lateral: no es una pantalla más de la
-           aplicación, es la cuenta de quien está conectado. -->
       <a mat-menu-item routerLink="/perfil">
         <mat-icon>manage_accounts</mat-icon>
         <span>Mi perfil</span>

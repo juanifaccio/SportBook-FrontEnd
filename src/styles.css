@@ -1,18 +1,3 @@
-/* Estilos globales de SportBook.
- *
- * El tema de Angular Material (colores, tipografía, densidad) vive en
- * `src/material-theme.scss`. Acá va solo lo estructural y las utilidades
- * compartidas entre componentes.
- *
- * Metodología mobile-first: todo estilo base asume pantalla chica y las media
- * queries agregan reglas hacia arriba. Breakpoints de la app (los mismos que
- * declara `src/app/core/breakpoints.ts`, alineados con Angular Material):
- *
- *   SM  >=  600px   celular grande / tablet vertical
- *   MD  >=  960px   tablet horizontal / notebook
- *   LG  >= 1280px   escritorio
- */
-
 html,
 body {
   height: 100%;
@@ -23,8 +8,6 @@ app-root {
   height: 100%;
 }
 
-/* Encabezado de pantalla: título más acción principal. En mobile la acción
-   baja debajo del título; desde SM comparten fila. */
 .encabezado-pantalla {
   display: flex;
   flex-direction: column;
@@ -46,29 +29,14 @@ app-root {
   }
 }
 
-/* Formularios de los diálogos (la clase `.formulario` de cada `<feature>-form`).
- *
- * El espacio de arriba no es decorativo: sin él, la etiqueta del primer campo
- * sale cortada. Material anula el padding superior del contenido cuando el
- * diálogo tiene título (`.mat-mdc-dialog-title + .mat-mdc-dialog-content {
- * padding-top: 0 }`) y ese contenido lleva `overflow: auto`. La etiqueta
- * flotante de un campo `outline` se dibuja por encima del borde del campo, así
- * que en el primero queda fuera de la caja de scroll y el navegador se la come.
- *
- * Va acá y no en cada formulario porque el problema es del diálogo, que es el
- * mismo para todos, y no de cómo está armado cada formulario. */
 .formulario {
   padding-top: 0.5rem;
 }
 
-/* El tipo al lado del nombre de la cancha. Va acá y no en cada componente
-   porque el nombre solo no alcanza para distinguir dos canchas en ninguna de
-   las pantallas donde hay que elegir una. */
 .tipo-cancha {
   color: var(--mat-sys-on-surface-variant);
 }
 
-/* Estado vacío / de error / de carga: bloque centrado con mensaje y acción. */
 .estado-mensaje {
   display: flex;
   flex-direction: column;
@@ -97,7 +65,6 @@ app-root {
   max-width: 32rem;
 }
 
-/* Notificaciones (ver NotificacionService). */
 .notificacion-error {
   --mat-snack-bar-button-color: var(--mat-sys-on-error);
   --mdc-snackbar-container-color: var(--mat-sys-error);

@@ -1,11 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-/**
- * Punto único para mostrarle mensajes al usuario. Cualquier componente o
- * interceptor que necesite avisar algo pasa por acá, así el estilo y la
- * duración de los mensajes quedan consistentes en toda la aplicación.
- */
 @Injectable({
   providedIn: 'root'
 })

@@ -65,8 +65,6 @@ describe('EventoService', () => {
     req.flush({ id: 7, ...dto });
   });
 
-  // Un evento no se muda de reserva, así que el PUT va sin `reservaId`: el
-  // backend lo ignoraría igual, pero mandarlo sugeriría que se puede cambiar.
   it('apunta al recurso por id al actualizar y eliminar', () => {
     const edicion = {
       descripcion: 'Cumpleaños de 18',

@@ -1,8 +1,6 @@
 <header class="encabezado-pantalla">
   <h1>Canchas</h1>
 
-  <!-- Una cancha no puede existir sin un tipo: si todavía no hay ninguno, el
-       alta queda deshabilitada y el tooltip explica por qué. -->
   <span
     [matTooltip]="hayTipos() ? '' : 'Primero tenés que crear un tipo de cancha'"
     [matTooltipDisabled]="hayTipos()">
@@ -13,14 +11,8 @@
   </span>
 </header>
 
-<!-- El filtro necesita los tipos cargados, así que no aparece hasta que
-     llegaron. Se queda a la vista mientras se recarga la lista: es lo que
-     explica por qué se están viendo esas canchas y no todas. -->
 @if (hayTipos()) {
   <div class="filtros">
-    <!-- "Tipo" y no "Tipo de cancha": es el nombre corto que usan los filtros de
-         /reservas, y así no se confunde con el campo del formulario, que se
-         abre encima de este. -->
     <mat-form-field appearance="outline">
       <mat-label>Tipo</mat-label>
       <mat-select [value]="tipoFiltro()" (valueChange)="alCambiarTipo($event)">
@@ -59,8 +51,6 @@
     </button>
   </div>
 } @else if (canchas().length === 0) {
-  <!-- Una lista vacía por el filtro no es lo mismo que no tener ninguna cancha:
-       en un caso hay que ampliar la búsqueda y en el otro, cargar la primera. -->
   @if (hayFiltro()) {
     <div class="estado-mensaje">
       <mat-icon>filter_alt_off</mat-icon>

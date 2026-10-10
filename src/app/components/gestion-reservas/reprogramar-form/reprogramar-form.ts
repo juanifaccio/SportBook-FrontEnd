@@ -13,24 +13,11 @@ import { Horario } from '../../../models/horario';
 import { Reserva } from '../../../models/reserva';
 import { aDate, aTexto, formatearFecha, hoyLocal } from '../../../core/fechas';
 
-/** Cancha y día sobre los que hay que buscar turnos libres. */
 export interface BusquedaTurnos {
   canchaId: number;
   fecha: string;
 }
 
-/**
- * Elige el turno nuevo de una reserva.
- *
- * Es un componente presentacional: no conoce el servicio ni el backend. Recibe
- * las canchas y los turnos ya cargados, y avisa por `buscar` cuando hay que
- * pedir los de otra cancha u otro día. Quien lo hospeda decide cómo
- * conseguirlos.
- *
- * No reutiliza la pantalla de `/reservar` aunque el selector se parezca: aquella
- * elige además el usuario y da de alta, y ésta solo mueve una reserva que ya
- * existe.
- */
 @Component({
   selector: 'app-reprogramar-form',
   imports: [
@@ -48,27 +35,21 @@ export interface BusquedaTurnos {
   styleUrl: './reprogramar-form.css'
 })
 export class ReprogramarFormComponent {
-
-  /** Reserva que se está moviendo; de ella salen la cancha y el día iniciales. */
   readonly reserva = input.required<Reserva>();
 
-  /** Opciones del selector de cancha. */
   readonly canchas = input<Cancha[]>([]);
 
-  /** Turnos libres de la cancha y el día elegidos. */
   readonly turnos = input<Horario[]>([]);
 
   readonly cargandoTurnos = input(false);
   readonly errorTurnos = input(false);
 
-  /** Deshabilita los controles mientras el request está en curso. */
   readonly guardando = input(false);
 
   readonly buscar = output<BusquedaTurnos>();
   readonly guardar = output<number>();
   readonly cancelar = output<void>();
 
-  /** Día mínimo del calendario: no tiene sentido mover una reserva al pasado. */
   protected readonly hoy = hoyLocal();
   protected readonly minimo = aDate(this.hoy);
 
@@ -76,7 +57,6 @@ export class ReprogramarFormComponent {
   protected readonly fecha = signal('');
   protected readonly turnoSeleccionado = signal<number | null>(null);
 
-  /** El día elegido, como `Date`, que es lo que entiende el calendario. */
   protected readonly fechaElegida = computed(() => aDate(this.fecha()));
 
   protected readonly formatearFecha = formatearFecha;
@@ -86,8 +66,6 @@ export class ReprogramarFormComponent {
   );
 
   constructor() {
-    // Al abrirse, el formulario arranca en la cancha y el día que la reserva ya
-    // tiene: lo más habitual es correrla unas horas, no mudarla de complejo.
     effect(() => {
       const reserva = this.reserva();
 
@@ -103,8 +81,6 @@ export class ReprogramarFormComponent {
   }
 
   protected alCambiarFecha(fecha: Date | null): void {
-    // El campo se puede vaciar o escribir mal a mano; sin día válido no hay
-    // turnos que pedir.
     if (!fecha) {
       return;
     }
@@ -117,10 +93,6 @@ export class ReprogramarFormComponent {
     this.turnoSeleccionado.set(turnoId);
   }
 
-  /**
-   * Al cambiar de cancha o de día, el turno que estaba elegido ya no está en la
-   * lista: dejarlo seleccionado movería la reserva a uno que el usuario no ve.
-   */
   private pedirTurnos(): void {
     this.turnoSeleccionado.set(null);
 

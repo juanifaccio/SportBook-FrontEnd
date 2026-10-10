@@ -46,7 +46,6 @@ describe('HorarioLoteDialogComponent', () => {
   let fixture: ComponentFixture<HorarioLoteDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -70,7 +69,6 @@ describe('HorarioLoteDialogComponent', () => {
     fixture.detectChanges();
   };
 
-  /** Simula que el usuario completó el formulario y le dio a generar. */
   const enviarFormulario = async () => {
     fixture.debugElement
       .query(By.directive(HorarioLoteFormComponent))
@@ -103,8 +101,6 @@ describe('HorarioLoteDialogComponent', () => {
     req.flush(resultado);
     await fixture.whenStable();
 
-    // El resultado entero, no un booleano: la pantalla necesita cuántos se
-    // crearon y cuántos ya estaban para poder contarlo.
     expect(cierres).toEqual([resultado]);
   });
 
@@ -132,8 +128,6 @@ describe('HorarioLoteDialogComponent', () => {
       );
     await fixture.whenStable();
 
-    // Sigue abierto con los datos cargados: cambiar el rango o la duración es
-    // justo lo que hay que hacer para que el lote sirva de algo.
     expect(cierres).toEqual([]);
     expect(botonGenerar()?.disabled).toBe(false);
     expect(dialogRef.disableClose).toBe(false);

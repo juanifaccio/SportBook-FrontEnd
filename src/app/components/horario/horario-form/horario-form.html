@@ -1,8 +1,6 @@
 <form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
   <mat-form-field appearance="outline">
     <mat-label>Cancha</mat-label>
-    <!-- El tipo va al lado del nombre: es lo que evita cargarle el turno a la
-         cancha equivocada cuando hay varias con nombres parecidos. -->
     <mat-select formControlName="canchaId">
       @for (cancha of canchas(); track cancha.id) {
         <mat-option [value]="cancha.id">
@@ -18,17 +16,11 @@
     }
   </mat-form-field>
 
-  <!-- La fecha se puede elegir del calendario o escribir a mano como DD/MM/AAAA:
-       el `FechaAdapter` interpreta lo escrito sin ambigüedad de día y mes. -->
   <mat-form-field appearance="outline">
     <mat-label>Fecha</mat-label>
     <input matInput [matDatepicker]="calendario" formControlName="fecha" placeholder="DD/MM/AAAA" />
     <mat-datepicker-toggle matIconSuffix [for]="calendario" />
     <mat-datepicker #calendario />
-    <!-- El error de formato va primero: cuando lo escrito no se entiende,
-         Material deja el control en `null` y salta también `required`. Decirle
-         "la fecha es obligatoria" a alguien que sí escribió algo lo manda a
-         buscar el problema donde no está. -->
     @if (formulario.controls.fecha.hasError('matDatepickerParse')) {
       <mat-error>Escribí la fecha como DD/MM/AAAA, o elegila del calendario.</mat-error>
     } @else if (formulario.controls.fecha.hasError('required')) {
@@ -36,10 +28,6 @@
     }
   </mat-form-field>
 
-  <!-- Las horas se eligen de la lista o se escriben a mano como HH:mm, igual que
-       la fecha. El error de formato va primero por la misma razón que allá: con
-       texto que no se entiende el control queda vacío y salta también
-       `required`. -->
   <div class="horas">
     <mat-form-field appearance="outline">
       <mat-label>Desde</mat-label>

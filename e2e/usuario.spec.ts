@@ -1,13 +1,6 @@
 import { ADMINISTRADOR, ANA } from './apoyo/datos';
 import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures';
 
-/**
- * ABM de usuarios.
- *
- * El recorrido del ABM en sí ya lo cubre `tipo-cancha.spec.ts`, que es la
- * implementación de referencia. Lo propio de esta pantalla es que una cuenta con
- * reservas no se borra: las reservas son el historial del complejo.
- */
 test.describe('ABM de usuarios', () => {
 
   test('no borra un usuario que tiene reservas, y lo dice', async ({ page, api }) => {

@@ -1,6 +1,3 @@
-/* Mobile-first: estas reglas son las de pantalla chica; las media queries de
-   abajo solo ajustan hacia arriba. */
-
 :host {
   display: flex;
   flex-direction: column;
@@ -19,19 +16,14 @@
   letter-spacing: 0.02em;
 }
 
-/* Empuja el menú de la cuenta contra el borde derecho de la barra. */
 .separador {
   flex: 1;
 }
 
-/* En pantalla chica queda solo el ícono: el nombre completo se comería el
-   ancho que necesita la marca. */
 .nombre-cuenta {
   display: none;
 }
 
-/* Datos del usuario arriba del menú desplegable. No es un ítem: no se hace
-   clic en él, solo dice quién está conectado. */
 .datos-cuenta {
   display: flex;
   flex-direction: column;
@@ -47,7 +39,6 @@
 
 .contenedor {
   flex: 1;
-  /* El contenedor ocupa lo que queda debajo de la barra superior. */
   min-height: 0;
   background-color: var(--mat-sys-surface-container-low);
 }

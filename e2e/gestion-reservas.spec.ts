@@ -13,17 +13,8 @@ import {
   tooltip
 } from './apoyo/fixtures';
 
-/**
- * Gestionar reservas: la contracara de reservar.
- *
- * Acá lo reservado se lista, se filtra, se reprograma a otro turno o se cancela.
- * Cancelar no borra: la fila queda como historial y el turno vuelve a la lista
- * de libres, que es justamente lo que se comprueba de punta a punta.
- */
-
 const filas = (page: Page): Locator => page.locator('table tbody tr');
 
-/** La fila de una reserva, ubicada por su horario, que es lo que la distingue. */
 const fila = (page: Page, horario: string): Locator =>
   filas(page).filter({ hasText: horario });
 
@@ -40,10 +31,8 @@ test.describe('Gestión de reservas', () => {
   test('el cliente ve solo las suyas, y sin la columna del usuario', async ({ page }) => {
     await abrirComo(page, ANA, '/reservas');
 
-    // De las cuatro sembradas, tres son de Ana.
     await expect(filas(page)).toHaveCount(3);
     await expect(page.locator('table')).not.toContainText(BRUNO.nombre);
-    // Su propio nombre repetido en cada fila no le diría nada.
     await expect(page.getByRole('columnheader', { name: 'Usuario' })).toHaveCount(0);
   });
 
@@ -70,7 +59,6 @@ test.describe('Gestión de reservas', () => {
 
     await escribirFecha(page, 'Día', MANANA);
 
-    // La de ayer queda afuera.
     await expect(filas(page)).toHaveCount(3);
 
     await page.getByRole('button', { name: 'Quitar el filtro de día' }).click();
@@ -104,7 +92,6 @@ test.describe('Gestión de reservas', () => {
     await expect(detalle).toContainText(ANA.email);
     await expect(detalle).toContainText(ANA.telefono);
     await expect(detalle).toContainText('Confirmada');
-    // El evento es parte de "los datos completos" que pide la propuesta.
     await expect(detalle).toContainText('Cumpleaños de 15');
     await expect(detalle).toContainText('40 personas');
 
@@ -113,8 +100,6 @@ test.describe('Gestión de reservas', () => {
     await expect(detalle).toBeHidden();
   });
 
-  // La mayoría de las reservas son un partido y nada más: sin evento no aparece
-  // una fila vacía.
   test('el detalle de una reserva sin evento no muestra esa fila', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/reservas');
 
@@ -127,8 +112,6 @@ test.describe('Gestión de reservas', () => {
     await expect(detalle).not.toContainText('Equipamiento');
   });
 
-  // Es lo que pide la propuesta del detalle del listado: los datos completos de
-  // la reserva, del evento y del equipamiento.
   test('el detalle muestra el equipamiento alquilado con su subtotal', async ({ page, api }) => {
     api.estado.reservaEquipamientos.push({
       id: 1,
@@ -165,18 +148,13 @@ test.describe('Gestión de reservas', () => {
 
     await expect(notificacion(page)).toContainText('Reserva cancelada. El turno volvió a quedar libre.');
 
-    // La fila sigue estando: cancelar no es borrar.
     await expect(filas(page)).toHaveCount(4);
     await expect(fila(page, '18:00 a 19:00')).toContainText('Cancelada');
 
     expect(api.estado.reservas.find((reserva) => reserva.id === 1)?.estado).toBe('CANCELADA');
 
-    // Y el turno vuelve a ofrecerse en la pantalla de reservar.
     await page.getByRole('link', { name: 'Reservar' }).click();
 
-    // Se espera a que la pantalla nueva termine de cargar antes de tocarle el
-    // día: las dos tienen campos "Cancha" y "Día", así que a medio navegar se
-    // estaría escribiendo en los filtros de la anterior.
     await expect(page).toHaveURL(/\/reservar$/);
     await expect(page.getByText('No quedan turnos libres en Cancha 1')).toBeVisible();
 
@@ -187,8 +165,6 @@ test.describe('Gestión de reservas', () => {
     ).toHaveText(['10:00 a 11:00', '11:00 a 12:00', '18:00 a 19:00']);
   });
 
-  // El turno empezó con la pantalla abierta: el botón seguía habilitado, pero el
-  // backend ya no la deja cancelar.
   test('si la reserva empezó mientras tanto, lo avisa y no la cancela', async ({ page, api }) => {
     api.fallar('PUT', '/reservas/1/cancelar', 400, {
       mensaje: 'La reserva ya empezó y no se puede modificar'
@@ -230,7 +206,6 @@ test.describe('Gestión de reservas', () => {
 
     expect(reserva?.horarioId).toBe(2);
     expect(reserva?.horaInicio).toBe('11:00');
-    // El turno viejo se soltó recién después de tomar el nuevo.
     expect(api.estado.horarios.find((turno) => turno.id === 3)?.disponible).toBe(true);
     expect(api.estado.horarios.find((turno) => turno.id === 2)?.disponible).toBe(false);
   });
@@ -247,8 +222,6 @@ test.describe('Gestión de reservas', () => {
     await expect(cancelada.getByRole('button', { name: 'Cancelar la reserva' })).toBeDisabled();
     await expect(yaEmpezo.getByRole('button', { name: 'Reprogramar la reserva' })).toBeDisabled();
 
-    // El motivo va en un tooltip sobre el contenedor: un botón deshabilitado no
-    // dispara eventos de mouse.
     await contenedorDe(cancelada, 'Cancelar la reserva').hover();
     await expect(tooltip(page)).toContainText('La reserva está cancelada');
   });

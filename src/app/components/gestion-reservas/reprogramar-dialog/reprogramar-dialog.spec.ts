@@ -52,7 +52,6 @@ describe('ReprogramarDialogComponent', () => {
   let fixture: ComponentFixture<ReprogramarDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -67,7 +66,6 @@ describe('ReprogramarDialogComponent', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')
     ).find((candidato) => candidato.textContent?.includes(etiqueta));
 
-  /** Elige el turno libre y aprieta "Reprogramar". */
   const reprogramar = async () => {
     fixture.componentInstance['alGuardar'](turnoLibre.id);
     await fixture.whenStable();
@@ -116,8 +114,6 @@ describe('ReprogramarDialogComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Reprogramar puede mover la reserva a otra cancha: el nombre solo no
-    // alcanza para saber a cuál se la está mandando.
     const selector = (fixture.nativeElement as HTMLElement).querySelector('mat-select');
     expect(selector?.textContent).toContain('Cancha 3');
     expect(selector?.textContent).toContain('(Pádel)');
@@ -167,7 +163,6 @@ describe('ReprogramarDialogComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Sigue abierto para que el usuario elija otro turno o reintente.
     expect(cierres).toEqual([]);
     expect(dialogRef.disableClose).toBe(false);
   });

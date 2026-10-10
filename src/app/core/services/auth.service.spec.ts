@@ -19,11 +19,6 @@ describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
 
-  /**
-   * El router se reemplaza por un doble que anota a dónde se le pidió ir. Lo que
-   * interesa acá es que cerrar sesión mande al login, no cómo el router resuelve
-   * esa navegación.
-   */
   let navegaciones: unknown[][];
   const router = {
     navigate: (comandos: unknown[]) => {
@@ -32,10 +27,6 @@ describe('AuthService', () => {
     }
   };
 
-  /**
-   * El servicio lee la sesión guardada al construirse, así que hay que dejarla
-   * armada (o no) antes de pedirlo.
-   */
   const preparar = () => {
     navegaciones = [];
 
@@ -77,7 +68,6 @@ describe('AuthService', () => {
     expect(service.autenticado()).toBe(true);
     expect(service.esAdmin()).toBe(true);
     expect(service.usuario()).toEqual(USUARIO_ADMIN);
-    // Guardado, para que recargar la página no obligue a entrar de nuevo.
     expect(localStorage.getItem(CLAVE_TOKEN)).toBe(TOKEN_DE_PRUEBA);
   });
 
@@ -93,14 +83,10 @@ describe('AuthService', () => {
     iniciarSesionDePrueba(USUARIO_CLIENTE);
     preparar();
 
-    // Antes de que conteste el backend ya vale la copia guardada: la pantalla no
-    // tiene que esperar un viaje de red para saber quién está conectado.
     expect(service.usuario()).toEqual(USUARIO_CLIENTE);
 
     service.restaurar();
 
-    // Al usuario le cambiaron el rol desde la última vez: manda lo que dice el
-    // backend, no la copia del navegador.
     httpMock.expectOne(`${url}/yo`).flush({ ...USUARIO_CLIENTE, rol: USUARIO_ADMIN.rol });
 
     expect(service.esAdmin()).toBe(true);
@@ -111,7 +97,6 @@ describe('AuthService', () => {
 
     service.restaurar();
 
-    // `httpMock.verify()` del afterEach falla si salió algún pedido.
     expect(service.autenticado()).toBe(false);
   });
 
@@ -121,7 +106,6 @@ describe('AuthService', () => {
 
     preparar();
 
-    // Ante la duda, no hay sesión: como mucho obliga a entrar otra vez.
     expect(service.autenticado()).toBe(false);
   });
 
@@ -140,14 +124,10 @@ describe('AuthService', () => {
 
       const req = httpMock.expectOne(`${url}/yo`);
       expect(req.request.method).toBe('PUT');
-      // Sin `rolId` ni `activo`: el backend los descarta igual, pero mandarlos
-      // sugeriría que un cliente puede ascenderse solo.
       expect(req.request.body).toEqual(perfil);
       req.flush({ ...USUARIO_CLIENTE, ...perfil });
     });
 
-    // El nombre se ve en la barra superior: con la copia vieja seguiría
-    // mostrando el anterior hasta recargar.
     it('refresca la sesión con lo que devolvió el backend', () => {
       iniciarSesionDePrueba(USUARIO_CLIENTE);
       preparar();
@@ -186,7 +166,6 @@ describe('AuthService', () => {
       expect(req.request.body).toEqual(cambio);
       req.flush({ mensaje: 'Contraseña actualizada correctamente' });
 
-      // El token sigue valiendo: no hay motivo para echar al usuario.
       expect(service.usuario()).toEqual(USUARIO_CLIENTE);
       expect(localStorage.getItem(CLAVE_TOKEN)).toBe(TOKEN_DE_PRUEBA);
     });

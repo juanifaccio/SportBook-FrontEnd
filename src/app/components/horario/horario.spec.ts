@@ -35,10 +35,6 @@ describe('HorarioComponent', () => {
   let fixture: ComponentFixture<HorarioComponent>;
   let httpMock: HttpTestingController;
 
-  /**
-   * La pantalla pide primero las canchas y recién después los turnos de la que
-   * queda elegida, así que los dos requests son secuenciales.
-   */
   const responder = (canchas: unknown[], horarios: unknown[]) => {
     httpMock.expectOne(urlCanchas).flush(canchas);
 
@@ -86,8 +82,6 @@ describe('HorarioComponent', () => {
     responder([cancha], [horario]);
     await fixture.whenStable();
 
-    // El nombre solo no distingue dos canchas: sin el tipo es fácil terminar
-    // cargándole el turno a la equivocada.
     const selector = (fixture.nativeElement as HTMLElement).querySelector('mat-select');
     expect(selector?.textContent).toContain('Cancha 1');
     expect(selector?.textContent).toContain('(Fútbol 5)');

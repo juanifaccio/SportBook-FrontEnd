@@ -1,6 +1,4 @@
 <form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
-  <!-- Al corregir, la reserva y el monto se muestran pero no se tocan: lo único
-       editable es con qué se cobró. El monto se anula y se registra de nuevo. -->
   @if (esEdicion) {
     <div class="solo-lectura">
       <span class="etiqueta">Reserva</span>
@@ -13,11 +11,6 @@
     <mat-form-field appearance="outline">
       <mat-label>Reserva</mat-label>
       <mat-select formControlName="reservaId">
-        <!-- El campo cerrado es de un renglón y recorta con puntos suspensivos,
-             así que la etiqueta entera se comía justo el final: el nombre. Acá
-             se parte en dos, con el dueño abajo, y lo que se recorta es cada
-             renglón por su cuenta. En la lista abierta no hace falta: la opción
-             crece a los renglones que necesite. -->
         <mat-select-trigger>
           @if (reservaElegida; as reserva) {
             <span class="reserva-elegida">

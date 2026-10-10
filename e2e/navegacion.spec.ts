@@ -1,10 +1,6 @@
 import { ADMINISTRADOR, ANA } from './apoyo/datos';
 import { abrirComo, expect, notificacion, test } from './apoyo/fixtures';
 
-/**
- * Navegación: el ruteo, los títulos de cada pantalla, la 404 y el menú lateral,
- * que es lo que cambia de forma entre pantalla chica y pantalla ancha.
- */
 test.describe('Navegación', () => {
 
   test('la raíz lleva a reservar, que es el caso de uso central', async ({ page }) => {
@@ -30,13 +26,10 @@ test.describe('Navegación', () => {
 
     await expect(page.getByRole('heading', { name: 'Página no encontrada' })).toBeVisible();
     await expect(page).toHaveTitle('Página no encontrada | SportBook');
-    // La 404 cuelga del layout: el usuario no queda sin salida.
     await expect(page.locator('mat-sidenav')).toBeVisible();
   });
 
   test('desde la 404 se vuelve al inicio, y al cliente también', async ({ page }) => {
-    // El botón apuntaba a /tipos-cancha, que es solo para administradores: un
-    // cliente salía del callejón sin salida para caer en otro.
     await abrirComo(page, ANA, '/lo-que-sea');
 
     await page.getByRole('link', { name: 'Volver al inicio' }).click();
@@ -44,10 +37,6 @@ test.describe('Navegación', () => {
     await expect(page).toHaveURL(/\/reservar$/);
     await expect(page.getByRole('heading', { name: 'Reservar una cancha' })).toBeVisible();
 
-    // Esta es la comprobación que distingue un caso del otro: con el destino
-    // equivocado la URL terminaba igual en /reservar, pero porque lo rebotaba el
-    // `adminGuard`, y el usuario se comía un mensaje de permisos que no venía a
-    // cuento.
     await expect(notificacion(page)).toHaveCount(0);
   });
 
@@ -76,8 +65,6 @@ test.describe('Navegación', () => {
 
       await menu.getByRole('link', { name: 'Reservas' }).click();
 
-      // Se cierra solo: en pantalla chica taparía el contenido al que se acaba
-      // de entrar.
       await expect(menu).toBeHidden();
       await expect(page.getByRole('heading', { name: 'Reservas' })).toBeVisible();
     });

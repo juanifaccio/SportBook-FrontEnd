@@ -69,7 +69,6 @@ describe('ReservaService', () => {
 
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe('POST');
-    // La fecha, las horas, la cancha y el precio los deriva el backend del turno.
     expect(req.request.body).toEqual({ horarioId: 2, usuarioId: 6 });
     req.flush(reserva);
   });
@@ -95,8 +94,6 @@ describe('ReservaService', () => {
 
     const req = httpMock.expectOne(`${url}/1`);
     expect(req.request.method).toBe('PUT');
-    // La fecha, las horas, la cancha y el precio los vuelve a copiar el backend
-    // del turno nuevo.
     expect(req.request.body).toEqual({ horarioId: 8 });
     req.flush({ ...reserva, horarioId: 8 });
   });
@@ -106,7 +103,6 @@ describe('ReservaService', () => {
 
     const req = httpMock.expectOne(`${url}/1/cancelar`);
     expect(req.request.method).toBe('PUT');
-    // Cancelar no es borrar: la reserva se conserva, cambia de estado.
     expect(req.request.body).toEqual({});
     req.flush({ ...reserva, estado: 'CANCELADA' });
   });

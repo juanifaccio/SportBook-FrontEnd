@@ -1,8 +1,6 @@
 <header class="encabezado-pantalla">
   <h1>Pagos</h1>
 
-  <!-- La plata la cobra el complejo: al cliente esta pantalla le sirve para
-       mirar lo suyo, no para registrar nada. -->
   @if (esAdmin()) {
     <span
       matTooltip="Todas las reservas vigentes están pagas"
@@ -95,8 +93,6 @@
     <ng-container matColumnDef="acciones">
       <th mat-header-cell *matHeaderCellDef class="columna-acciones">Acciones</th>
       <td mat-cell *matCellDef="let pago" class="columna-acciones">
-        <!-- Un pago anulado no se corrige ni se vuelve a anular: el backend
-             responde 409 en los dos casos. -->
         <span
           matTooltip="El pago está anulado"
           [matTooltipDisabled]="!estaAnulado(pago)">

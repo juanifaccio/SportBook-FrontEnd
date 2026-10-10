@@ -58,7 +58,6 @@ describe('EventoComponent', () => {
 
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  /** Las tres listas salen juntas en un `forkJoin`. */
   const responder = async (eventos: unknown[], reservas: unknown[] = [], tipos: unknown[] = []) => {
     httpMock.expectOne(urlEventos).flush(eventos);
     httpMock.expectOne((pedido) => pedido.url === urlReservas).flush(reservas);
@@ -73,8 +72,6 @@ describe('EventoComponent', () => {
     ).find((boton) => boton.textContent?.includes('Nuevo evento'));
 
   beforeEach(async () => {
-    // La pantalla muestra el dueño solo para el administrador, así que la sesión
-    // se arma antes del `TestBed`: `AuthService` la lee al construirse.
     iniciarSesionDePrueba(USUARIO_ADMIN);
 
     await TestBed.configureTestingModule({
@@ -104,9 +101,6 @@ describe('EventoComponent', () => {
 
     expect(texto()).toContain('Cumpleaños de 15');
     expect(texto()).toContain(tipoEvento.nombre);
-    // La reserva se identifica por día, horario y cancha, con el tipo entre
-    // paréntesis: dos canchas pueden llamarse parecido y ser de deportes
-    // distintos. El tipo lo pone la etiqueta, no la plantilla.
     expect(texto()).toContain('20/08/2026');
     expect(texto()).toContain(`${cancha.nombre} (${cancha.tipoCancha.nombre})`);
   });
@@ -121,9 +115,6 @@ describe('EventoComponent', () => {
   it('ofrece reintentar cuando la carga falla', async () => {
     fixture.detectChanges();
 
-    // El de eventos se responde último: los tres pedidos salen juntos y, en
-    // cuanto uno falla, los otros quedan cancelados y ya no se les puede
-    // responder.
     httpMock.expectOne((pedido) => pedido.url === urlReservas).flush([]);
     httpMock.expectOne(urlTipos).flush([]);
     httpMock
@@ -135,8 +126,6 @@ describe('EventoComponent', () => {
     expect(texto()).toContain('Reintentar');
   });
 
-  // Sin tipos no hay nada que elegir en el formulario, así que abrirlo sería
-  // ofrecer un selector vacío.
   it('no deja crear si no hay tipos de evento', async () => {
     fixture.detectChanges();
     await responder([], [reserva], []);
@@ -144,8 +133,6 @@ describe('EventoComponent', () => {
     expect(botonNuevo()?.disabled).toBe(true);
   });
 
-  // Una reserva con evento y una cancelada no admiten uno nuevo: si no queda
-  // ninguna libre, el alta no tiene sobre qué trabajar.
   it('no deja crear si todas las reservas vigentes ya tienen evento', async () => {
     fixture.detectChanges();
     await responder([evento], [reserva, reservaCancelada], [tipoEvento]);

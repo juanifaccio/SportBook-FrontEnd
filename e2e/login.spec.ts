@@ -1,12 +1,6 @@
 import { ADMINISTRADOR, ANA } from './apoyo/datos';
 import { abrirComo, expect, notificacion, test } from './apoyo/fixtures';
 
-/**
- * Inicio de sesión: la puerta de entrada a la aplicación.
- *
- * Es el único archivo que recorre el formulario de login de verdad; el resto de
- * las pantallas se abren con la sesión ya armada.
- */
 test.describe('Inicio de sesión', () => {
 
   test('sin sesión, cualquier pantalla manda al login y se acuerda de a dónde iba', async ({
@@ -58,7 +52,6 @@ test.describe('Inicio de sesión', () => {
     await expect(notificacion(page)).toContainText('Email o contraseña incorrectos');
     await expect(page).toHaveURL(/\/login/);
 
-    // El botón vuelve a quedar habilitado: el usuario corrige y prueba de nuevo.
     await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeEnabled();
   });
 
@@ -133,8 +126,6 @@ test.describe('Inicio de sesión', () => {
     page,
     api
   }) => {
-    // La cuenta se dio de baja mientras el token seguía guardado en el navegador:
-    // el `GET /auth/yo` del arranque devuelve 401 y el interceptor desloguea.
     const ana = api.estado.usuarios.find((usuario) => usuario.id === ANA.id);
 
     if (ana) {

@@ -29,13 +29,6 @@ import {
   DatosConfirmacion
 } from '../shared/confirmacion/confirmacion';
 
-/**
- * Pantalla de ABM de horarios.
- *
- * Los turnos no son un catálogo global: son de una cancha, así que la pantalla
- * arranca eligiendo una y muestra los suyos. Cambiar de cancha vuelve a pedirle
- * al backend solo los turnos de esa.
- */
 @Component({
   selector: 'app-horario',
   imports: [
@@ -66,10 +59,8 @@ export class HorarioComponent implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
 
-  /** Sin canchas cargadas no hay turnos que administrar. */
   protected readonly hayCanchas = computed(() => this.canchas().length > 0);
 
-  /** En mobile se muestran tarjetas apiladas; desde MD, una tabla. */
   protected readonly esPantallaAncha = toSignal(
     this.breakpointObserver.observe(BREAKPOINT_MD).pipe(map((estado) => estado.matches)),
     { initialValue: false }
@@ -81,10 +72,6 @@ export class HorarioComponent implements OnInit {
     this.cargar();
   }
 
-  /**
-   * Carga inicial: primero las canchas, porque hasta no saber cuál está elegida
-   * no hay turnos que pedir.
-   */
   protected cargar(): void {
     this.cargando.set(true);
     this.error.set(false);
@@ -103,8 +90,6 @@ export class HorarioComponent implements OnInit {
         this.canchaSeleccionada.set(primera.id);
         this.cargarHorarios();
       },
-      // El mensaje al usuario ya lo muestra el interceptor; acá solo se refleja
-      // el estado en la vista para poder ofrecer un reintento.
       error: () => {
         this.error.set(true);
         this.cargando.set(false);
@@ -116,16 +101,6 @@ export class HorarioComponent implements OnInit {
     this.mostrarTurnosDe(canchaId);
   }
 
-  /**
-   * Deja a la vista los turnos de una cancha, sea porque el usuario la eligió en
-   * el selector o porque acaba de guardar algo en ella.
-   *
-   * Lo segundo es lo que hace que la pantalla siga a lo que se guardó: tanto el
-   * formulario como el lote dejan elegir cancha, así que lo recién creado puede
-   * no pertenecer a la lista que se está mostrando. Recargar la cancha elegida y
-   * nada más dejaba la tabla igual que antes, con un cartel diciendo que se
-   * habían creado doce turnos: parecía que no había funcionado.
-   */
   private mostrarTurnosDe(canchaId: number): void {
     this.canchaSeleccionada.set(canchaId);
     this.cargarHorarios();
@@ -153,7 +128,6 @@ export class HorarioComponent implements OnInit {
     });
   }
 
-  /** La fecha viaja como "AAAA-MM-DD" y se muestra como "DD/MM/AAAA". */
   protected readonly formatearFecha = formatearFecha;
 
   protected abrirAlta(): void {
@@ -164,10 +138,6 @@ export class HorarioComponent implements OnInit {
     this.abrirFormulario(horario);
   }
 
-  /**
-   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
-   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
-   */
   private abrirFormulario(horario: Horario | null): void {
     const dialogRef = this.dialog.open<HorarioDialogComponent, DatosHorarioDialog, Horario>(
       HorarioDialogComponent,
@@ -191,16 +161,10 @@ export class HorarioComponent implements OnInit {
         horario ? 'Horario actualizado correctamente.' : 'Horario creado correctamente.'
       );
 
-      // El formulario también deja elegir cancha, así que el turno guardado
-      // puede haber quedado en otra: la pantalla lo sigue hasta ahí.
       this.mostrarTurnosDe(guardado.canchaId);
     });
   }
 
-  /**
-   * Genera de una vez todos los turnos de un día. Es la misma alta repetida:
-   * llenar un día de a uno son doce formularios idénticos salvo por la hora.
-   */
   protected abrirGeneracion(): void {
     const dialogRef = this.dialog.open<
       HorarioLoteDialogComponent,
@@ -222,11 +186,6 @@ export class HorarioComponent implements OnInit {
 
       this.notificacion.exito(this.resumenDelLote(resultado));
 
-      // Todos los turnos del lote son de la misma cancha, así que el primero
-      // alcanza para saber a cuál seguir. La lista nunca viene vacía (si no
-      // quedaba ninguno por crear, el backend responde 409 y el diálogo no se
-      // cierra), pero si lo estuviera igual hay que recargar: pudo haber
-      // cambiado algo de la cancha que se está mirando.
       const primero = resultado.creados[0];
 
       if (primero) {
@@ -238,12 +197,6 @@ export class HorarioComponent implements OnInit {
     });
   }
 
-  /**
-   * Cuántos turnos se crearon y cuántos ya estaban.
-   *
-   * Los salteados se nombran solo cuando los hubo: aclarar que ya estaban cero
-   * es ruido, y el caso normal es el día vacío.
-   */
   private resumenDelLote({ creados, omitidos }: ResultadoLote): string {
     const turnos = `${creados.length} ${creados.length === 1 ? 'turno' : 'turnos'}`;
 
@@ -282,9 +235,6 @@ export class HorarioComponent implements OnInit {
         this.horarios.update((horarios) => horarios.filter((horario) => horario.id !== id));
         this.notificacion.exito('Horario eliminado correctamente.');
       },
-      // El aviso ya lo mostró el interceptor y el turno sigue en la lista, que
-      // es lo que corresponde. Sin este manejador, el error que el interceptor
-      // relanza quedaría sin atrapar.
       error: () => {}
     });
   }

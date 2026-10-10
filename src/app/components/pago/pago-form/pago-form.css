@@ -1,16 +1,10 @@
 .formulario {
   display: flex;
   flex-direction: column;
-  /* Aire entre campos: sin esto, el mensaje de error de uno queda pegado a la
-     caja del siguiente. */
   gap: 0.5rem;
-  /* Ancho cómodo en mobile; el diálogo lo limita en pantallas grandes. */
   min-width: 0;
 }
 
-/* La reserva elegida en el campo cerrado del selector: dos renglones, con el
-   dueño abajo. `white-space` vuelve a normal porque Material deja el valor en
-   una sola línea, que es justamente lo que había que partir. */
 .reserva-elegida {
   display: flex;
   flex-direction: column;
@@ -24,7 +18,6 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-/* La reserva y el monto al corregir: se leen como campos más, pero no se tocan. */
 .solo-lectura {
   display: flex;
   flex-direction: column;

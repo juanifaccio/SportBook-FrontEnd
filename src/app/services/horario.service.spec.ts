@@ -94,7 +94,6 @@ describe('HorarioService', () => {
 
     const req = httpMock.expectOne(`${url}/lote`);
     expect(req.request.method).toBe('POST');
-    // El cuerpo va tal cual: el rango y la duración son del lote, no de un turno.
     expect(req.request.body).toEqual(lote);
 
     const respuesta = { creados: [{ id: 1, ...dto }], omitidos: 2 };

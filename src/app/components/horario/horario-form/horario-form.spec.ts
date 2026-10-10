@@ -18,7 +18,6 @@ describe('HorarioFormComponent', () => {
 
   let fixture: ComponentFixture<HorarioFormComponent>;
 
-  /** Completa los campos como lo haría el usuario en el navegador. */
   const completar = async (horaInicio: string, horaFin: string) => {
     const inputs = (fixture.nativeElement as HTMLElement).querySelectorAll('input');
 
@@ -27,8 +26,6 @@ describe('HorarioFormComponent', () => {
       input.dispatchEvent(new Event('input'));
     };
 
-    // La fecha se escribe a mano como DD/MM/AAAA, que es la otra forma de
-    // cargarla además del calendario. El `FechaAdapter` la interpreta.
     cargar(inputs[0] as HTMLInputElement, '20/08/2026');
     cargar(inputs[1] as HTMLInputElement, horaInicio);
     cargar(inputs[2] as HTMLInputElement, horaFin);
@@ -79,13 +76,9 @@ describe('HorarioFormComponent', () => {
   });
 
   it('muestra el tipo al lado del nombre en el selector de cancha', async () => {
-    // La cancha por defecto la carga un efecto, así que el select recién queda
-    // con valor cuando el componente se estabiliza.
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Es el campo donde se le asigna la cancha al turno: si dos se llaman
-    // parecido, el tipo es lo único que evita cargarlo en la equivocada.
     const selector = (fixture.nativeElement as HTMLElement).querySelector('mat-select');
 
     expect(selector?.textContent).toContain('Cancha 1');
@@ -116,7 +109,6 @@ describe('HorarioFormComponent', () => {
 
     await enviar();
 
-    // Antes que inventar una fecha, el formulario avisa y no llama al backend.
     expect(emitidos).toEqual([]);
     expect(errores()).toContain('Escribí la fecha como DD/MM/AAAA, o elegila del calendario.');
   });
@@ -129,9 +121,6 @@ describe('HorarioFormComponent', () => {
     await enviar();
 
     expect(emitidos).toEqual([]);
-    // El mensaje tiene que ser el de formato y no el de obligatorio: el usuario
-    // sí escribió algo, y mandarlo a completar un campo que ya completó lo hace
-    // buscar el problema donde no está.
     expect(errores()).toContain('Escribí la hora como HH:mm, o elegila de la lista.');
     expect(errores()).not.toContain('La hora de inicio es obligatoria.');
   });
@@ -143,8 +132,6 @@ describe('HorarioFormComponent', () => {
     await completar('9:30', '11:00');
     await enviar();
 
-    // El backend guarda y ordena las horas como texto, así que el cero a la
-    // izquierda lo tiene que poner el formulario.
     expect(emitidos[0]?.horaInicio).toBe('09:30');
   });
 
@@ -152,8 +139,6 @@ describe('HorarioFormComponent', () => {
     await completar('10:00', '09:30');
     await enviar();
 
-    // Bajar la hora de inicio también resuelve el problema: el error tiene que
-    // recalcularse aunque el campo que cambió sea el otro.
     await completar('09:00', '09:30');
 
     expect(errores()).toEqual([]);

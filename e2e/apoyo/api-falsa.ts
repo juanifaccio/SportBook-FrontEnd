@@ -9,25 +9,6 @@ import { ReservaEquipamiento } from '../../src/app/models/reserva-equipamiento';
 import { Usuario } from '../../src/app/models/usuario';
 import { EstadoApi, UsuarioSembrado, datosIniciales } from './datos';
 
-/**
- * El backend de SportBook, simulado dentro del navegador.
- *
- * Intercepta todo lo que la aplicación le pide a `/api` y lo responde desde un
- * estado en memoria, reproduciendo el contrato real: los mismos códigos HTTP,
- * los mismos `{ mensaje }` en español y las mismas reglas de negocio que la API
- * de verdad (quién puede llamar a qué, el turno que se ocupa al reservar y se
- * libera al cancelar, la reserva que ya empezó y no se puede tocar).
- *
- * No es un stub que devuelve listas fijas: guarda lo que se crea, se edita y se
- * borra, así que un test puede reservar un turno y comprobar después que dejó de
- * ofrecerse. Eso es lo que permite que los e2e recorran flujos completos sin
- * levantar el backend ni una base MySQL.
- *
- * `fallar()` está para lo que de otro modo no se podría provocar: los estados de
- * error y de reintento de cada pantalla.
- */
-
-/** Fallo forzado por un test para la próxima llamada que coincida. */
 interface Falla {
   metodo: string;
   ruta: string;
@@ -36,65 +17,49 @@ interface Falla {
   veces: number;
 }
 
-/** Lo que la API contesta: el código HTTP y el JSON del cuerpo. */
 interface Respuesta {
   estado: number;
   cuerpo: unknown;
 }
 
-/** Una llamada ya desarmada, con la sesión resuelta. */
 interface Pedido {
   metodo: string;
-  /** Camino sin el prefijo `/api`, por ejemplo `/tipos-cancha/3`. */
   ruta: string;
   parametros: URLSearchParams;
   cuerpo: Record<string, unknown>;
   sesion: UsuarioSembrado | null;
 }
 
-/**
- * Todo lo que cuelgue de `/api`, sin importar el origen.
- *
- * Va como expresión regular y no como el glob `**\/api/**`: desde que Playwright
- * empareja los globs por segmento de ruta, ese patrón no llega a coincidir con
- * una URL completa (protocolo y host incluidos) y las llamadas se le escapan al
- * servidor de desarrollo, que responde un 404 en HTML.
- */
 const RUTA_API = /\/api\//;
 
 const ok = (cuerpo: unknown, estado = 200): Respuesta => ({ estado, cuerpo });
 
 const falla = (estado: number, mensaje: string): Respuesta => ({ estado, cuerpo: { mensaje } });
 
-/** El id que va al final de la ruta, o `null` si no hay ninguno. */
 const idDe = (ruta: string, recurso: string): number | null => {
   const partes = new RegExp(`^${recurso}/(\\d+)$`).exec(ruta);
 
   return partes ? Number(partes[1]) : null;
 };
 
-/** La contraseña no sale nunca en una respuesta, ni siquiera hasheada. */
 const sinContrasena = (usuario: UsuarioSembrado): Usuario => {
   const { contrasena, ...resto } = usuario;
 
   return resto;
 };
 
-/** Minutos desde la medianoche, para poder restar dos horas `"HH:mm"`. */
 const minutosDe = (hora: string): number => {
   const [horas, minutos] = hora.split(':').map(Number);
 
   return horas * 60 + minutos;
 };
 
-/** La vuelta de `minutosDe`: los minutos desde la medianoche, como "HH:mm". */
 const comoHora = (minutos: number): string => {
   const horas = `${Math.floor(minutos / 60)}`.padStart(2, '0');
 
   return `${horas}:${`${minutos % 60}`.padStart(2, '0')}`;
 };
 
-/** Si un turno ya arrancó, en hora local, que es la del complejo. */
 const yaEmpezo = (fecha: string, horaInicio: string): boolean => {
   const [anio, mes, dia] = fecha.split('-').map(Number);
   const [hora, minuto] = horaInicio.split(':').map(Number);
@@ -102,10 +67,6 @@ const yaEmpezo = (fecha: string, horaInicio: string): boolean => {
   return new Date(anio, mes - 1, dia, hora, minuto).getTime() <= Date.now();
 };
 
-/**
- * El día de hoy como `"AAAA-MM-DD"`, que es lo que el backend le pone a un pago.
- * Con partes locales y no `toISOString()`, por lo mismo que en `core/fechas.ts`.
- */
 const hoy = (): string => {
   const fecha = new Date();
   const mes = `${fecha.getMonth() + 1}`.padStart(2, '0');
@@ -117,7 +78,6 @@ const hoy = (): string => {
 const proximoId = (coleccion: { id: number }[]): number =>
   coleccion.reduce((mayor, item) => Math.max(mayor, item.id), 0) + 1;
 
-/** El cuerpo del request como objeto. Un DELETE no manda ninguno. */
 const cuerpoDe = (texto: string | null): Record<string, unknown> => {
   if (!texto) {
     return {};
@@ -131,8 +91,6 @@ const cuerpoDe = (texto: string | null): Record<string, unknown> => {
 };
 
 export class ApiFalsa {
-
-  /** El estado del servidor. Los tests lo pueden leer para comprobar efectos. */
   readonly estado: EstadoApi;
 
   private readonly fallas: Falla[] = [];
@@ -141,12 +99,6 @@ export class ApiFalsa {
     this.estado = estado;
   }
 
-  /**
-   * Hace fallar las próximas llamadas que coincidan con ese método y esa ruta.
-   *
-   * Con `estado: 0` el request ni siquiera llega: es el backend caído, que es
-   * como se prueban los mensajes de "no se pudo conectar".
-   */
   fallar(
     metodo: string,
     ruta: string,
@@ -162,7 +114,6 @@ export class ApiFalsa {
     });
   }
 
-  /** Engancha la API a la página. Hay que llamarla antes de navegar. */
   async instalar(pagina: Page): Promise<void> {
     await pagina.route(RUTA_API, (ruta) => this.atender(ruta));
   }
@@ -205,7 +156,6 @@ export class ApiFalsa {
     });
   }
 
-  /** Descuenta una falla pendiente, si hay alguna para esta llamada. */
   private tomarFalla(metodo: string, ruta: string): Falla | null {
     const indice = this.fallas.findIndex(
       (item) => item.metodo === metodo && item.ruta === ruta && item.veces > 0
@@ -222,11 +172,6 @@ export class ApiFalsa {
     return encontrada;
   }
 
-  /**
-   * El usuario del token, releído del estado en cada llamada y no confiado del
-   * token: igual que el middleware real, así una baja lógica tiene efecto en el
-   * momento.
-   */
   private sesionDe(autorizacion: string | undefined): UsuarioSembrado | null {
     if (!autorizacion?.startsWith('Bearer ')) {
       return null;
@@ -242,14 +187,9 @@ export class ApiFalsa {
     return sesion.rol?.nombre === 'ADMIN';
   }
 
-  // ---------------------------------------------------------------------------
-  // Ruteo
-  // ---------------------------------------------------------------------------
-
   private responder(pedido: Pedido): Respuesta {
     const { metodo, ruta } = pedido;
 
-    // El único endpoint público: sin él no habría con qué pedir nada más.
     if (metodo === 'POST' && ruta === '/auth/login') {
       return this.login(pedido.cuerpo);
     }
@@ -307,22 +247,13 @@ export class ApiFalsa {
     return falla(404, 'No se encontró el recurso solicitado');
   }
 
-  /** Las pantallas de administración del complejo son solo para `ADMIN`. */
   private exigirAdmin(sesion: UsuarioSembrado): Respuesta | null {
     return this.esAdmin(sesion) ? null : falla(403, 'No tenés permisos para realizar esta acción');
   }
 
-  /**
-   * Consultar canchas, horarios y tipos lo puede hacer cualquiera (el cliente
-   * los necesita para reservar); administrarlos, solo un `ADMIN`.
-   */
   private soloLeeElCliente(metodo: string, sesion: UsuarioSembrado): Respuesta | null {
     return metodo === 'GET' ? null : this.exigirAdmin(sesion);
   }
-
-  // ---------------------------------------------------------------------------
-  // Sesión
-  // ---------------------------------------------------------------------------
 
   private login(cuerpo: Record<string, unknown>): Respuesta {
     const email = typeof cuerpo['email'] === 'string' ? cuerpo['email'] : '';
@@ -345,10 +276,6 @@ export class ApiFalsa {
     return ok({ token: `token-${usuario.id}`, usuario: sinContrasena(usuario) });
   }
 
-  /**
-   * El perfil propio: siempre sobre el usuario de la sesión, nunca sobre un id
-   * que venga del cliente.
-   */
   private perfil(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
     const { metodo, ruta, cuerpo } = pedido;
 
@@ -377,8 +304,6 @@ export class ApiFalsa {
         return falla(409, 'Ya existe un usuario con ese email');
       }
 
-      // Lista blanca: el rol, el activo y la contraseña se descartan aunque
-      // vengan en el cuerpo, igual que hace el controller.
       sesion.nombre = nombre;
       sesion.email = email;
       sesion.telefono = telefono;
@@ -406,8 +331,6 @@ export class ApiFalsa {
         return falla(400, 'La contraseña nueva tiene que ser distinta de la actual');
       }
 
-      // 400 y no 401: la sesión sirve, lo que está mal es un dato del
-      // formulario. Con un 401 el frontend cerraría la sesión.
       if (sesion.contrasena !== actual) {
         return falla(400, 'La contraseña actual no es correcta');
       }
@@ -419,10 +342,6 @@ export class ApiFalsa {
 
     return falla(404, 'No se encontró el recurso solicitado');
   }
-
-  // ---------------------------------------------------------------------------
-  // Usuarios
-  // ---------------------------------------------------------------------------
 
   private usuarios(pedido: Pedido): Respuesta {
     const { metodo, ruta, cuerpo } = pedido;
@@ -486,7 +405,6 @@ export class ApiFalsa {
         activo: cuerpo['activo'] !== false,
         rolId: Number(cuerpo['rolId']),
         rol: this.estado.roles.find((rol) => rol.id === Number(cuerpo['rolId'])),
-        // Si el formulario no manda contraseña, se conserva la que estaba.
         contrasena: cuerpo['contrasena'] ? `${cuerpo['contrasena']}` : anterior.contrasena
       };
 
@@ -519,8 +437,6 @@ export class ApiFalsa {
       return falla(400, 'El email es obligatorio y debe tener un formato válido');
     }
 
-    // Al editar, la contraseña es opcional: el formulario la deja vacía para
-    // conservar la que ya estaba, porque nunca la recibió.
     if (id === null && !cuerpo['contrasena']) {
       return falla(400, 'La contraseña es obligatoria');
     }
@@ -539,10 +455,6 @@ export class ApiFalsa {
 
     return null;
   }
-
-  // ---------------------------------------------------------------------------
-  // Tipos de cancha
-  // ---------------------------------------------------------------------------
 
   private tiposCancha(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
     const { metodo, ruta, cuerpo } = pedido;
@@ -620,10 +532,6 @@ export class ApiFalsa {
     return falla(404, 'No se encontró el recurso solicitado');
   }
 
-  // ---------------------------------------------------------------------------
-  // Tipos de evento
-  // ---------------------------------------------------------------------------
-
   private tiposEvento(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
     const { metodo, ruta, cuerpo } = pedido;
     const prohibido = this.soloLeeElCliente(metodo, sesion);
@@ -687,8 +595,6 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
-      // La clave foránea de Evento es la que frena el borrado en el backend; el
-      // controller traduce ese error de Prisma a este 409.
       if (this.estado.eventos.some((evento) => evento.tipoEventoId === id)) {
         return falla(
           409,
@@ -703,10 +609,6 @@ export class ApiFalsa {
 
     return falla(404, 'No se encontró el recurso solicitado');
   }
-
-  // ---------------------------------------------------------------------------
-  // Equipamiento
-  // ---------------------------------------------------------------------------
 
   private equipamientos(pedido: Pedido, sesion: UsuarioSembrado): Respuesta {
     const { metodo, ruta, cuerpo } = pedido;
@@ -728,7 +630,6 @@ export class ApiFalsa {
           equipamiento.nombre.toLowerCase() === nombre.toLowerCase() && equipamiento.id !== id
       );
 
-    /** Las mismas validaciones del controller, con sus mismos mensajes. */
     const invalido = (): Respuesta | null => {
       if (!nombre) {
         return falla(400, 'El nombre es obligatorio');
@@ -750,7 +651,6 @@ export class ApiFalsa {
     };
 
     if (metodo === 'GET' && ruta === '/equipamientos') {
-      // Ordenado por nombre, como lo devuelve el backend.
       const ordenados = [...this.estado.equipamientos].sort((uno, otro) =>
         uno.nombre.localeCompare(otro.nombre)
       );
@@ -770,7 +670,6 @@ export class ApiFalsa {
         return falla(404, 'Turno no encontrado');
       }
 
-      // Con un turno, cada artículo viene con las unidades libres durante él.
       const alquilado = this.alquiladoEn(turno);
 
       return ok(
@@ -828,7 +727,6 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
-      // La FK de ReservaEquipamiento impide borrar un artículo ya alquilado.
       if (this.estado.reservaEquipamientos.some((fila) => fila.equipamientoId === id)) {
         return falla(409, 'No se puede eliminar el equipamiento porque hay reservas que lo incluyen');
       }
@@ -841,11 +739,6 @@ export class ApiFalsa {
     return falla(404, 'No se encontró el recurso solicitado');
   }
 
-  // ---------------------------------------------------------------------------
-  // Canchas
-  // ---------------------------------------------------------------------------
-
-  /** La cancha con su tipo anidado, como la devuelve el backend. */
   private conTipo(cancha: Cancha): Cancha {
     return {
       ...cancha,
@@ -866,8 +759,6 @@ export class ApiFalsa {
     if (metodo === 'GET' && ruta === '/canchas') {
       const tipoCanchaId = parametros.get('tipoCanchaId');
 
-      // Un tipo que no es un número es un dato inválido; uno que no existe no,
-      // porque no es un error sino una búsqueda sin resultados.
       if (tipoCanchaId !== null && !/^\d+$/.test(tipoCanchaId)) {
         return falla(400, 'El id del tipo de cancha debe ser un número');
       }
@@ -876,8 +767,6 @@ export class ApiFalsa {
         (cancha) => tipoCanchaId === null || cancha.tipoCanchaId === Number(tipoCanchaId)
       );
 
-      // Ordenadas por nombre, como el backend: el listado se usa para encontrar
-      // una cancha y el orden de alta no ayuda a eso.
       return ok(
         [...filtradas]
           .sort((una, otra) => una.nombre.localeCompare(otra.nombre))
@@ -983,11 +872,6 @@ export class ApiFalsa {
     return falla(404, 'No se encontró el recurso solicitado');
   }
 
-  // ---------------------------------------------------------------------------
-  // Horarios
-  // ---------------------------------------------------------------------------
-
-  /** El turno con su cancha anidada, como lo devuelve el backend. */
   private conCancha(horario: Horario): Horario {
     const cancha = this.estado.canchas.find((item) => item.id === horario.canchaId);
 
@@ -1104,9 +988,6 @@ export class ApiFalsa {
         return error;
       }
 
-      // Un turno con una reserva activa solo se guarda sin cambios: moverlo
-      // dejaría la reserva con un horario que ya no está en la grilla, y
-      // ofrecerlo de nuevo dejaría que otro cliente lo reserve.
       const anterior = this.estado.horarios[indice];
       const reservado = this.estado.reservas.some(
         (reserva) => reserva.horarioId === id && reserva.estado !== 'CANCELADA'
@@ -1142,8 +1023,6 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
-      // Como la clave foránea del backend: alcanza con que alguna reserva lo
-      // haya ocupado, aunque esté cancelada, porque se conserva como historial.
       if (this.estado.reservas.some((reserva) => reserva.horarioId === id)) {
         return falla(409, 'No se puede eliminar el horario porque tiene reservas asociadas');
       }
@@ -1156,11 +1035,6 @@ export class ApiFalsa {
     return falla(404, 'No se encontró el recurso solicitado');
   }
 
-  // ---------------------------------------------------------------------------
-  // Reservas
-  // ---------------------------------------------------------------------------
-
-  /** La reserva con sus tres relaciones, como la devuelve el backend. */
   private conRelaciones(reserva: Reserva): Reserva {
     const usuario = this.estado.usuarios.find((item) => item.id === reserva.usuarioId);
     const cancha = this.estado.canchas.find((item) => item.id === reserva.canchaId);
@@ -1171,8 +1045,6 @@ export class ApiFalsa {
       usuario: usuario ? sinContrasena(usuario) : undefined,
       cancha: cancha ? this.conTipo(cancha) : undefined,
       horario: horario,
-      // El backend lo incluye en todas sus respuestas de reserva, y viene `null`
-      // en las que son un partido y nada más.
       evento: this.estado.eventos.find((evento) => evento.reservaId === reserva.id) ?? null,
       pagos: this.estado.pagos.filter((pago) => pago.reservaId === reserva.id),
       equipamientos: this.estado.reservaEquipamientos
@@ -1184,11 +1056,6 @@ export class ApiFalsa {
     };
   }
 
-  /**
-   * Unidades de cada artículo que ya ocupan las reservas no canceladas del mismo
-   * día cuyo horario se superpone con el turno. Es la regla del stock del
-   * backend: no se descuenta, cada reserva ocupa sus unidades durante su turno.
-   */
   private alquiladoEn(
     turno: { fecha: string; horaInicio: string; horaFin: string },
     reservaExcluida?: number
@@ -1217,11 +1084,6 @@ export class ApiFalsa {
     return alquilado;
   }
 
-  /**
-   * Valida lo pedido y comprueba que alcance en el turno, con los mismos
-   * mensajes que el backend. Devuelve las filas a guardar (sin `id` ni
-   * `reservaId`) o la falla.
-   */
   private armarEquipamiento(
     lista: unknown,
     turno: { fecha: string; horaInicio: string; horaFin: string },
@@ -1278,14 +1140,12 @@ export class ApiFalsa {
     return { filas };
   }
 
-  /** Lo que suman los subtotales del equipamiento de una reserva. */
   private totalEquipamientoDe(reservaId: number): number {
     return this.estado.reservaEquipamientos
       .filter((fila) => fila.reservaId === reservaId)
       .reduce((total, fila) => total + fila.subtotal, 0);
   }
 
-  /** Lo que falta pagar de una reserva; los pagos anulados no cuentan. */
   private saldoDe(reserva: Reserva): number {
     const pagado = this.estado.pagos
       .filter((pago) => pago.reservaId === reserva.id && pago.estado !== 'ANULADO')
@@ -1294,14 +1154,9 @@ export class ApiFalsa {
     return reserva.precioTotal - pagado;
   }
 
-  /**
-   * Deja la reserva en el estado que le corresponde según sus pagos, igual que
-   * hace el backend después de registrar o anular uno.
-   */
   private recalcularReserva(reservaId: number): void {
     const reserva = this.estado.reservas.find((item) => item.id === reservaId);
 
-    // Cancelar es una decisión, no algo que se derive de la plata.
     if (!reserva || reserva.estado === 'CANCELADA') {
       return;
     }
@@ -1309,12 +1164,6 @@ export class ApiFalsa {
     reserva.estado = this.saldoDe(reserva) <= 0 ? 'CONFIRMADA' : 'PENDIENTE';
   }
 
-  /**
-   * Genera los turnos de un día con las mismas reglas que el backend: el rango
-   * se parte en turnos de la duración pedida, el último se descarta si no entra
-   * completo, y los que se pisan con alguno ya cargado se saltean en vez de
-   * hacer fallar el lote entero.
-   */
   private generarHorarios(cuerpo: Record<string, unknown>): Respuesta {
     const fecha = `${cuerpo['fecha'] ?? ''}`;
     const horaInicio = `${cuerpo['horaInicio'] ?? ''}`;
@@ -1403,8 +1252,6 @@ export class ApiFalsa {
       const fecha = parametros.get('fecha');
       const estado = parametros.get('estado');
 
-      // Al cliente el backend le impone su propio usuario: no hay filtro que
-      // pueda mandar para ver las reservas de otro.
       const usuarioId = this.esAdmin(sesion) ? parametros.get('usuarioId') : `${sesion.id}`;
 
       const filtradas = this.estado.reservas.filter((reserva) => {
@@ -1470,8 +1317,6 @@ export class ApiFalsa {
       return falla(400, 'El turno es obligatorio');
     }
 
-    // El dueño sale de la sesión: solo un administrador puede reservar a nombre
-    // de otro, y si un cliente manda `usuarioId` no cambia nada.
     const usuarioId = this.esAdmin(sesion) ? Number(cuerpo['usuarioId'] ?? sesion.id) : sesion.id;
     const usuario = this.estado.usuarios.find((item) => item.id === usuarioId);
 
@@ -1495,8 +1340,6 @@ export class ApiFalsa {
       return invalido;
     }
 
-    // Va en la misma "transacción": si el equipamiento no alcanza, no se
-    // reserva nada.
     const equipamiento = this.armarEquipamiento(cuerpo['equipamientos'], horario);
 
     if ('falla' in equipamiento) {
@@ -1507,12 +1350,9 @@ export class ApiFalsa {
 
     const creada: Reserva = {
       id: proximoId(this.estado.reservas),
-      // Se copian del turno en vez de leerse por la relación: así la reserva
-      // queda como registro histórico si el turno se edita después.
       fecha: horario.fecha,
       horaInicio: horario.horaInicio,
       horaFin: horario.horaFin,
-      // Nace PENDIENTE: la confirman sus pagos.
       estado: 'PENDIENTE',
       precioTotal: this.precioDe(horario) + totalEquipamiento,
       usuarioId: usuarioId,
@@ -1557,8 +1397,6 @@ export class ApiFalsa {
       return invalido;
     }
 
-    // Lo alquilado viaja con la reserva y tiene que alcanzar en el turno nuevo;
-    // la propia reserva no compite consigo misma.
     const alquilado = this.estado.reservaEquipamientos
       .filter((fila) => fila.reservaId === reserva.id)
       .map(({ equipamientoId, cantidad }) => ({ equipamientoId, cantidad }));
@@ -1570,8 +1408,6 @@ export class ApiFalsa {
 
     const viejo = this.estado.horarios.find((item) => item.id === reserva.horarioId);
 
-    // Se toma el turno nuevo antes de soltar el viejo, igual que la transacción
-    // del backend.
     nuevo.disponible = false;
 
     if (viejo) {
@@ -1583,8 +1419,6 @@ export class ApiFalsa {
     reserva.horaFin = nuevo.horaFin;
     reserva.canchaId = nuevo.canchaId;
     reserva.horarioId = nuevo.id;
-    // El precio del turno se vuelve a copiar; los subtotales del equipamiento
-    // quedan como se cobraron.
     reserva.precioTotal = this.precioDe(nuevo) + this.totalEquipamientoDe(reserva.id);
 
     return ok(this.conRelaciones(reserva));
@@ -1602,8 +1436,6 @@ export class ApiFalsa {
 
     reserva.estado = 'CANCELADA';
 
-    // Cancelar no borra: la fila queda como historial y el turno vuelve a la
-    // lista de libres.
     if (horario) {
       horario.disponible = true;
     }
@@ -1611,10 +1443,6 @@ export class ApiFalsa {
     return ok(this.conRelaciones(reserva));
   }
 
-  /**
-   * Las tres reglas que comparten reprogramar y cancelar: la reserva tiene que
-   * existir, ser de quien la pide y todavía poder tocarse.
-   */
   private buscarModificable(
     id: number,
     sesion: UsuarioSembrado
@@ -1640,7 +1468,6 @@ export class ApiFalsa {
     return { reserva: reserva };
   }
 
-  /** Un turno sirve si su cancha está habilitada, no empezó y sigue libre. */
   private validarTurno(horario: Horario): Respuesta | null {
     const cancha = this.estado.canchas.find((item) => item.id === horario.canchaId);
 
@@ -1659,7 +1486,6 @@ export class ApiFalsa {
     return null;
   }
 
-  /** Precio por hora de la cancha por la duración del turno. */
   private precioDe(horario: Horario): number {
     const cancha = this.estado.canchas.find((item) => item.id === horario.canchaId);
     const horas = (minutosDe(horario.horaFin) - minutosDe(horario.horaInicio)) / 60;
@@ -1667,11 +1493,6 @@ export class ApiFalsa {
     return (cancha?.precioPorHora ?? 0) * horas;
   }
 
-  // ---------------------------------------------------------------------------
-  // Eventos
-  // ---------------------------------------------------------------------------
-
-  /** El evento con su tipo y su reserva, como lo devuelve el backend. */
   private conTipoYReserva(evento: Evento): Evento {
     const tipoEvento = this.estado.tiposEvento.find((item) => item.id === evento.tipoEventoId);
     const reserva = this.estado.reservas.find((item) => item.id === evento.reservaId);
@@ -1683,14 +1504,12 @@ export class ApiFalsa {
     };
   }
 
-  /** Un evento es de quien es su reserva; el administrador los gestiona todos. */
   private puedeGestionar(evento: Evento, sesion: UsuarioSembrado): boolean {
     const reserva = this.estado.reservas.find((item) => item.id === evento.reservaId);
 
     return this.esAdmin(sesion) || reserva?.usuarioId === sesion.id;
   }
 
-  /** Valida lo común al alta y a la edición, con los mensajes del controller. */
   private validarEvento(cuerpo: Record<string, unknown>): Respuesta | null {
     const descripcion = `${cuerpo['descripcion'] ?? ''}`.trim();
     const cantidadPersonas = Number(cuerpo['cantidadPersonas']);
@@ -1721,7 +1540,6 @@ export class ApiFalsa {
           return false;
         }
 
-        // Al cliente el backend le impone sus propias reservas.
         return this.puedeGestionar(evento, sesion);
       });
 
@@ -1762,7 +1580,6 @@ export class ApiFalsa {
         return falla(409, 'La reserva está cancelada');
       }
 
-      // El `reservaId` del cuerpo se ignora: un evento no se muda de reserva.
       const actualizado: Evento = {
         ...evento,
         descripcion: `${cuerpo['descripcion']}`.trim(),
@@ -1776,8 +1593,6 @@ export class ApiFalsa {
     }
 
     if (metodo === 'DELETE') {
-      // Borrar el evento de una reserva cancelada sí se permite: es limpiar un
-      // dato que ya no aplica, no modificarlo.
       this.estado.eventos.splice(indice, 1);
 
       return ok({ mensaje: 'Evento eliminado correctamente' });
@@ -1786,11 +1601,6 @@ export class ApiFalsa {
     return falla(404, 'No se encontró el recurso solicitado');
   }
 
-  // ---------------------------------------------------------------------------
-  // Pagos
-  // ---------------------------------------------------------------------------
-
-  /** El pago con su reserva, como lo devuelve el backend. */
   private conReserva(pago: Pago): Pago {
     const reserva = this.estado.reservas.find((item) => item.id === pago.reservaId);
 
@@ -1813,7 +1623,6 @@ export class ApiFalsa {
           return false;
         }
 
-        // Al cliente el backend le impone sus propias reservas.
         const reserva = this.estado.reservas.find((item) => item.id === pago.reservaId);
 
         return this.esAdmin(sesion) || reserva?.usuarioId === sesion.id;
@@ -1822,7 +1631,6 @@ export class ApiFalsa {
       return ok(filtrados.map((pago) => this.conReserva(pago)));
     }
 
-    // La plata la cobra el complejo: el resto de las operaciones son del admin.
     if (metodo === 'POST' && ruta === '/pagos') {
       return this.exigirAdmin(sesion) ?? this.crearPago(cuerpo);
     }
@@ -1869,7 +1677,6 @@ export class ApiFalsa {
         return falla(400, 'El método debe ser EFECTIVO, TARJETA, TRANSFERENCIA');
       }
 
-      // Solo el método: el monto de un pago no se edita.
       pago.metodo = metodoNuevo as MetodoPago;
 
       return ok(this.conReserva(pago));
@@ -1919,7 +1726,6 @@ export class ApiFalsa {
     const creado: Pago = {
       id: proximoId(this.estado.pagos),
       monto: monto,
-      // La fecha la pone el servidor: el día en que se cobra.
       fecha: hoy(),
       metodo: metodo as MetodoPago,
       estado: 'REGISTRADO',
@@ -1943,7 +1749,6 @@ export class ApiFalsa {
       return falla(409, 'El pago ya está anulado');
     }
 
-    // Anular no es borrar: la fila se conserva y deja de contar para el saldo.
     pago.estado = 'ANULADO';
     this.recalcularReserva(pago.reservaId);
 

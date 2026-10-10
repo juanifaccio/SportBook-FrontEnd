@@ -24,14 +24,6 @@ import {
   DatosConfirmacion
 } from '../shared/confirmacion/confirmacion';
 
-/**
- * Pantalla de ABM de eventos: lo que se festeja o se juega en una reserva.
- *
- * Sirve a los dos roles sin ramas especiales, porque el backend ya decide qué
- * ve cada uno: un administrador recibe todos los eventos del complejo y un
- * cliente, solo los de sus propias reservas. Lo único que cambia por rol es la
- * columna con el dueño, que para un cliente sería siempre él mismo.
- */
 @Component({
   selector: 'app-evento',
   imports: [
@@ -64,7 +56,6 @@ export class EventoComponent implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
 
-  /** En mobile se muestran tarjetas apiladas; desde MD, una tabla. */
   protected readonly esPantallaAncha = toSignal(
     this.breakpointObserver.observe(BREAKPOINT_MD).pipe(map((estado) => estado.matches)),
     { initialValue: false }
@@ -76,11 +67,6 @@ export class EventoComponent implements OnInit {
       : ['reserva', 'tipo', 'descripcion', 'personas', 'acciones']
   );
 
-  /**
-   * Las reservas que admiten un evento nuevo: las que no están canceladas y
-   * todavía no tienen uno. Se deriva de los eventos cargados en vez de
-   * recalcularse a mano, así crear o borrar uno actualiza el selector solo.
-   */
   protected readonly reservasDisponibles = computed(() => {
     const conEvento = new Set(this.eventos().map((evento) => evento.reservaId));
 
@@ -105,8 +91,6 @@ export class EventoComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(false);
 
-    // Las tres listas se piden juntas: sin las reservas y los tipos no se puede
-    // dar de alta, y esperarlas de a una alargaría la carga sin motivo.
     forkJoin({
       eventos: this.eventoService.listar(),
       reservas: this.reservaService.listar(),
@@ -118,8 +102,6 @@ export class EventoComponent implements OnInit {
         this.tipos.set(tipos);
         this.cargando.set(false);
       },
-      // El mensaje al usuario ya lo muestra el interceptor; acá solo se refleja
-      // el estado en la vista para poder ofrecer un reintento.
       error: () => {
         this.error.set(true);
         this.cargando.set(false);
@@ -135,10 +117,6 @@ export class EventoComponent implements OnInit {
     this.abrirFormulario(evento);
   }
 
-  /**
-   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
-   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
-   */
   private abrirFormulario(evento: Evento | null): void {
     const datos: DatosEventoDialog = {
       evento: evento,
@@ -193,9 +171,6 @@ export class EventoComponent implements OnInit {
         this.eventos.update((eventos) => eventos.filter((evento) => evento.id !== id));
         this.notificacion.exito('Evento eliminado correctamente.');
       },
-      // El aviso ya lo mostró el interceptor y el evento sigue en la lista, que
-      // es lo que corresponde. Sin este manejador, el error que el interceptor
-      // relanza quedaría sin atrapar.
       error: () => {}
     });
   }

@@ -25,7 +25,6 @@ describe('CanchaDialogComponent', () => {
   let fixture: ComponentFixture<CanchaDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -48,7 +47,6 @@ describe('CanchaDialogComponent', () => {
     fixture.detectChanges();
   };
 
-  /** Simula que el usuario completó el formulario y le dio a guardar. */
   const enviarFormulario = async () => {
     fixture.debugElement.query(By.directive(CanchaFormComponent)).componentInstance.guardar.emit(dto);
     await fixture.whenStable();
@@ -117,7 +115,6 @@ describe('CanchaDialogComponent', () => {
     );
     await fixture.whenStable();
 
-    // El diálogo sigue abierto con los datos cargados y se puede reintentar.
     expect(cierres).toEqual([]);
     expect(botonGuardar()?.disabled).toBe(false);
     expect(dialogRef.disableClose).toBe(false);

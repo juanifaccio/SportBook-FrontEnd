@@ -1,7 +1,3 @@
-/* Mobile-first: los filtros arrancan apilados a lo ancho de la pantalla y la
-   vista base es la de tarjetas. La tabla solo aparece desde MD, donde hay ancho
-   suficiente para las siete columnas. */
-
 .filtros {
   display: flex;
   flex-direction: column;
@@ -55,7 +51,6 @@
   }
 
   .tarjetas {
-    /* En tablet vertical entran dos tarjetas por fila. */
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }

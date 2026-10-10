@@ -1,6 +1,3 @@
-/* Mobile-first: los dos selectores arrancan apilados a lo ancho de la pantalla
-   y comparten fila desde SM, donde ya entran los dos. */
-
 .filtros {
   display: flex;
   flex-direction: column;
@@ -21,8 +18,6 @@
   font: var(--mat-sys-title-medium);
 }
 
-/* Dentro de una sección el estado vacío no es el de una pantalla entera: se le
-   saca el aire de arriba y abajo para que no empuje el resumen fuera de vista. */
 .seccion .estado-mensaje {
   padding: 1.5rem 1rem;
 }
@@ -32,9 +27,6 @@
   max-width: 28rem;
 }
 
-/* Los campos del evento van apilados y no más anchos que el selector de usuario,
-   para que la sección se lea como parte del mismo formulario y no como otra
-   pantalla. */
 .formulario-evento {
   display: flex;
   flex-direction: column;
@@ -52,10 +44,6 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-/* Un renglón por artículo: nombre y precio a la izquierda, la cantidad a la
-   derecha. Con botones de más y menos en vez de un campo numérico, que en el
-   celular abre el teclado para cambiar un número de a uno y deja escribir una
-   cantidad que no hay. */
 .lista-equipamiento {
   max-width: 28rem;
   margin: 0.75rem 0 0;

@@ -52,8 +52,6 @@ describe('PagoService', () => {
     req.flush([]);
   });
 
-  // La fecha y el estado los pone el servidor: un pago se registra el día en que
-  // se cobra y nace REGISTRADO, así que ni siquiera viajan.
   it('envía el alta sin fecha ni estado', () => {
     service.crear(dto).subscribe();
 
@@ -63,7 +61,6 @@ describe('PagoService', () => {
     req.flush({ id: 7, ...dto, fecha: '2026-08-20', estado: 'REGISTRADO' });
   });
 
-  // Lo único editable es el método: el monto se anula y se registra de nuevo.
   it('al actualizar manda solamente el método', () => {
     service.actualizar(3, { metodo: 'TARJETA' }).subscribe();
 
@@ -73,8 +70,6 @@ describe('PagoService', () => {
     req.flush({ id: 3, ...dto, metodo: 'TARJETA' });
   });
 
-  // Anular no es borrar: el backend no expone DELETE, y este endpoint además
-  // recalcula el estado de la reserva.
   it('anula con un PUT a su propia URL y sin cuerpo', () => {
     service.anular(3).subscribe();
 

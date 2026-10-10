@@ -19,7 +19,6 @@ describe('UsuarioFormComponent', () => {
   let fixture: ComponentFixture<UsuarioFormComponent>;
   let emitidos: UsuarioDto[];
 
-  /** Escribe en un input identificándolo por su `formControlName`. */
   const cargar = async (control: string, valor: string) => {
     const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
       `input[formControlName="${control}"]`
@@ -98,7 +97,6 @@ describe('UsuarioFormComponent', () => {
 
     await enviar();
 
-    // Sin el campo, el backend conserva el hash que ya tenía guardado.
     expect(emitidos).toEqual([
       {
         nombre: usuario.nombre,

@@ -26,7 +26,6 @@ describe('UsuarioComponent', () => {
   let fixture: ComponentFixture<UsuarioComponent>;
   let httpMock: HttpTestingController;
 
-  /** La pantalla carga los usuarios y los roles juntos, así que hay dos requests. */
   const responder = (usuarios: unknown[], roles: unknown[]) => {
     httpMock.expectOne(urlUsuarios).flush(usuarios);
     httpMock.expectOne(urlRoles).flush(roles);
@@ -89,8 +88,6 @@ describe('UsuarioComponent', () => {
   it('ofrece reintentar cuando la carga falla', async () => {
     fixture.detectChanges();
 
-    // El listado de roles se responde primero para que el de usuarios pueda
-    // fallar sin dejar el otro request cancelado a mitad de camino.
     httpMock.expectOne(urlRoles).flush([rol]);
     httpMock.expectOne(urlUsuarios).flush(
       { mensaje: 'Error interno' },

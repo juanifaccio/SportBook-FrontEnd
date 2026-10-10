@@ -8,17 +8,6 @@ import {
   test
 } from './apoyo/fixtures';
 
-/**
- * Los pagos de una reserva, y lo que le hacen a su estado.
- *
- * Una reserva nace PENDIENTE y la confirman sus pagos. Eso es lo que hay que ver
- * acá y no en los unitarios: que cobrar el total la deje CONFIRMADA, que anular
- * el pago la devuelva a PENDIENTE, y que un cliente pueda mirar sus pagos pero
- * no registrar ninguno.
- *
- * De lo sembrado, la reserva #1 de Ana (8000) está paga entera y la #2 de Bruno
- * (6000) no tiene ningún pago.
- */
 test.describe('Pagos', () => {
 
   test('lista el pago sembrado con su reserva', async ({ page }) => {
@@ -53,11 +42,9 @@ test.describe('Pagos', () => {
     const creado = api.estado.pagos.at(-1);
     expect(creado?.monto).toBe(6000);
     expect(creado?.reservaId).toBe(2);
-    // Lo cobrado cubre el precio total, así que la reserva queda confirmada.
     expect(api.estado.reservas.find((reserva) => reserva.id === 2)?.estado).toBe('CONFIRMADA');
   });
 
-  // Con una seña la reserva sigue debiendo: no se confirma hasta cobrarla entera.
   test('un pago parcial deja la reserva pendiente', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 
@@ -74,7 +61,6 @@ test.describe('Pagos', () => {
     expect(api.estado.reservas.find((reserva) => reserva.id === 2)?.estado).toBe('PENDIENTE');
   });
 
-  // Cobrar de más dejaría un saldo negativo que el sistema no sabe devolver.
   test('no deja cobrar más que el saldo', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 
@@ -90,7 +76,6 @@ test.describe('Pagos', () => {
     await expect(formulario).toBeVisible();
   });
 
-  // La reserva #1 ya está paga y la #4 está cancelada: ninguna admite un cobro.
   test('solo ofrece las reservas vigentes que deben plata', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 
@@ -99,33 +84,22 @@ test.describe('Pagos', () => {
 
     const opciones = page.getByRole('option');
 
-    // Quedan la #2 y la #3, que no tienen pagos.
     await expect(opciones).toHaveCount(2);
     await expect(opciones.first()).not.toContainText('18:00 a 19:00');
   });
 
-  // El que cobra es el administrador, que no sabe de memoria de quién es cada
-  // turno: sin el nombre, el día y la cancha no le dicen a quién le está
-  // registrando el pago.
   test('ofrece cada reserva con el nombre de quien la hizo', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 
     await page.getByRole('button', { name: 'Registrar un pago' }).click();
     await page.getByRole('combobox', { name: 'Reserva' }).click();
 
-    // La #2 es de Bruno, en la Cancha 2, que es de pádel. La etiqueta entera:
-    // el día y el horario distinguen la reserva, el tipo distingue la cancha y
-    // el nombre dice a quién se le cobra.
     await expect(page.getByRole('option').first()).toContainText(
       `20:00 a 21:00 · ${CANCHA_2.nombre} (${PADEL.nombre}) · ${BRUNO.nombre}`
     );
-    // La #3 es de Ana.
     await expect(page.getByRole('option', { name: new RegExp(ANA.nombre) })).toBeVisible();
   });
 
-  // El campo cerrado es de un renglón y recorta con puntos suspensivos: con la
-  // etiqueta entera de una sola línea, lo primero en perderse era el nombre,
-  // justo después de elegirlo. Se muestra en dos renglones, con el dueño abajo.
   test('el campo cerrado sigue mostrando el nombre después de elegir', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/pagos');
 
@@ -152,13 +126,11 @@ test.describe('Pagos', () => {
 
     await expect(notificacion(page)).toContainText('Pago anulado correctamente.');
 
-    // Anular no es borrar: la fila se conserva como historial.
     expect(api.estado.pagos).toHaveLength(1);
     expect(api.estado.pagos[0].estado).toBe('ANULADO');
     expect(api.estado.reservas.find((reserva) => reserva.id === 1)?.estado).toBe('PENDIENTE');
   });
 
-  // Otro administrador lo anuló con la pantalla abierta: el backend lo rechaza.
   test('si el pago ya estaba anulado, lo avisa y la reserva no cambia', async ({ page, api }) => {
     api.fallar('PUT', '/pagos/1/anular', 409, { mensaje: 'El pago ya está anulado' });
 
@@ -180,7 +152,6 @@ test.describe('Pagos', () => {
     const formulario = dialogo(page);
 
     await expect(formulario.getByRole('heading', { name: 'Corregir el pago' })).toBeVisible();
-    // El monto y la reserva se muestran pero no se pueden tocar.
     await expect(formulario.getByLabel('Monto')).toHaveCount(0);
     await expect(formulario).toContainText('8.000');
 
@@ -189,14 +160,12 @@ test.describe('Pagos', () => {
 
     await expect(notificacion(page)).toContainText('Pago actualizado correctamente.');
     expect(api.estado.pagos[0].metodo).toBe('TARJETA');
-    // Corregir el método no toca el estado de la reserva.
     expect(api.estado.reservas.find((reserva) => reserva.id === 1)?.estado).toBe('CONFIRMADA');
   });
 
   test('al cliente le muestra sus pagos pero no lo deja registrar', async ({ page }) => {
     await abrirComo(page, ANA, '/pagos');
 
-    // El pago sembrado es de una reserva de Ana.
     await expect(page.locator('table tbody tr')).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Registrar un pago' })).toHaveCount(0);
     await expect(page.locator('table')).not.toContainText('A nombre de');
@@ -211,7 +180,6 @@ test.describe('Pagos', () => {
   test('el detalle de la reserva muestra lo cobrado y lo que falta', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/reservas');
 
-    // La #2 de Bruno no tiene ningún pago: debe los 6000 enteros.
     await page
       .locator('table tbody tr', { hasText: '20:00 a 21:00' })
       .getByRole('button', { name: 'Ver el detalle' })
@@ -224,7 +192,6 @@ test.describe('Pagos', () => {
 
     await detalle.getByRole('button', { name: 'Cerrar' }).click();
 
-    // La #1 de Ana está paga: no muestra saldo, pero sí el pago.
     await page
       .locator('table tbody tr', { hasText: '18:00 a 19:00' })
       .getByRole('button', { name: 'Ver el detalle' })

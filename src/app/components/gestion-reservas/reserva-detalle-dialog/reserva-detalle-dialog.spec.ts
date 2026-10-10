@@ -54,8 +54,6 @@ describe('ReservaDetalleDialogComponent', () => {
   });
 
   it('muestra los datos que no entran en el listado', () => {
-    // El listado muestra cancha, día, horario, usuario, estado y total; el
-    // detalle suma el tipo de cancha, el contacto y el precio por hora.
     expect(texto()).toContain('Pádel');
     expect(texto()).toContain(usuario.email);
     expect(texto()).toContain(usuario.telefono);
@@ -67,8 +65,6 @@ describe('ReservaDetalleDialogComponent', () => {
     expect(texto()).toContain('Confirmada');
   });
 
-  // La mayoría de las reservas son un partido y nada más: sin evento no tiene
-  // que aparecer una fila vacía.
   it('no muestra la fila de evento si la reserva no tiene uno', () => {
     expect(texto()).not.toContain('Evento');
   });
@@ -115,14 +111,12 @@ describe('ReservaDetalleDialogComponent', () => {
       expect(texto()).toContain('18/08/2026');
     });
 
-    // El total es 8400: con 3000 pagos, faltan 5400.
     it('descuenta lo pagado del saldo', async () => {
       await montar([pago(3000)]);
 
       expect(fixture.componentInstance['saldo']()).toBe(5400);
     });
 
-    // Un pago anulado se sigue mostrando (es historial) pero deja de contar.
     it('no descuenta los pagos anulados', async () => {
       await montar([pago(3000), { ...pago(5400), id: 2, estado: 'ANULADO' }]);
 
@@ -166,8 +160,6 @@ describe('ReservaDetalleDialogComponent', () => {
       fixture.detectChanges();
     });
 
-    // Es lo que pide la propuesta del detalle: los datos completos de la reserva
-    // y de su evento.
     it('lo muestra con su tipo, descripción y cantidad de personas', () => {
       expect(texto()).toContain('Cumpleaños de 15');
       expect(texto()).toContain('40 personas');
@@ -212,12 +204,9 @@ describe('ReservaDetalleDialogComponent', () => {
       fixture.detectChanges();
     });
 
-    // Es la otra parte de lo que pide la propuesta del detalle: los datos
-    // completos de la reserva, del evento y del equipamiento.
     it('lo muestra con la cantidad, el artículo y el subtotal', () => {
       expect(texto()).toContain('Equipamiento');
       expect(texto()).toContain('2 × Pelota de pádel');
-      // El separador de miles depende del locale con el que corren los tests.
       expect(texto()).toMatch(/3[.,]000/);
     });
   });

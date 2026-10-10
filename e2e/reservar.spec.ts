@@ -20,26 +20,9 @@ import {
   test
 } from './apoyo/fixtures';
 
-/**
- * Reservar una cancha: el caso de uso central de la aplicación.
- *
- * Todo pasa en una sola pantalla (cancha, día, turno libre y a nombre de quién)
- * y el diálogo muestra el resumen antes de mandarlo. Los turnos sembrados son de
- * mañana, así que la pantalla arranca en el día de hoy y sin nada que ofrecer:
- * elegir el día es parte del recorrido.
- */
-
 const turnos = (page: Page): Locator =>
   page.getByRole('listbox', { name: 'Turnos libres' }).getByRole('option');
 
-/**
- * Cambia el día ya con la pantalla cargada.
- *
- * La espera no es de adorno: el campo aparece apenas llegan las canchas, y la
- * primera búsqueda de turnos (la de hoy) todavía está viajando. Escribir la
- * fecha antes dejaría dos pedidos en el aire y la lista mostraría el que llegue
- * último.
- */
 const elegirDia = async (page: Page, fecha: string): Promise<void> => {
   await expect(page.getByText('No quedan turnos libres en Cancha 1')).toBeVisible();
   await escribirFecha(page, 'Día', fecha);
@@ -54,8 +37,6 @@ test.describe('Reservar una cancha', () => {
 
     const opciones = page.getByRole('option');
 
-    // La Cancha 3 está en mantenimiento: el backend rechazaría la reserva, así
-    // que ni siquiera se ofrece.
     await expect(opciones).toHaveCount(2);
     await expect(opciones.first()).toContainText(`${CANCHA_1.nombre} (Fútbol 5)`);
     await expect(opciones.nth(1)).toContainText(`${CANCHA_2.nombre} (Pádel)`);
@@ -74,7 +55,6 @@ test.describe('Reservar una cancha', () => {
 
     await elegirDia(page, MANANA);
 
-    // De los tres turnos de mañana de la Cancha 1, el de 18:00 ya está reservado.
     await expect(turnos(page)).toHaveText(['10:00 a 11:00', '11:00 a 12:00']);
   });
 
@@ -98,7 +78,6 @@ test.describe('Reservar una cancha', () => {
     await elegirDia(page, MANANA);
     await turnos(page).first().click();
 
-    // El total lo calcula la pantalla como adelanto: 8000 por hora, una hora.
     const resumen = page.locator('.resumen');
 
     await expect(resumen).toContainText(`${CANCHA_1.nombre} (Fútbol 5)`);
@@ -118,14 +97,12 @@ test.describe('Reservar una cancha', () => {
     await expect(confirmacion).toBeHidden();
     await expect(notificacion(page)).toContainText('Reserva confirmada correctamente.');
 
-    // El turno reservado desaparece de la lista sin recargar la pantalla.
     await expect(turnos(page)).toHaveText(['11:00 a 12:00']);
 
     const creada = api.estado.reservas.at(-1);
 
     expect(creada?.usuarioId).toBe(ANA.id);
     expect(creada?.horarioId).toBe(1);
-    // El precio lo calcula el backend, no el navegador.
     expect(creada?.precioTotal).toBe(8000);
     expect(api.estado.horarios.find((turno) => turno.id === 1)?.disponible).toBe(false);
   });
@@ -175,12 +152,9 @@ test.describe('Reservar una cancha', () => {
     await abrirComo(page, ANA, '/reservar');
 
     await expect(page.getByRole('heading', { name: 'No hay canchas disponibles' })).toBeVisible();
-    // Las canchas las administra el complejo: el cliente no tiene a dónde ir.
     await expect(page.getByRole('button', { name: 'Ir a canchas' })).toHaveCount(0);
   });
 
-  // La #14: el evento se declara al reservar y se guarda con un segundo request,
-  // porque necesita el id de una reserva que todavía no existe.
   test('reserva declarando un evento y lo guarda junto con la reserva', async ({ page, api }) => {
     await abrirComo(page, ANA, '/reservar');
     await elegirDia(page, MANANA);
@@ -195,7 +169,6 @@ test.describe('Reservar una cancha', () => {
 
     const confirmacion = dialogo(page);
 
-    // El resumen lo muestra antes de que no haya vuelta atrás.
     await expect(confirmacion).toContainText('Torneo relámpago');
     await expect(confirmacion).toContainText('16 personas');
 
@@ -212,7 +185,6 @@ test.describe('Reservar una cancha', () => {
     expect(evento?.reservaId).toBe(creada?.id);
   });
 
-  // Marcado pero incompleto se reservaría sin el evento y sin avisar.
   test('no deja confirmar con el evento marcado a medio completar', async ({ page }) => {
     await abrirComo(page, ANA, '/reservar');
     await elegirDia(page, MANANA);
@@ -224,14 +196,11 @@ test.describe('Reservar una cancha', () => {
 
     await expect(page.getByRole('button', { name: 'Reservar' })).toBeDisabled();
 
-    // Destildarlo vuelve a habilitar la reserva sin evento.
     await page.getByRole('checkbox', { name: 'Es para un evento' }).uncheck();
 
     await expect(page.getByRole('button', { name: 'Reservar' })).toBeEnabled();
   });
 
-  // La reserva ya quedó hecha: reintentarla la duplicaría, así que el diálogo se
-  // cierra igual y avisa que el evento quedó pendiente.
   test('si el evento falla avisa pero la reserva queda hecha', async ({ page, api }) => {
     api.fallar('POST', '/eventos', 500, { mensaje: 'Error al crear el evento' });
 
@@ -248,8 +217,6 @@ test.describe('Reservar una cancha', () => {
     await dialogo(page).getByRole('button', { name: 'Confirmar reserva' }).click();
 
     await expect(dialogo(page)).toBeHidden();
-    // Son dos snackbars: el del interceptor con el error crudo y el de la
-    // pantalla explicando qué quedó pendiente.
     await expect(
       notificacion(page).filter({ hasText: 'el evento no se pudo guardar' })
     ).toBeVisible();
@@ -257,8 +224,6 @@ test.describe('Reservar una cancha', () => {
     expect(api.estado.eventos).toHaveLength(1);
   });
 
-  // La #13: el equipamiento va en el mismo request de la reserva, porque cambia
-  // el precio total.
   test('reserva alquilando equipamiento y el total lo suma', async ({ page, api }) => {
     await abrirComo(page, ANA, '/reservar');
     await elegirDia(page, MANANA);
@@ -270,7 +235,6 @@ test.describe('Reservar una cancha', () => {
 
     await expect(lista).toContainText(`${PELOTA.nombre}`);
     await expect(lista).toContainText('quedan 10');
-    // Las pecheras tienen stock cero: siguen en el catálogo, pero no se ofrecen.
     await expect(lista).toContainText('sin unidades para este turno');
     await expect(
       page.getByRole('button', { name: `Agregar una unidad de ${PECHERAS.nombre}` })
@@ -281,7 +245,6 @@ test.describe('Reservar una cancha', () => {
     await agregarPelota.click();
     await agregarPelota.click();
 
-    // Una hora a 8000 más dos pelotas a 1500.
     const resumen = page.locator('.resumen');
 
     await expect(resumen).toContainText(`2 × ${PELOTA.nombre}`);
@@ -307,8 +270,6 @@ test.describe('Reservar una cancha', () => {
     ]);
   });
 
-  // El stock son las unidades del complejo: lo que alquila una reserva no está
-  // en los turnos que se le superponen, en ninguna cancha, pero sí en los demás.
   test('lo alquilado en un turno no se ofrece en los que se le superponen', async ({
     page,
     api
@@ -341,13 +302,11 @@ test.describe('Reservar una cancha', () => {
     const lista = page.getByRole('list', { name: 'Equipamiento para alquilar' });
     const agregarPelota = page.getByRole('button', { name: `Agregar una unidad de ${PELOTA.nombre}` });
 
-    // De 09:00 a 10:30 se pisa con la reserva de 10:00 a 11:00 de la Cancha 1.
     await turnos(page).filter({ hasText: '09:00 a 10:30' }).click();
 
     await expect(lista).not.toContainText('quedan');
     await expect(agregarPelota).toBeDisabled();
 
-    // De 08:00 a 09:00 no se pisa con nada: las diez pelotas están libres.
     await turnos(page).filter({ hasText: '08:00 a 09:00' }).click();
 
     await expect(lista).toContainText('quedan 10');

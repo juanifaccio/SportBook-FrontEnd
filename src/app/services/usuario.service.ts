@@ -4,12 +4,6 @@ import { Observable } from 'rxjs';
 import { Usuario, UsuarioDto } from '../models/usuario';
 import { environment } from '../../environments/environment';
 
-/**
- * Acceso a los endpoints de usuarios del backend.
- *
- * Sigue el mismo criterio que `CanchaService`: la URL sale del ambiente y los
- * errores quedan a cargo del interceptor, así que acá no se atrapan.
- */
 @Injectable({
   providedIn: 'root'
 })

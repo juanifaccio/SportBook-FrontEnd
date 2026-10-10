@@ -65,16 +65,9 @@ describe('ReservaComponent', () => {
   let fixture: ComponentFixture<ReservaComponent>;
   let httpMock: HttpTestingController;
 
-  /** El pedido de turnos lleva la fecha de hoy, que cambia según el día. */
   const pedidoDeTurnos = () =>
     httpMock.expectOne((pedido) => pedido.url === urlHorarios && pedido.params.has('disponible'));
 
-  /**
-   * La pantalla pide canchas, usuarios y tipos de evento a la vez, y recién con
-   * una cancha elegida pide los turnos del día. Si ninguna cancha está
-   * disponible no queda ninguna elegida, así que ese último pedido no llega a
-   * salir.
-   */
   const responder = async (
     canchas: { estado: string }[],
     usuarios: unknown[],
@@ -101,12 +94,6 @@ describe('ReservaComponent', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')
     ).find((boton) => boton.textContent?.includes('Reservar'));
 
-  /**
-   * La pantalla se comporta distinto según el rol, así que la sesión se arma
-   * antes de configurar el `TestBed`: `AuthService` la lee al construirse.
-   * Por defecto es un administrador, que es quien elige a nombre de quién va la
-   * reserva.
-   */
   const preparar = async (usuario = USUARIO_ADMIN) => {
     iniciarSesionDePrueba(usuario);
 
@@ -146,7 +133,6 @@ describe('ReservaComponent', () => {
     fixture.detectChanges();
     await responder([cancha, canchaEnMantenimiento], [usuario, usuarioDeBaja], [turno]);
 
-    // El backend rechaza las dos cosas, así que ni siquiera aparecen como opción.
     expect(texto()).not.toContain(canchaEnMantenimiento.nombre);
     expect(texto()).not.toContain(usuarioDeBaja.nombre);
   });
@@ -177,7 +163,6 @@ describe('ReservaComponent', () => {
     await responder([cancha], [usuario], [turno]);
 
     fixture.componentInstance['alElegirTurno'](turno.id);
-    // El calendario entrega un `Date` local y el backend espera "AAAA-MM-DD".
     fixture.componentInstance['alCambiarFecha'](new Date(2026, 7, 21));
 
     const req = pedidoDeTurnos();
@@ -185,8 +170,6 @@ describe('ReservaComponent', () => {
     req.flush([]);
     await fixture.whenStable();
 
-    // El turno de ayer ya no está en la lista: dejarlo elegido reservaría uno
-    // que el usuario no está viendo.
     expect(fixture.componentInstance['turnoSeleccionado']()).toBeNull();
   });
 
@@ -200,7 +183,6 @@ describe('ReservaComponent', () => {
     fixture.componentInstance['alElegirUsuario'](usuario.id);
     fixture.detectChanges();
 
-    // Dos horas a 4200 por hora.
     expect(fixture.componentInstance['precioTotal']()).toBe(8400);
     expect(botonReservar()?.disabled).toBe(false);
   });
@@ -212,8 +194,6 @@ describe('ReservaComponent', () => {
     fixture.componentInstance['alElegirTurno'](turno.id);
     fixture.detectChanges();
 
-    // El nombre solo no distingue dos canchas: el tipo es lo que evita confirmar
-    // la reserva en la que no era.
     expect(texto()).toContain(cancha.nombre);
     expect(texto()).toContain('(Pádel)');
   });
@@ -221,9 +201,6 @@ describe('ReservaComponent', () => {
   it('muestra el error con reintento si falla la carga inicial', async () => {
     fixture.detectChanges();
 
-    // El de canchas se responde último: los tres pedidos salen juntos y, en
-    // cuanto uno falla, los otros quedan cancelados y ya no se les puede
-    // responder.
     httpMock.expectOne(urlUsuarios).flush([usuario]);
     httpMock.expectOne(urlTiposEvento).flush([tipoEvento]);
     httpMock.expectOne(urlCanchas).flush(
@@ -242,9 +219,6 @@ describe('ReservaComponent', () => {
 
     fixture.detectChanges();
 
-    // El listado de usuarios es de administración: al cliente el backend se lo
-    // rechaza con un 403, así que la pantalla ni siquiera lo pide. Que
-    // `httpMock.verify()` no se queje al terminar prueba que no salió.
     httpMock.expectOne(urlCanchas).flush([cancha]);
     httpMock.expectOne(urlTiposEvento).flush([tipoEvento]);
     await fixture.whenStable();
@@ -254,8 +228,6 @@ describe('ReservaComponent', () => {
 
     expect(texto()).not.toContain('A nombre de');
 
-    // Su propia reserva va a su nombre sin elegir nada: con el turno elegido
-    // alcanza para poder reservar.
     fixture.componentInstance['alElegirTurno'](turno.id);
     fixture.detectChanges();
 
@@ -264,7 +236,6 @@ describe('ReservaComponent', () => {
   });
 
   describe('el evento de la reserva', () => {
-    /** Deja la pantalla con un turno y un usuario ya elegidos. */
     const conTurnoElegido = async () => {
       fixture.detectChanges();
       await responder([cancha], [usuario], [turno]);
@@ -289,8 +260,6 @@ describe('ReservaComponent', () => {
       expect(texto()).toContain('Es para un evento');
     });
 
-    // Sin tipos no hay nada que elegir, así que la sección no aparece: una
-    // reserva sin evento es lo normal, no un error.
     it('no ofrece nada si no hay tipos de evento', async () => {
       fixture.detectChanges();
       await responder([cancha], [usuario], [turno], []);
@@ -298,8 +267,6 @@ describe('ReservaComponent', () => {
       expect(texto()).not.toContain('Es para un evento');
     });
 
-    // Marcado pero incompleto se reservaría sin el evento y sin avisar: o se
-    // completa, o se destilda.
     it('bloquea el botón mientras el evento marcado está incompleto', async () => {
       await conTurnoElegido();
       expect(botonReservar()?.disabled).toBe(false);
@@ -335,12 +302,9 @@ describe('ReservaComponent', () => {
 
       const controles = fixture.componentInstance['eventoFormulario'].controls;
 
-      // La descripción es `nonNullable`, así que vuelve a su valor inicial y no
-      // a null como los dos numéricos.
       expect(controles.descripcion.value).toBe('');
       expect(controles.tipoEventoId.value).toBeNull();
       expect(controles.cantidadPersonas.value).toBeNull();
-      // Sin evento marcado, el botón vuelve a depender solo del turno.
       expect(botonReservar()?.disabled).toBe(false);
     });
   });
@@ -351,13 +315,11 @@ describe('ReservaComponent', () => {
 
     const otroTurno = { ...turno, id: 3, horaInicio: '15:00', horaFin: '16:00' };
 
-    /** El pedido del equipamiento lleva el turno elegido. */
     const pedidoDeEquipamiento = (horarioId: number) =>
       httpMock.expectOne(
         (pedido) => pedido.url === urlEquipamientos && pedido.params.get('horarioId') === String(horarioId)
       );
 
-    /** Deja la pantalla con un turno elegido y la sección de equipamiento abierta. */
     const conEquipamientoAbierto = async (disponibles = [
       { ...pelota, disponibles: 8 },
       { ...paleta, disponibles: 0 }
@@ -385,7 +347,6 @@ describe('ReservaComponent', () => {
       fixture.detectChanges();
     };
 
-    // Plegado, no pide nada: la mayoría de los que reservan traen lo suyo.
     it('no pide el equipamiento hasta que se marca la sección', async () => {
       fixture.detectChanges();
       await responder([cancha], [usuario], [turno]);
@@ -410,7 +371,6 @@ describe('ReservaComponent', () => {
 
       sumar(pelota, 2);
 
-      // Dos horas a 4200, más dos tubos a 1500.
       expect(fixture.componentInstance['precioTotal']()).toBe(11400);
       expect(texto()).toContain('2 × Pelota de pádel');
     });

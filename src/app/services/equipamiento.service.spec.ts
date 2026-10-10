@@ -68,8 +68,6 @@ describe('EquipamientoService', () => {
     reqDelete.flush({ mensaje: 'Equipamiento eliminado correctamente' });
   });
 
-  // Sin turno la URL tiene que ir limpia: una query vacía sería un filtro
-  // inválido para el backend y no la ausencia de filtro.
   it('no agrega parámetros de query al listar sin turno', () => {
     service.listar().subscribe();
 
