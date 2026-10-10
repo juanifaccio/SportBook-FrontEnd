@@ -2,25 +2,6 @@ import { Locator, Page } from '@playwright/test';
 import { ADMINISTRADOR, PECHERAS, PELOTA } from './apoyo/datos';
 import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures';
 
-/**
- * ABM del equipamiento que alquila el complejo.
- *
- * Replica el recorrido del ABM de tipos de cancha, que es la implementación de
- * referencia; lo propio de esta pantalla es el precio con su formato de moneda,
- * el stock (donde el cero es un valor válido y no un campo vacío) y que el
- * catálogo sea de administración aunque el cliente vaya a leerlo al reservar.
- */
-
-/**
- * Abre un diálogo del ABM y espera a que el foco haya terminado de moverse.
- *
- * El diálogo de Material atrapa el foco y lo lleva al primer campo al abrirse.
- * `fill` reemplaza el contenido en dos pasos (selecciona y después inserta), así
- * que si ese movimiento del foco le cae en el medio, el texto termina en el
- * campo equivocado. Con cuatro campos para completar es fácil que pase, y en
- * una corrida en paralelo pasaba de a ratos: esperar a que el primer campo tenga
- * el foco es lo que dice que el diálogo ya terminó de abrirse.
- */
 const abrirDialogo = async (pagina: Page, boton: string | RegExp): Promise<Locator> => {
   await pagina.getByRole('button', { name: boton }).click();
 
@@ -44,8 +25,6 @@ test.describe('ABM de equipamiento', () => {
     await expect(filas.nth(1)).toContainText(PELOTA.descripcion);
   });
 
-  // El cero es un valor real (agotado, pero en catálogo), así que la fila no
-  // desaparece: se avisa, que es lo que permite reponerlo a tiempo.
   test('avisa cuál está sin stock', async ({ page }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
@@ -71,15 +50,12 @@ test.describe('ABM de equipamiento', () => {
     await expect(page.locator('table tbody tr')).toHaveCount(3);
     await expect(page.locator('table')).toContainText('De fibra de vidrio');
 
-    // Y quedó guardado del otro lado, no solo pintado en la tabla.
     const guardado = api.estado.equipamientos.find((item) => item.nombre === 'Paleta de pádel');
 
     expect(guardado?.precio).toBe(2000);
     expect(guardado?.stock).toBe(6);
   });
 
-  // El stock en cero es válido: el formulario no puede confundirlo con un campo
-  // sin completar.
   test('deja crear uno con stock cero', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/equipamientos');
 
@@ -106,7 +82,6 @@ test.describe('ABM de equipamiento', () => {
     await expect(page.getByText('La descripción es obligatoria.')).toBeVisible();
     await expect(page.getByText('El precio es obligatorio.')).toBeVisible();
     await expect(page.getByText('El stock es obligatorio.')).toBeVisible();
-    // El diálogo sigue abierto: no se pierde lo que el usuario venía cargando.
     await expect(formulario).toBeVisible();
   });
 
@@ -132,7 +107,6 @@ test.describe('ABM de equipamiento', () => {
 
     const formulario = await abrirDialogo(page, 'Nuevo equipamiento');
 
-    // El nombre es único: la API responde 409 con su propio mensaje.
     await formulario.getByLabel('Nombre').fill(PELOTA.nombre);
     await formulario.getByLabel('Descripción').fill('Otra descripción');
     await formulario.getByLabel('Precio por unidad').fill('1000');
@@ -188,7 +162,6 @@ test.describe('ABM de equipamiento', () => {
     expect(api.estado.equipamientos.map((item) => item.id)).toEqual([PECHERAS.id]);
   });
 
-  // Ya alquilado en una reserva, queda en su historial: la base no deja borrarlo.
   test('no borra uno que alguna reserva incluye, y lo dice', async ({ page, api }) => {
     api.estado.reservaEquipamientos.push({
       id: 1,
@@ -231,10 +204,6 @@ test.describe('ABM de equipamiento', () => {
     await expect(page.getByRole('heading', { name: 'Todavía no hay equipamiento' })).toBeVisible();
     await expect(page.locator('table')).toBeHidden();
   });
-
-  // El cliente no entra acá (el stock y los precios los maneja el complejo) y
-  // eso lo cubre `niveles-de-acceso.spec.ts`, junto con el resto de las
-  // pantallas de administración.
 
   test.describe('en pantalla chica', () => {
 

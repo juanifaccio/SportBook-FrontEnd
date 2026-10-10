@@ -66,14 +66,12 @@ describe('ReservaDialogComponent', () => {
     disponibles: 8
   };
 
-  /** La misma reserva, alquilando además dos tubos de pelotas. */
   const datosConEquipamiento: DatosReservaDialog = {
     ...datos,
     precioTotal: 11400,
     equipamiento: [{ equipamiento: pelota, cantidad: 2, subtotal: 3000 }]
   };
 
-  /** La misma reserva, pero declarando además el evento que se va a festejar. */
   const datosConEvento: DatosReservaDialog = {
     ...datos,
     evento: {
@@ -99,7 +97,6 @@ describe('ReservaDialogComponent', () => {
   let fixture: ComponentFixture<ReservaDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -116,11 +113,6 @@ describe('ReservaDialogComponent', () => {
     await fixture.whenStable();
   };
 
-  /**
-   * Quién confirma cambia lo que se manda: el administrador reserva a nombre de
-   * otro, el cliente solo para sí mismo. La sesión se arma antes del `TestBed`
-   * porque `AuthService` la lee al construirse.
-   */
   const preparar = async (usuario = USUARIO_ADMIN, datosDelDialogo = datos) => {
     cierres = [];
     dialogRef.disableClose = false;
@@ -156,8 +148,6 @@ describe('ReservaDialogComponent', () => {
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     expect(texto).toContain(cancha.nombre);
-    // El tipo va al lado del nombre: dos canchas pueden llamarse parecido y
-    // acá ya no hay vuelta atrás.
     expect(texto).toContain('(Pádel)');
     expect(texto).toContain('20/08/2026');
     expect(texto).toContain('11:00 a 13:00');
@@ -169,8 +159,6 @@ describe('ReservaDialogComponent', () => {
 
     const req = httpMock.expectOne(url);
     expect(req.request.method).toBe('POST');
-    // El administrador reserva desde el mostrador para otro, así que sí manda a
-    // nombre de quién va.
     expect(req.request.body).toEqual({ horarioId: horario.id, usuarioId: usuario.id });
     req.flush(reserva);
     await fixture.whenStable();
@@ -185,8 +173,6 @@ describe('ReservaDialogComponent', () => {
     await confirmar();
 
     const req = httpMock.expectOne(url);
-    // El dueño lo impone el backend con el usuario de la sesión. Mandarlo desde
-    // acá sugeriría que el cliente puede elegirlo, y no puede.
     expect(req.request.body).toEqual({ horarioId: horario.id });
     req.flush(reserva);
     await fixture.whenStable();
@@ -214,7 +200,6 @@ describe('ReservaDialogComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Sigue abierto para que el usuario elija otro turno o reintente.
     expect(cierres).toEqual([]);
     expect(boton('Confirmar reserva')?.disabled).toBe(false);
     expect(dialogRef.disableClose).toBe(false);
@@ -241,8 +226,6 @@ describe('ReservaDialogComponent', () => {
       expect(texto).toContain('40 personas');
     });
 
-    // Son dos requests encadenados porque el evento necesita el id de una
-    // reserva que todavía no existe.
     it('lo carga con el id de la reserva recién creada', async () => {
       await confirmar();
 
@@ -263,8 +246,6 @@ describe('ReservaDialogComponent', () => {
       expect(cierres).toEqual([{ eventoPendiente: false }]);
     });
 
-    // La reserva ya quedó hecha: reintentar la duplicaría y el turno ya no está
-    // libre, así que el diálogo se cierra igual avisando que faltó el evento.
     it('se cierra avisando si la reserva salió pero el evento no', async () => {
       await confirmar();
 
@@ -282,8 +263,6 @@ describe('ReservaDialogComponent', () => {
       expect(cierres).toEqual([{ eventoPendiente: true }]);
     });
 
-    // Si lo que falla es la reserva, el evento ni se intenta: no hay a qué
-    // colgarlo.
     it('no intenta el evento si la reserva fue rechazada', async () => {
       await confirmar();
 
@@ -307,13 +286,10 @@ describe('ReservaDialogComponent', () => {
       const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
       expect(texto).toContain('2 × Pelota de pádel');
-      // El separador de miles depende del locale con el que corren los tests.
       expect(texto).toMatch(/3[.,]000/);
       expect(texto).toMatch(/11[.,]400/);
     });
 
-    // A diferencia del evento, va en el mismo request: cambia el precio total,
-    // y el backend tiene que guardar las dos cosas juntas o ninguna.
     it('lo manda en el mismo request de la reserva, sin subtotales', async () => {
       await confirmar();
 

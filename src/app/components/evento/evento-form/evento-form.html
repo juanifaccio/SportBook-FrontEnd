@@ -1,6 +1,4 @@
 <form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
-  <!-- Un evento no se muda de reserva: al editar, la reserva es un dato fijo y
-       no un selector. El backend ignora el `reservaId` del PUT por lo mismo. -->
   @if (esEdicion) {
     <div class="reserva-fija">
       <span class="etiqueta">Reserva</span>

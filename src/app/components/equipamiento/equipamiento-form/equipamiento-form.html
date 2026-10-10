@@ -37,8 +37,6 @@
   <mat-form-field appearance="outline">
     <mat-label>Stock</mat-label>
     <input matInput type="number" formControlName="stock" min="0" step="1" placeholder="Ej.: 10" />
-    <!-- El cero es un valor válido y conviene decirlo: si no, parece que el
-         campo está mal cargado cuando el artículo está agotado. -->
     <mat-hint>Cantidad de unidades. Puede ser cero si está agotado.</mat-hint>
     @if (formulario.controls.stock.hasError('required')) {
       <mat-error>El stock es obligatorio.</mat-error>

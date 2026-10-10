@@ -19,14 +19,6 @@ import {
   DatosConfirmacion
 } from '../shared/confirmacion/confirmacion';
 
-/**
- * Pantalla de ABM de tipos de cancha.
- *
- * Es la implementación de referencia del proyecto: el resto de las entidades del
- * dominio (TipoEvento, Equipamiento, Cancha...) se construyen replicando esta
- * estructura: estado por signals, diálogo de formulario reutilizable, listado
- * adaptado al tamaño de pantalla y estados explícitos de carga, vacío y error.
- */
 @Component({
   selector: 'app-tipo-cancha',
   imports: [
@@ -51,7 +43,6 @@ export class TipoCanchaComponent implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
 
-  /** En mobile se muestran tarjetas apiladas; desde MD, una tabla. */
   protected readonly esPantallaAncha = toSignal(
     this.breakpointObserver.observe(BREAKPOINT_MD).pipe(map((estado) => estado.matches)),
     { initialValue: false }
@@ -72,8 +63,6 @@ export class TipoCanchaComponent implements OnInit {
         this.tiposCancha.set(tipos);
         this.cargando.set(false);
       },
-      // El mensaje al usuario ya lo muestra el interceptor; acá solo se refleja
-      // el estado en la vista para poder ofrecer un reintento.
       error: () => {
         this.error.set(true);
         this.cargando.set(false);
@@ -89,10 +78,6 @@ export class TipoCanchaComponent implements OnInit {
     this.abrirFormulario(tipoCancha);
   }
 
-  /**
-   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
-   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
-   */
   private abrirFormulario(tipoCancha: TipoCancha | null): void {
     const dialogRef = this.dialog.open<
       TipoCanchaDialogComponent,
@@ -146,9 +131,6 @@ export class TipoCanchaComponent implements OnInit {
         this.tiposCancha.update((tipos) => tipos.filter((tipo) => tipo.id !== id));
         this.notificacion.exito('Tipo de cancha eliminado correctamente.');
       },
-      // El aviso ya lo mostró el interceptor y el tipo sigue en la lista, que
-      // es lo que corresponde. Sin este manejador, el error que el interceptor
-      // relanza quedaría sin atrapar.
       error: () => {}
     });
   }

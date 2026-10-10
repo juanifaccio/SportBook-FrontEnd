@@ -1,8 +1,6 @@
 <form class="formulario" [formGroup]="formulario" (ngSubmit)="alEnviar()">
   <mat-form-field appearance="outline">
     <mat-label>Cancha</mat-label>
-    <!-- El tipo va al lado del nombre: es lo que evita llenarle el día a la
-         cancha equivocada cuando hay varias con nombres parecidos. -->
     <mat-select formControlName="canchaId">
       @for (cancha of canchas(); track cancha.id) {
         <mat-option [value]="cancha.id">
@@ -23,8 +21,6 @@
     <input matInput [matDatepicker]="calendario" formControlName="fecha" placeholder="DD/MM/AAAA" />
     <mat-datepicker-toggle matIconSuffix [for]="calendario" />
     <mat-datepicker #calendario />
-    <!-- El error de formato va primero: cuando lo escrito no se entiende,
-         Material deja el control en `null` y salta también `required`. -->
     @if (formulario.controls.fecha.hasError('matDatepickerParse')) {
       <mat-error>Escribí la fecha como DD/MM/AAAA, o elegila del calendario.</mat-error>
     } @else if (formulario.controls.fecha.hasError('required')) {
@@ -32,8 +28,6 @@
     }
   </mat-form-field>
 
-  <!-- Acá el rango no es un turno sino el horario en que abre la cancha ese día:
-       de ahí que las etiquetas hablen de abrir y cerrar. -->
   <div class="horas">
     <mat-form-field appearance="outline">
       <mat-label>Abre a las</mat-label>
@@ -76,8 +70,6 @@
     }
   </mat-form-field>
 
-  <!-- Adelanta cuántos turnos salen del rango cargado. Cuántos se van a crear de
-       verdad lo dice el backend al volver, porque depende de los que ya estén. -->
   @if (cuantosTurnos; as cuantos) {
     <p class="resumen">
       Se van a generar {{ cuantos }} {{ cuantos === 1 ? 'turno' : 'turnos' }}. Los que ya estén

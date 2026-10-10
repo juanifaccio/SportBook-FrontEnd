@@ -26,8 +26,6 @@
       <span class="secundario">{{ reserva.usuario?.telefono }}</span>
     </dd>
 
-    <!-- La mayoría de las reservas son un partido y nada más: si no hay evento,
-         no se muestra una fila vacía. -->
     @if (reserva.evento; as evento) {
       <dt>Evento</dt>
       <dd>
@@ -37,8 +35,6 @@
       </dd>
     }
 
-    <!-- Lo mismo con el equipamiento: si la reserva es la cancha y nada más, no
-         hay fila. -->
     @if (equipamiento().length > 0) {
       <dt>Equipamiento</dt>
       <dd>
@@ -59,8 +55,6 @@
     }
   </dl>
 
-  <!-- Lo cobrado hasta ahora. Un pago anulado se muestra igual (es historial)
-       pero tachado, porque dejó de contar para el saldo. -->
   @if (pagos().length > 0) {
     <ul class="pagos">
       @for (pago of pagos(); track pago.id) {

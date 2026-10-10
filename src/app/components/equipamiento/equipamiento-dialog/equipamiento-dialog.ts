@@ -4,14 +4,6 @@ import { EquipamientoFormComponent } from '../equipamiento-form/equipamiento-for
 import { EquipamientoService } from '../../../services/equipamiento.service';
 import { Equipamiento, EquipamientoDto } from '../../../models/equipamiento';
 
-/**
- * Envuelve al formulario en un diálogo de Material y se encarga de guardar.
- *
- * El request se hace acá y no en el listado porque si el backend rechaza los
- * datos (un nombre repetido, por ejemplo) el diálogo tiene que seguir abierto
- * con lo que el usuario había cargado. Se cierra con el equipamiento ya
- * guardado, o con `undefined` si el usuario cancela.
- */
 @Component({
   selector: 'app-equipamiento-dialog',
   imports: [MatDialogModule, EquipamientoFormComponent],
@@ -25,7 +17,6 @@ export class EquipamientoDialogComponent {
 
   private dialogRef = inject(MatDialogRef<EquipamientoDialogComponent, Equipamiento>);
 
-  /** Deshabilita los botones del formulario mientras el request está en curso. */
   protected readonly guardando = signal(false);
 
   protected get titulo(): string {
@@ -36,8 +27,6 @@ export class EquipamientoDialogComponent {
     const equipamiento = this.equipamiento;
 
     this.guardando.set(true);
-    // Mientras el request viaja, el diálogo no se puede cerrar con Escape ni
-    // haciendo clic afuera: si se cerrara, el listado no se enteraría del alta.
     this.dialogRef.disableClose = true;
 
     const peticion = equipamiento
@@ -46,8 +35,6 @@ export class EquipamientoDialogComponent {
 
     peticion.subscribe({
       next: (guardado) => this.dialogRef.close(guardado),
-      // El mensaje de error ya lo mostró el interceptor; acá solo se devuelve el
-      // control del formulario para que el usuario corrija y reintente.
       error: () => {
         this.guardando.set(false);
         this.dialogRef.disableClose = false;

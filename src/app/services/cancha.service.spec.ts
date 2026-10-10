@@ -59,8 +59,6 @@ describe('CanchaService', () => {
     req.flush([]);
   });
 
-  // Una `tipoCanchaId=` vacía en la query es un filtro inválido para el
-  // backend, no la ausencia de filtro.
   it('no manda claves sin valor', () => {
     service.listar({ tipoCanchaId: undefined }).subscribe();
 

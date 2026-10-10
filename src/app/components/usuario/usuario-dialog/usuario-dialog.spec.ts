@@ -23,14 +23,12 @@ describe('UsuarioDialogComponent', () => {
     rolId: rol.id
   };
 
-  /** Lo que devuelve el backend: los mismos datos pero sin la contraseña. */
   const { contrasena, ...sinContrasena } = dto;
   const usuario = { id: 1, ...sinContrasena, rol: rol };
 
   let fixture: ComponentFixture<UsuarioDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -53,7 +51,6 @@ describe('UsuarioDialogComponent', () => {
     fixture.detectChanges();
   };
 
-  /** Simula que se completó el formulario y se le dio a guardar. */
   const enviarFormulario = async (datos: UsuarioDto = dto) => {
     fixture.debugElement
       .query(By.directive(UsuarioFormComponent))
@@ -92,7 +89,6 @@ describe('UsuarioDialogComponent', () => {
   it('actualiza cuando recibe un usuario para editar', async () => {
     await montar({ usuario: usuario, roles: [rol] });
 
-    // Sin contraseña: es el caso de editar sin cambiarla.
     await enviarFormulario(sinContrasena);
 
     const req = httpMock.expectOne(`${url}/${usuario.id}`);
@@ -126,7 +122,6 @@ describe('UsuarioDialogComponent', () => {
     );
     await fixture.whenStable();
 
-    // El diálogo sigue abierto con los datos cargados y se puede reintentar.
     expect(cierres).toEqual([]);
     expect(botonGuardar()?.disabled).toBe(false);
     expect(dialogRef.disableClose).toBe(false);

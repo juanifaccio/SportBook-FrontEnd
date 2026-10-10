@@ -3,11 +3,6 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { NotificacionService } from '../services/notificacion.service';
 
-/**
- * Traduce cualquier fallo HTTP a un mensaje entendible y lo muestra al usuario.
- * El error se vuelve a lanzar para que el componente pueda además reflejarlo en
- * su propia vista (por ejemplo, con un botón de reintentar).
- */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const notificacion = inject(NotificacionService);
 
@@ -19,10 +14,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-/**
- * El backend responde sus errores como `{ mensaje: '...' }` en español, así que
- * ese texto tiene prioridad sobre cualquier mensaje genérico.
- */
 function obtenerMensaje(error: HttpErrorResponse): string {
   if (typeof error.error?.mensaje === 'string') {
     return error.error.mensaje;

@@ -6,19 +6,9 @@ export interface DatosConfirmacion {
   titulo: string;
   mensaje: string;
   textoConfirmar: string;
-  /**
-   * Texto del botón que se echa atrás. Por defecto es "Cancelar", que sirve para
-   * casi todo, pero no cuando la acción confirmada **también** se llama cancelar:
-   * dos botones que dicen lo mismo y hacen lo opuesto son el ejemplo de manual
-   * de mala UX. Ahí se pasa "Volver".
-   */
   textoCancelar?: string;
 }
 
-/**
- * Diálogo genérico de confirmación para acciones destructivas. Se cierra con
- * `true` si el usuario confirma y con `false`/`undefined` si cancela.
- */
 @Component({
   selector: 'app-confirmacion',
   imports: [MatDialogModule, MatButtonModule],

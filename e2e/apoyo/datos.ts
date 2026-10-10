@@ -10,21 +10,8 @@ import { TipoCancha } from '../../src/app/models/tipo-cancha';
 import { TipoEvento } from '../../src/app/models/tipo-evento';
 import { Usuario } from '../../src/app/models/usuario';
 
-/**
- * Los datos con los que arranca cada test.
- *
- * Se tipan con las mismas interfaces del dominio que usa la aplicación: si
- * alguna cambia y la API falsa deja de responder lo que el frontend espera, esto
- * no compila. Es la forma de que un doble no se vaya quedando viejo en silencio.
- *
- * Las entidades se guardan planas (sin las relaciones anidadas) y la API falsa
- * las arma al responder, igual que hace Prisma con sus `include`.
- */
-
-/** Usuario tal como se guarda del lado del servidor: con la contraseña. */
 export type UsuarioSembrado = Usuario & { contrasena: string };
 
-/** Estado completo del servidor simulado. */
 export interface EstadoApi {
   roles: Rol[];
   usuarios: UsuarioSembrado[];
@@ -36,17 +23,9 @@ export interface EstadoApi {
   reservas: Reserva[];
   eventos: Evento[];
   pagos: Pago[];
-  /** Lo alquilado en cada reserva. Arranca vacío: lo llenan los tests al reservar. */
   reservaEquipamientos: ReservaEquipamiento[];
 }
 
-/**
- * Un día relativo a hoy, como `"AAAA-MM-DD"`.
- *
- * Se arma con las partes locales de la fecha y no con `toISOString()`, por lo
- * mismo que `core/fechas.ts`: ese devuelve el día en UTC y a la tarde ya está
- * mostrando el de mañana.
- */
 const dia = (desplazamiento: number): string => {
   const fecha = new Date();
 
@@ -58,11 +37,6 @@ const dia = (desplazamiento: number): string => {
   return `${fecha.getFullYear()}-${mes}-${numero}`;
 };
 
-/**
- * Los turnos se siembran mañana y no hoy: una reserva que ya empezó no se puede
- * gestionar, y a media tarde la mitad de los turnos de hoy caerían en ese caso.
- * `AYER` existe justamente para probar el otro lado.
- */
 export const MANANA = dia(1);
 export const AYER = dia(-1);
 
@@ -122,7 +96,6 @@ export const PELOTA: Equipamiento = {
   stock: 10
 };
 
-/** Uno agotado, para poder ejercitar el aviso de "Sin stock" del listado. */
 export const PECHERAS: Equipamiento = {
   id: 2,
   nombre: 'Juego de pecheras',
@@ -147,7 +120,6 @@ export const CANCHA_2: Cancha = {
   tipoCanchaId: PADEL.id
 };
 
-/** En mantenimiento: la pantalla de reservar no tiene que ofrecerla. */
 export const CANCHA_3: Cancha = {
   id: 3,
   nombre: 'Cancha 3',
@@ -156,10 +128,6 @@ export const CANCHA_3: Cancha = {
   tipoCanchaId: PADEL.id
 };
 
-/**
- * Turnos sembrados. Los tres primeros son los de la Cancha 1 de mañana, que es
- * lo que ve la pantalla de reservar al abrirse: dos libres y uno ya tomado.
- */
 export const TURNOS: Horario[] = [
   { id: 1, fecha: MANANA, horaInicio: '10:00', horaFin: '11:00', disponible: true, canchaId: 1 },
   { id: 2, fecha: MANANA, horaInicio: '11:00', horaFin: '12:00', disponible: true, canchaId: 1 },
@@ -167,18 +135,9 @@ export const TURNOS: Horario[] = [
   { id: 4, fecha: MANANA, horaInicio: '09:00', horaFin: '10:30', disponible: true, canchaId: 2 },
   { id: 5, fecha: MANANA, horaInicio: '20:00', horaFin: '21:00', disponible: false, canchaId: 2 },
   { id: 6, fecha: AYER, horaInicio: '10:00', horaFin: '11:00', disponible: false, canchaId: 1 },
-  // Libre de nuevo: es el turno de la reserva #4, que está cancelada.
   { id: 7, fecha: MANANA, horaInicio: '08:00', horaFin: '09:00', disponible: true, canchaId: 2 }
 ];
 
-/**
- * Reservas sembradas, una por cada situación que la pantalla de gestión tiene
- * que distinguir: dos vigentes de clientes distintos, una que ya empezó y una
- * cancelada.
- *
- * La #1 está CONFIRMADA porque tiene su pago completo; las otras vigentes nacen
- * PENDIENTE, que es como nacen todas hasta que se cobran.
- */
 export const RESERVAS: Reserva[] = [
   {
     id: 1,
@@ -229,11 +188,6 @@ export const RESERVAS: Reserva[] = [
 export const CUMPLEANIOS: TipoEvento = { id: 1, nombre: 'Cumpleaños' };
 export const TORNEO: TipoEvento = { id: 2, nombre: 'Torneo' };
 
-/**
- * Un solo evento sembrado, sobre la reserva #1 de Ana: alcanza para probar que
- * el listado lo muestra, que el detalle de esa reserva lo trae y que la #2 (sin
- * evento) sigue disponible para cargarle uno.
- */
 export const EVENTOS: Evento[] = [
   {
     id: 1,
@@ -244,17 +198,6 @@ export const EVENTOS: Evento[] = [
   }
 ];
 
-/**
- * Una copia fresca del estado inicial.
- *
- * Se clona en cada llamada: los tests corren en paralelo y modifican lo que
- * tienen enfrente (crean, editan y borran), así que compartir los objetos haría
- * que un test viera lo que hizo otro.
- */
-/**
- * Un solo pago sembrado, el que cubre entera la reserva #1: alcanza para que esa
- * reserva esté CONFIRMADA y para probar que anularlo la devuelve a PENDIENTE.
- */
 export const PAGOS: Pago[] = [
   {
     id: 1,

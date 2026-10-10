@@ -1,6 +1,3 @@
-/* Etiqueta arriba y valor abajo: en mobile las dos columnas dejaban los valores
-   largos (un nombre completo) partidos en tres líneas. */
-
 .detalle {
   margin: 0;
 }
@@ -15,8 +12,6 @@
   font: var(--mat-sys-body-large);
 }
 
-/* Lo que acompaña al valor principal, como la descripción del evento: cada dato
-   en su renglón para que no se lea como una sola frase. */
 .detalle .secundario {
   display: block;
   font: var(--mat-sys-body-medium);
@@ -34,7 +29,6 @@
   font: var(--mat-sys-title-medium);
 }
 
-/* Un renglón por artículo, con el subtotal a la derecha como en un ticket. */
 .equipamiento {
   margin: 0;
   padding: 0;

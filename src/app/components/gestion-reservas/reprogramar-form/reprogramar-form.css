@@ -1,6 +1,3 @@
-/* Mobile-first: los dos selectores arrancan apilados y comparten fila desde SM,
-   donde ya entran los dos. */
-
 .actual {
   margin: 0 0 1rem;
   color: var(--mat-sys-on-surface-variant);
@@ -21,8 +18,6 @@ h3 {
   font: var(--mat-sys-title-small);
 }
 
-/* Dentro del diálogo el estado vacío no es el de una pantalla entera: se le saca
-   el aire de arriba y abajo para que los botones no queden fuera de vista. */
 .estado-mensaje {
   padding: 1rem;
 }

@@ -26,7 +26,6 @@ describe('CanchaComponent', () => {
   let fixture: ComponentFixture<CanchaComponent>;
   let httpMock: HttpTestingController;
 
-  /** La pantalla carga las canchas y los tipos juntos, así que hay dos requests. */
   const responder = (canchas: unknown[], tipos: unknown[]) => {
     httpMock.expectOne(urlCanchas).flush(canchas);
     httpMock.expectOne(urlTipos).flush(tipos);
@@ -46,7 +45,6 @@ describe('CanchaComponent', () => {
     httpMock.verify();
   });
 
-  /** El listado filtrado llega con query, así que se lo busca por camino. */
   const pedidoDeCanchas = () => httpMock.expectOne((pedido) => pedido.url === urlCanchas);
 
   it('se crea correctamente', () => {
@@ -95,8 +93,6 @@ describe('CanchaComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Por el selector y no por su texto: las opciones las dibuja Material en un
-    // overlay recién cuando se lo abre, así que en el DOM todavía no están.
     const filtro = (fixture.nativeElement as HTMLElement).querySelector('.filtros mat-select');
     expect(filtro).not.toBeNull();
   });
@@ -115,8 +111,6 @@ describe('CanchaComponent', () => {
     await fixture.whenStable();
   });
 
-  // Sin valor, `tipoCanchaId=` en la query es un filtro inválido para el
-  // backend, no la ausencia de filtro.
   it('no manda el parámetro cuando se vuelve a ver todas', async () => {
     fixture.detectChanges();
 
@@ -154,8 +148,6 @@ describe('CanchaComponent', () => {
   it('ofrece reintentar cuando la carga falla', async () => {
     fixture.detectChanges();
 
-    // El listado de tipos se responde primero para que el de canchas pueda
-    // fallar sin dejar el otro request cancelado a mitad de camino.
     httpMock.expectOne(urlTipos).flush([tipo]);
     httpMock.expectOne(urlCanchas).flush(
       { mensaje: 'Error interno' },

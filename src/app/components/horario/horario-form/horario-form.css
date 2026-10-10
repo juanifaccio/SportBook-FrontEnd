@@ -1,14 +1,10 @@
 .formulario {
   display: flex;
   flex-direction: column;
-  /* Aire entre campos: sin esto, el mensaje de error de uno queda pegado a la
-     caja del siguiente. */
   gap: 0.5rem;
   min-width: 0;
 }
 
-/* Las dos horas son un solo dato partido en dos: en pantallas con ancho van
-   juntas en la misma fila. */
 .horas {
   display: flex;
   flex-direction: column;

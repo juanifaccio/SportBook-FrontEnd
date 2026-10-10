@@ -46,8 +46,6 @@ describe('EquipamientoComponent', () => {
     expect(texto()).toContain('Pelota de fútbol');
   });
 
-  // Un artículo agotado sigue en el catálogo, así que no desaparece del listado:
-  // se avisa, que es lo que permite reponerlo antes de que alguien lo pida.
   it('avisa cuando un artículo está sin stock', async () => {
     fixture.detectChanges();
 

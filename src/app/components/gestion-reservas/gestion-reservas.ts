@@ -35,17 +35,8 @@ import {
 import { ReservaDetalleDialogComponent } from './reserva-detalle-dialog/reserva-detalle-dialog';
 import { ConfirmacionComponent, DatosConfirmacion } from '../shared/confirmacion/confirmacion';
 
-/** Opción del filtro de estado, más la de "todos", que no filtra nada. */
 const ESTADOS: EstadoReserva[] = ['PENDIENTE', 'CONFIRMADA', 'CANCELADA'];
 
-/**
- * Pantalla de gestión de reservas: el listado de lo ya reservado y las dos
- * cosas que se pueden hacer con una reserva (reprogramarla a otro turno o
- * cancelarla).
- *
- * Es la contracara de `/reservar`: ahí se ocupa un turno, acá se lo mueve o se
- * lo devuelve.
- */
 @Component({
   selector: 'app-gestion-reservas',
   imports: [
@@ -74,11 +65,6 @@ export class GestionReservasComponent implements OnInit {
   private dialog = inject(MatDialog);
   private breakpointObserver = inject(BreakpointObserver);
 
-  /**
-   * El backend ya filtra: al cliente le devuelve solamente sus reservas. Acá el
-   * rol solo decide qué mostrar, porque una columna con su propio nombre
-   * repetido en todas las filas no le dice nada.
-   */
   protected readonly esAdmin = this.auth.esAdmin;
 
   protected readonly reservas = signal<Reserva[]>([]);
@@ -86,27 +72,19 @@ export class GestionReservasComponent implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
 
-  /**
-   * Los filtros son del servidor, no de la lista en memoria: el backend ya los
-   * soporta, y filtrar acá obligaría a traerse todas las reservas del complejo
-   * para descartar la mayoría.
-   */
   protected readonly canchaFiltro = signal<number | null>(null);
   protected readonly fechaFiltro = signal('');
   protected readonly estadoFiltro = signal<EstadoReserva | null>(null);
 
-  /** El día filtrado, como `Date`, que es lo que entiende el calendario. */
   protected readonly fechaElegida = computed(() => aDate(this.fechaFiltro()));
 
   protected readonly estados = ESTADOS;
   protected readonly etiquetasEstado = ETIQUETAS_ESTADO_RESERVA;
 
-  /** Etiqueta legible del estado de una reserva. */
   protected etiquetaEstado(reserva: Reserva): string {
     return ETIQUETAS_ESTADO_RESERVA[reserva.estado];
   }
 
-  /** En mobile se muestran tarjetas apiladas; desde MD, una tabla. */
   protected readonly esPantallaAncha = toSignal(
     this.breakpointObserver.observe(BREAKPOINT_MD).pipe(map((estado) => estado.matches)),
     { initialValue: false }
@@ -124,10 +102,6 @@ export class GestionReservasComponent implements OnInit {
     this.cargar();
   }
 
-  /**
-   * Carga inicial: las reservas y las canchas del filtro. Van juntas porque la
-   * pantalla no sirve hasta que están las dos.
-   */
   protected cargar(): void {
     this.cargando.set(true);
     this.error.set(false);
@@ -141,8 +115,6 @@ export class GestionReservasComponent implements OnInit {
         this.canchas.set(canchas);
         this.cargando.set(false);
       },
-      // El mensaje al usuario ya lo muestra el interceptor; acá solo se refleja
-      // el estado en la vista para poder ofrecer un reintento.
       error: () => {
         this.error.set(true);
         this.cargando.set(false);
@@ -150,7 +122,6 @@ export class GestionReservasComponent implements OnInit {
     });
   }
 
-  /** Filtros activos, sin las claves que quedaron vacías. */
   private filtros(): FiltrosReserva {
     const filtros: FiltrosReserva = {};
     const cancha = this.canchaFiltro();
@@ -177,7 +148,6 @@ export class GestionReservasComponent implements OnInit {
     this.cargarReservas();
   }
 
-  /** `null` limpia el filtro: sin día se listan las reservas de todos. */
   protected alCambiarFecha(fecha: Date | null): void {
     this.fechaFiltro.set(fecha ? aTexto(fecha) : '');
     this.cargarReservas();
@@ -188,7 +158,6 @@ export class GestionReservasComponent implements OnInit {
     this.cargarReservas();
   }
 
-  /** Vuelve a pedir el listado con los filtros actuales. Las canchas ya están. */
   protected cargarReservas(): void {
     this.cargando.set(true);
     this.error.set(false);
@@ -216,16 +185,10 @@ export class GestionReservasComponent implements OnInit {
     this.cargarReservas();
   }
 
-  /**
-   * Una reserva cancelada o que ya empezó no se puede tocar: son las mismas dos
-   * reglas que aplica el backend. Se comprueban también acá para no ofrecer un
-   * botón que solo va a devolver un error.
-   */
   protected esGestionable(reserva: Reserva): boolean {
     return reserva.estado !== 'CANCELADA' && !yaEmpezo(reserva.fecha, reserva.horaInicio);
   }
 
-  /** Explica por qué el botón está deshabilitado, en vez de dejarlo mudo. */
   protected motivoNoGestionable(reserva: Reserva): string {
     if (reserva.estado === 'CANCELADA') {
       return 'La reserva está cancelada';
@@ -238,7 +201,6 @@ export class GestionReservasComponent implements OnInit {
     return '';
   }
 
-  /** Detalle completo de la reserva seleccionada. */
   protected verDetalle(reserva: Reserva): void {
     this.dialog.open<ReservaDetalleDialogComponent, Reserva>(ReservaDetalleDialogComponent, {
       data: reserva,
@@ -247,10 +209,6 @@ export class GestionReservasComponent implements OnInit {
     });
   }
 
-  /**
-   * La reprogramación la resuelve el diálogo, que se cierra recién cuando el
-   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
-   */
   protected reprogramar(reserva: Reserva): void {
     const datos: DatosReprogramarDialog = {
       reserva: reserva,
@@ -278,8 +236,6 @@ export class GestionReservasComponent implements OnInit {
       titulo: 'Cancelar reserva',
       mensaje: `¿Seguro que querés cancelar la reserva de ${reserva.cancha?.nombre} del ${formatearFecha(reserva.fecha)} de ${reserva.horaInicio} a ${reserva.horaFin}? El turno va a volver a quedar libre.`,
       textoConfirmar: 'Sí, cancelar',
-      // Si el botón de echarse atrás dijera "Cancelar", los dos botones dirían
-      // lo mismo y harían lo opuesto.
       textoCancelar: 'Volver'
     };
 
@@ -301,28 +257,10 @@ export class GestionReservasComponent implements OnInit {
         this.reemplazar(cancelada);
         this.notificacion.exito('Reserva cancelada. El turno volvió a quedar libre.');
       },
-      // El aviso ya lo mostró el interceptor y la reserva sigue como estaba,
-      // que es lo que corresponde. Sin este manejador, el error que el
-      // interceptor relanza quedaría sin atrapar.
       error: () => {}
     });
   }
 
-  /**
-   * Reemplaza la reserva en la lista con la que devolvió el backend. No se
-   * vuelve a pedir el listado: el backend ya respondió el objeto resultante, y
-   * pedirlo de nuevo sería un viaje de red al pedo que además hace parpadear la
-   * pantalla.
-   *
-   * Si la reserva dejó de cumplir el filtro activo (se canceló mientras se
-   * miraban solo las confirmadas), se la saca de la lista en vez de mostrarla
-   * fuera de lugar.
-   *
-   * Una reprogramada conserva su lugar en la lista aunque su fecha ya no
-   * corresponda a ese orden: el usuario acaba de actuar sobre esa fila y
-   * mandarla a otra posición se la haría perder de vista justo cuando quiere
-   * comprobar el cambio. El orden se reacomoda solo en la próxima carga.
-   */
   private reemplazar(reserva: Reserva): void {
     const estado = this.estadoFiltro();
     const cancha = this.canchaFiltro();

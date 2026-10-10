@@ -28,7 +28,6 @@ describe('guards de acceso', () => {
     httpMock = TestBed.inject(HttpTestingController);
   };
 
-  /** El guard corre en el contexto de inyección, como lo llama el router. */
   const correr = (guard: typeof sesionGuard, url = '/canchas') =>
     TestBed.runInInjectionContext(() =>
       guard({} as ActivatedRouteSnapshot, { url: url } as RouterStateSnapshot)

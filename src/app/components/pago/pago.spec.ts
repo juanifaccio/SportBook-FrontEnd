@@ -25,7 +25,6 @@ describe('PagoComponent', () => {
     tipoCanchaId: 17
   };
 
-  /** Reserva de 8400 con una seña de 3000: le faltan 5400. */
   const reserva = {
     id: 8,
     fecha: '2026-08-20',
@@ -115,8 +114,6 @@ describe('PagoComponent', () => {
   it('ofrece reintentar cuando la carga falla', async () => {
     fixture.detectChanges();
 
-    // El de pagos se responde último: los dos salen juntos y, en cuanto uno
-    // falla, el otro queda cancelado y ya no se le puede responder.
     httpMock.expectOne((pedido) => pedido.url === urlReservas).flush([]);
     httpMock
       .expectOne((pedido) => pedido.url === urlPagos)
@@ -127,7 +124,6 @@ describe('PagoComponent', () => {
     expect(texto()).toContain('Reintentar');
   });
 
-  // Solo se puede cobrar lo que falta: una reserva paga o cancelada no entra.
   it('solo ofrece las reservas vigentes con saldo', async () => {
     const paga = { ...reserva, id: 9, estado: 'CONFIRMADA' as const, pagos: [{ ...pago, id: 2, monto: 8400 }] };
     const cancelada = { ...reserva, id: 10, estado: 'CANCELADA' as const, pagos: [] };
@@ -150,7 +146,6 @@ describe('PagoComponent', () => {
     expect(botonRegistrar()?.disabled).toBe(true);
   });
 
-  // La plata la cobra el complejo: al cliente la pantalla le sirve para mirar.
   it('al cliente no le ofrece registrar ni le muestra las acciones', async () => {
     TestBed.resetTestingModule();
     await preparar(USUARIO_CLIENTE);

@@ -4,13 +4,6 @@ import { Observable } from 'rxjs';
 import { TipoCancha, TipoCanchaDto } from '../models/tipo-cancha';
 import { environment } from '../../environments/environment';
 
-/**
- * Acceso a los endpoints de tipos de cancha del backend.
- *
- * Es la implementación de referencia para el resto de los servicios: la URL sale
- * siempre del ambiente (nunca literal en el código) y el manejo de errores queda
- * a cargo del interceptor, así que acá no se atrapan.
- */
 @Injectable({
   providedIn: 'root'
 })

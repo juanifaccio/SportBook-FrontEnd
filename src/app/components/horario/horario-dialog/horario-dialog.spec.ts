@@ -33,7 +33,6 @@ describe('HorarioDialogComponent', () => {
   let fixture: ComponentFixture<HorarioDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -57,7 +56,6 @@ describe('HorarioDialogComponent', () => {
     fixture.detectChanges();
   };
 
-  /** Simula que el usuario completó el formulario y le dio a guardar. */
   const enviarFormulario = async () => {
     fixture.debugElement
       .query(By.directive(HorarioFormComponent))
@@ -128,7 +126,6 @@ describe('HorarioDialogComponent', () => {
     );
     await fixture.whenStable();
 
-    // El diálogo sigue abierto con los datos cargados y se puede reintentar.
     expect(cierres).toEqual([]);
     expect(botonGuardar()?.disabled).toBe(false);
     expect(dialogRef.disableClose).toBe(false);

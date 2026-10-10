@@ -1,14 +1,6 @@
 import { ADMINISTRADOR, FUTBOL_5, PADEL } from './apoyo/datos';
 import { abrirComo, dialogo, expect, notificacion, test } from './apoyo/fixtures';
 
-/**
- * ABM de tipos de cancha, la implementación de referencia del proyecto.
- *
- * Lo que se prueba acá vale para los otros cuatro ABM, que replican esta misma
- * estructura: listado adaptado al tamaño de pantalla, diálogo de formulario que
- * se cierra recién cuando el backend confirma, confirmación antes de borrar y
- * estados explícitos de carga, vacío y error.
- */
 test.describe('ABM de tipos de cancha', () => {
 
   test('lista en una tabla lo que devuelve la API', async ({ page }) => {
@@ -40,7 +32,6 @@ test.describe('ABM de tipos de cancha', () => {
     await expect(page.locator('table tbody tr')).toHaveCount(3);
     await expect(page.locator('table')).toContainText('Piso de parquet techado');
 
-    // Y quedó guardado del otro lado, no solo pintado en la tabla.
     expect(api.estado.tiposCancha.map((tipo) => tipo.nombre)).toContain('Básquet');
   });
 
@@ -52,7 +43,6 @@ test.describe('ABM de tipos de cancha', () => {
 
     await expect(page.getByText('El nombre es obligatorio.')).toBeVisible();
     await expect(page.getByText('La descripción es obligatoria.')).toBeVisible();
-    // El diálogo sigue abierto: no se pierde lo que el usuario venía cargando.
     await expect(dialogo(page)).toBeVisible();
   });
 
@@ -65,7 +55,6 @@ test.describe('ABM de tipos de cancha', () => {
 
     const formulario = dialogo(page);
 
-    // El nombre es único: la API responde 400 con su propio mensaje.
     await formulario.getByLabel('Nombre').fill(FUTBOL_5.nombre);
     await formulario.getByLabel('Descripción').fill('Otra descripción');
     await formulario.getByRole('button', { name: 'Crear' }).click();
@@ -98,8 +87,6 @@ test.describe('ABM de tipos de cancha', () => {
   });
 
   test('pide confirmación antes de borrar, y volver atrás no borra nada', async ({ page, api }) => {
-    // Sin canchas asociadas el borrado es posible; lo que se prueba acá es que
-    // arrepentirse no tenga efecto.
     api.estado.canchas.length = 0;
 
     await abrirComo(page, ADMINISTRADOR, '/tipos-cancha');
@@ -130,8 +117,6 @@ test.describe('ABM de tipos de cancha', () => {
   });
 
   test('avisa cuando el tipo está en uso y no lo saca de la tabla', async ({ page }) => {
-    // Los datos sembrados tienen canchas de los dos tipos: el backend responde
-    // 409 traduciendo la restricción de la base.
     await abrirComo(page, ADMINISTRADOR, '/tipos-cancha');
 
     await page.getByRole('button', { name: `Eliminar ${FUTBOL_5.nombre}` }).click();

@@ -46,7 +46,6 @@ describe('EventoDialogComponent', () => {
   let fixture: ComponentFixture<EventoDialogComponent>;
   let httpMock: HttpTestingController;
 
-  /** Reemplaza al `MatDialogRef` real para poder observar si el diálogo se cerró. */
   let cierres: unknown[];
   const dialogRef = {
     disableClose: false,
@@ -75,7 +74,6 @@ describe('EventoDialogComponent', () => {
     fixture.detectChanges();
   };
 
-  /** Simula que el usuario completó el formulario y le dio a guardar. */
   const enviarFormulario = async () => {
     fixture.debugElement
       .query(By.directive(EventoFormComponent))
@@ -111,8 +109,6 @@ describe('EventoDialogComponent', () => {
     expect(cierres).toEqual([evento]);
   });
 
-  // Un evento no se muda de reserva: el PUT va sin `reservaId` aunque el
-  // formulario lo tenga cargado.
   it('actualiza sin mandar la reserva cuando recibe un evento para editar', async () => {
     await montar(evento);
 
@@ -152,7 +148,6 @@ describe('EventoDialogComponent', () => {
       .flush({ mensaje: 'La reserva ya tiene un evento' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
 
-    // El diálogo sigue abierto con los datos cargados y se puede reintentar.
     expect(cierres).toEqual([]);
     expect(botonGuardar()?.disabled).toBe(false);
     expect(dialogRef.disableClose).toBe(false);

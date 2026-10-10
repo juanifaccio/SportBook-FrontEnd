@@ -29,13 +29,6 @@ import {
   DatosConfirmacion
 } from '../shared/confirmacion/confirmacion';
 
-/**
- * Pantalla de pagos: lo que se cobró por cada reserva.
- *
- * Sirve a los dos roles, pero no igual. La plata la cobra el complejo, así que
- * registrar, corregir y anular son cosa del administrador; un cliente entra a ver
- * los pagos de sus propias reservas, y eso ya lo decide el backend.
- */
 @Component({
   selector: 'app-pago',
   imports: [
@@ -67,7 +60,6 @@ export class PagoComponent implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
 
-  /** En mobile se muestran tarjetas apiladas; desde MD, una tabla. */
   protected readonly esPantallaAncha = toSignal(
     this.breakpointObserver.observe(BREAKPOINT_MD).pipe(map((estado) => estado.matches)),
     { initialValue: false }
@@ -76,16 +68,9 @@ export class PagoComponent implements OnInit {
   protected readonly columnas = computed(() => {
     const base = ['fecha', 'reserva', 'monto', 'metodo', 'estado'];
 
-    // Al cliente no le hace falta la columna del dueño (todas las reservas son
-    // suyas) ni las acciones, que no puede usar.
     return this.esAdmin() ? [...base, 'usuario', 'acciones'] : base;
   });
 
-  /**
-   * Las reservas a las que se les puede cobrar: las que no están canceladas y
-   * todavía deben plata. Se deriva de lo cargado, así registrar o anular un pago
-   * actualiza el selector solo.
-   */
   protected readonly reservasConSaldo = computed(() =>
     this.reservas().filter((reserva) => reserva.estado !== 'CANCELADA' && saldoDe(reserva) > 0)
   );
@@ -94,8 +79,6 @@ export class PagoComponent implements OnInit {
     () => this.esAdmin() && this.reservasConSaldo().length > 0
   );
 
-  // Como métodos y no como los mapas sueltos: la fila de `mat-table` llega al
-  // template como `any`, y usarla para indexar un `Record` tipado no compila.
   protected etiquetaMetodo(pago: Pago): string {
     return ETIQUETAS_METODO_PAGO[pago.metodo];
   }
@@ -115,8 +98,6 @@ export class PagoComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(false);
 
-    // Las reservas se piden junto con los pagos: sin ellas no se puede saber a
-    // cuáles les falta plata ni ofrecerlas en el alta.
     forkJoin({
       pagos: this.pagoService.listar(),
       reservas: this.reservaService.listar()
@@ -126,8 +107,6 @@ export class PagoComponent implements OnInit {
         this.reservas.set(reservas);
         this.cargando.set(false);
       },
-      // El mensaje al usuario ya lo muestra el interceptor; acá solo se refleja
-      // el estado en la vista para poder ofrecer un reintento.
       error: () => {
         this.error.set(true);
         this.cargando.set(false);
@@ -143,13 +122,6 @@ export class PagoComponent implements OnInit {
     this.abrirFormulario(pago);
   }
 
-  /**
-   * El alta y la corrección las resuelve el diálogo, que se cierra recién cuando
-   * el backend confirma.
-   *
-   * Después de un alta se vuelve a cargar todo: registrar un pago puede haber
-   * dejado la reserva CONFIRMADA, y ese estado se ve en esta misma pantalla.
-   */
   private abrirFormulario(pago: Pago | null): void {
     const datos: DatosPagoDialog = {
       pago: pago,
@@ -203,13 +175,8 @@ export class PagoComponent implements OnInit {
     this.pagoService.anular(id).subscribe({
       next: () => {
         this.notificacion.exito('Pago anulado correctamente.');
-        // Anular puede haber devuelto la reserva a PENDIENTE y liberado saldo:
-        // se recarga todo para que el listado y el selector queden al día.
         this.cargar();
       },
-      // El aviso ya lo mostró el interceptor y el pago sigue como estaba, que
-      // es lo que corresponde. Sin este manejador, el error que el interceptor
-      // relanza quedaría sin atrapar.
       error: () => {}
     });
   }

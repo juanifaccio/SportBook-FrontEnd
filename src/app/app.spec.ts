@@ -14,11 +14,6 @@ import {
   iniciarSesionDePrueba
 } from './core/testing/sesion';
 
-/**
- * La raíz ya no dibuja el layout: ahora solo hospeda al router, y el layout es
- * una ruta más para que el login pueda quedar fuera de él. Así que estos tests
- * navegan de verdad, que además es la única forma de comprobar los guards.
- */
 describe('App', () => {
   let httpMock: HttpTestingController;
 
@@ -36,7 +31,6 @@ describe('App', () => {
     httpMock = TestBed.inject(HttpTestingController);
   };
 
-  /** Navega y deja que el router resuelva la carga diferida del componente. */
   const ir = async (url: string) => {
     const fixture = TestBed.createComponent(App);
 
@@ -74,7 +68,6 @@ describe('App', () => {
 
     const fixture = await ir('/tipos-cancha');
 
-    // Al arrancar se revalida la sesión guardada contra el backend.
     httpMock.expectOne(`${environment.apiUrl}/auth/yo`).flush(USUARIO_ADMIN);
     httpMock.expectOne(`${environment.apiUrl}/tipos-cancha`).flush([]);
     await fixture.whenStable();
@@ -95,8 +88,6 @@ describe('App', () => {
 
     expect(TestBed.inject(Router).url).toBe('/reservar');
 
-    // El guard lo desvió antes de que el componente de usuarios llegara a
-    // pedir nada; lo que sale ahora es la carga de la pantalla de reservar.
     httpMock.match(`${environment.apiUrl}/canchas`).forEach((pedido) => pedido.flush([]));
     expect(httpMock.match(`${environment.apiUrl}/usuarios`)).toHaveLength(0);
 

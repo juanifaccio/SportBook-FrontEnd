@@ -14,8 +14,6 @@ describe('utilidades de fecha', () => {
     it('convierte "AAAA-MM-DD" a un Date local, no a medianoche UTC', () => {
       const fecha = aDate('2026-08-20')!;
 
-      // Si se hubiera usado `new Date('2026-08-20')`, en Argentina (UTC−3) esto
-      // daría el 19 a las 21:00. Es el bug que la conversión local evita.
       expect(fecha.getFullYear()).toBe(2026);
       expect(fecha.getMonth()).toBe(7);
       expect(fecha.getDate()).toBe(20);
@@ -53,8 +51,6 @@ describe('utilidades de fecha', () => {
     });
 
     it('rellena con ceros a la izquierda', () => {
-      // El backend guarda las horas como texto y las ordena como texto, así que
-      // un "9:05" sin cero rompería el orden del listado.
       expect(aHora(new Date(2026, 7, 20, 9, 5))).toBe('09:05');
     });
 
@@ -100,8 +96,6 @@ describe('utilidades de fecha', () => {
       expect(minutosEntre('10:00', '10:00')).toBe(0);
     });
 
-    // Es lo que permite usarlo para validar: un rango invertido da negativo y
-    // así no llega a parecer un rango corto pero válido.
     it('da negativo cuando el rango está invertido', () => {
       expect(minutosEntre('12:00', '08:00')).toBe(-240);
     });

@@ -26,7 +26,6 @@ describe('LoginComponent', () => {
 
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  /** Escribe las credenciales como lo haría el usuario y manda el formulario. */
   const entrar = async (email: string, contrasena: string) => {
     fixture.componentInstance['formulario'].setValue({ email: email, contrasena: contrasena });
     fixture.detectChanges();
@@ -41,8 +40,6 @@ describe('LoginComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        // Entrar navega a reservar; sin la ruta declarada la navegación fallaría
-        // por un motivo ajeno a lo que se está probando.
         provideRouter([{ path: 'reservar', children: [] }])
       ]
     }).compileComponents();
@@ -106,8 +103,6 @@ describe('LoginComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // El mensaje lo muestra el interceptor de errores; lo que le toca a la
-    // pantalla es devolver el control con los datos todavía cargados.
     expect(TestBed.inject(AuthService).autenticado()).toBe(false);
     expect(botonEntrar()?.disabled).toBe(false);
     expect(campo('email')?.value).toBe('admin@sportbook.com');

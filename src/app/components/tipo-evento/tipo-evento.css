@@ -1,6 +1,3 @@
-/* Mobile-first: la vista base es la de tarjetas apiladas. La tabla solo aparece
-   a partir de MD, donde hay ancho suficiente para las columnas. */
-
 .tarjetas {
   display: flex;
   flex-direction: column;
@@ -21,7 +18,6 @@
 
 @media (min-width: 600px) {
   .tarjetas {
-    /* En tablet vertical entran dos tarjetas por fila. */
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   }

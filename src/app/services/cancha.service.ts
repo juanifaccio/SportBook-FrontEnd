@@ -4,12 +4,6 @@ import { Observable } from 'rxjs';
 import { Cancha, CanchaDto, FiltrosCancha } from '../models/cancha';
 import { environment } from '../../environments/environment';
 
-/**
- * Acceso a los endpoints de canchas del backend.
- *
- * Sigue el mismo criterio que `TipoCanchaService`: la URL sale del ambiente y
- * los errores quedan a cargo del interceptor, así que acá no se atrapan.
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -19,11 +13,6 @@ export class CanchaService {
 
   private readonly url = `${environment.apiUrl}/canchas`;
 
-  /**
-   * El listado, opcionalmente filtrado. Las claves sin valor no se mandan: una
-   * `tipoCanchaId=` vacía en la query es un filtro inválido para el backend,
-   * no la ausencia de filtro.
-   */
   listar(filtros: FiltrosCancha = {}): Observable<Cancha[]> {
     let params = new HttpParams();
 

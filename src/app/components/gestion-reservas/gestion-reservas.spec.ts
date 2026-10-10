@@ -35,7 +35,6 @@ describe('GestionReservasComponent', () => {
     rolId: 2
   };
 
-  /** Una reserva a futuro, que es la única que se puede gestionar. */
   const reserva = {
     id: 1,
     fecha: '2099-08-20',
@@ -50,7 +49,6 @@ describe('GestionReservasComponent', () => {
     cancha: cancha
   };
 
-  /** Una que ya pasó: el backend la rechazaría, así que la vista la bloquea. */
   const reservaVieja = { ...reserva, id: 2, fecha: '2020-01-01' };
 
   const reservaCancelada = { ...reserva, id: 3, estado: 'CANCELADA' as const };
@@ -58,7 +56,6 @@ describe('GestionReservasComponent', () => {
   let fixture: ComponentFixture<GestionReservasComponent>;
   let httpMock: HttpTestingController;
 
-  /** La pantalla pide las reservas y las canchas del filtro a la vez. */
   const responder = async (reservas: unknown[]) => {
     httpMock.expectOne((pedido) => pedido.url === urlReservas).flush(reservas);
     httpMock.expectOne(urlCanchas).flush([cancha]);
@@ -68,11 +65,6 @@ describe('GestionReservasComponent', () => {
 
   const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  /**
-   * La sesión se arma antes del `TestBed` porque `AuthService` la lee al
-   * construirse. Por defecto es un administrador, que es quien ve las reservas
-   * de todo el complejo y necesita saber de quién es cada una.
-   */
   const preparar = async (usuario = USUARIO_ADMIN) => {
     iniciarSesionDePrueba(usuario);
 
@@ -117,8 +109,6 @@ describe('GestionReservasComponent', () => {
     fixture.detectChanges();
     await responder([reserva]);
 
-    // El backend ya le devuelve solamente sus reservas, así que una columna con
-    // su propio nombre repetido en cada fila no le aporta nada.
     expect(texto()).toContain(cancha.nombre);
     expect(texto()).not.toContain(usuario.nombre);
   });
@@ -137,7 +127,6 @@ describe('GestionReservasComponent', () => {
     fixture.componentInstance['alCambiarEstado']('CANCELADA');
 
     const req = httpMock.expectOne((pedido) => pedido.url === urlReservas);
-    // El filtrado lo hace el backend, no la lista en memoria.
     expect(req.request.params.get('estado')).toBe('CANCELADA');
     req.flush([]);
     await fixture.whenStable();
@@ -156,8 +145,6 @@ describe('GestionReservasComponent', () => {
     porCancha.flush([reserva]);
     await fixture.whenStable();
 
-    // El calendario entrega un `Date` local y el backend espera "AAAA-MM-DD".
-    // Que el 20 siga siendo 20 es la prueba de que la conversión no pasa por UTC.
     fixture.componentInstance['alCambiarFecha'](new Date(2099, 7, 20));
     const porFecha = httpMock.expectOne((pedido) => pedido.url === urlReservas);
     expect(porFecha.request.params.get('fecha')).toBe('2099-08-20');
@@ -170,7 +157,6 @@ describe('GestionReservasComponent', () => {
     fixture.detectChanges();
     await responder([reserva, reservaVieja, reservaCancelada]);
 
-    // Son las mismas dos reglas que aplica el backend.
     expect(fixture.componentInstance['esGestionable'](reserva)).toBe(true);
     expect(fixture.componentInstance['esGestionable'](reservaVieja)).toBe(false);
     expect(fixture.componentInstance['esGestionable'](reservaCancelada)).toBe(false);
@@ -193,7 +179,6 @@ describe('GestionReservasComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // No se vuelve a pedir el listado: el backend ya devolvió la reserva.
     expect(texto()).toContain('Cancelada');
   });
 
@@ -212,7 +197,6 @@ describe('GestionReservasComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Se estaban mirando solo las confirmadas: mostrarla ahí sería mentir.
     expect(fixture.componentInstance['reservas']()).toEqual([]);
   });
 

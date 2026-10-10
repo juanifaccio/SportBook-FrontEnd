@@ -18,7 +18,6 @@ describe('HorarioLoteFormComponent', () => {
 
   let fixture: ComponentFixture<HorarioLoteFormComponent>;
 
-  /** Completa la fecha y el rango como lo haría el usuario en el navegador. */
   const completar = async (horaInicio: string, horaFin: string) => {
     const inputs = (fixture.nativeElement as HTMLElement).querySelectorAll('input');
 
@@ -34,7 +33,6 @@ describe('HorarioLoteFormComponent', () => {
     await fixture.whenStable();
   };
 
-  /** La duración se elige de una lista, así que se toca el control directamente. */
   const elegirDuracion = async (minutos: number) => {
     fixture.componentInstance['formulario'].controls.duracion.setValue(minutos);
     await fixture.whenStable();
@@ -85,8 +83,6 @@ describe('HorarioLoteFormComponent', () => {
     ]);
   });
 
-  // Una hora es la duración más común de un turno: proponerla ahorra un campo en
-  // el caso de siempre.
   it('propone turnos de una hora', () => {
     expect(fixture.componentInstance['formulario'].controls.duracion.value).toBe(60);
   });
@@ -105,8 +101,6 @@ describe('HorarioLoteFormComponent', () => {
     expect(texto()).toContain('Se van a generar 1 turno.');
   });
 
-  // El rango no tiene por qué ser múltiplo de la duración: de 08:00 a 13:00 en
-  // turnos de 90 minutos entran tres, y el cuarto se descarta.
   it('no cuenta el turno que no entra completo', async () => {
     await completar('08:00', '13:00');
     await elegirDuracion(90);
@@ -124,18 +118,12 @@ describe('HorarioLoteFormComponent', () => {
 
     expect(emitidos).toEqual([]);
     expect(errores()).toContain('No entra ningún turno de esa duración en ese horario.');
-    // Y sin turnos que generar, tampoco se adelanta un número.
     expect(texto()).not.toContain('Se van a generar');
   });
 
-  // El error está sobre la duración pero depende de las horas: bajar la
-  // duración no es la única forma de arreglarlo, y ampliar el rango también
-  // tiene que limpiarlo.
   it('deja de marcar el error cuando se amplía el horario', async () => {
     await completar('10:00', '11:00');
     await elegirDuracion(120);
-    // Material muestra el mensaje recién cuando el campo se tocó, y el envío
-    // fallido es lo que marca todos los controles.
     await enviar();
     expect(errores().length).toBeGreaterThan(0);
 
@@ -173,8 +161,6 @@ describe('HorarioLoteFormComponent', () => {
     expect(errores()).toContain('Escribí la fecha como DD/MM/AAAA, o elegila del calendario.');
   });
 
-  // El selector muestra minutos, pero "90 minutos" se lee peor que "1 hora y 30
-  // minutos", que es como lo diría alguien del complejo.
   it('lee las duraciones en horas y minutos', async () => {
     const selectores = (fixture.nativeElement as HTMLElement).querySelectorAll('mat-select');
     const duracion = selectores[selectores.length - 1];
@@ -189,8 +175,6 @@ describe('HorarioLoteFormComponent', () => {
   });
 
   it('muestra el tipo al lado del nombre en el selector de cancha', async () => {
-    // La cancha por defecto la carga un efecto, así que el select recién queda
-    // con valor cuando el componente se estabiliza.
     await fixture.whenStable();
     fixture.detectChanges();
 

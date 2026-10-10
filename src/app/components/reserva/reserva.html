@@ -21,8 +21,6 @@
   <div class="estado-mensaje">
     <mat-icon>stadium</mat-icon>
     <h2>No hay canchas disponibles</h2>
-    <!-- Las canchas las administra el complejo, así que el cliente no tiene a
-         dónde ir a arreglarlo: se le dice qué pasa y nada más. -->
     @if (esAdmin()) {
       <p>Para reservar hace falta al menos una cancha en estado disponible.</p>
       <button mat-flat-button type="button" routerLink="/canchas">
@@ -62,9 +60,6 @@
       }
     </mat-form-field>
 
-    <!-- Se puede elegir del calendario o escribir como DD/MM/AAAA. El `Date` que
-         devuelve se convierte a "AAAA-MM-DD" en el componente, que es lo único
-         que viaja al backend. -->
     <mat-form-field appearance="outline">
       <mat-label>Día</mat-label>
       <input
@@ -124,9 +119,6 @@
     }
   </section>
 
-  <!-- El administrador reserva desde el mostrador para quien se lo pide, así que
-       elige a nombre de quién va. El cliente reserva para sí mismo: no hay nada
-       que elegir, y el backend le impone su propio usuario igual. -->
   @if (esAdmin()) {
     <section class="seccion">
       <h2>A nombre de</h2>
@@ -142,8 +134,6 @@
     </section>
   }
 
-  <!-- La mayoría de las reservas son un partido y nada más, así que el evento es
-       opcional y arranca plegado. Sin tipos cargados no hay nada que elegir. -->
   @if (hayTiposEvento()) {
     <section class="seccion">
       <h2>Evento</h2>
@@ -203,9 +193,6 @@
     </section>
   }
 
-  <!-- También opcional y plegado. Lo que se ofrece depende del turno: el stock
-       son las unidades del complejo, y las que ya alquilan otras reservas a esa
-       hora no se pueden volver a ofrecer. -->
   <section class="seccion">
     <h2>Equipamiento</h2>
 

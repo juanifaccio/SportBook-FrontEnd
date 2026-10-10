@@ -1,15 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard, invitadoGuard, sesionGuard } from './core/guards/acceso.guard';
 
-/**
- * Cada pantalla se carga con `loadComponent` (lazy loading): así el bundle
- * inicial no crece a medida que se sumen las entidades del dominio.
- *
- * El login queda fuera del layout (no hay menú que ofrecerle a quien todavía no
- * entró) y el resto cuelga de él detrás del `sesionGuard`. Las pantallas de
- * administración del complejo suman el `adminGuard`; reservar y ver las reservas
- * las usan los dos roles.
- */
 export const routes: Routes = [
   {
     path: 'login',
@@ -21,14 +12,10 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./components/layout/layout').then((m) => m.LayoutComponent),
     canActivate: [sesionGuard],
-    // Y en cada hijo, no solo al entrar: sin esto, cerrar sesión desde una
-    // pantalla ya abierta no impediría navegar a otra.
     canActivateChild: [sesionGuard],
     children: [
       {
         path: '',
-        // Reservar y no el primer ABM: es el caso de uso central y la única
-        // pantalla que sirve para los dos roles por igual.
         redirectTo: 'reservar',
         pathMatch: 'full'
       },
@@ -48,23 +35,16 @@ export const routes: Routes = [
       {
         path: 'perfil',
         title: 'Mi perfil | SportBook',
-        // Sin `adminGuard`: la cuenta propia la gestiona cualquiera que tenga
-        // sesión, sea del rol que sea.
         loadComponent: () => import('./components/perfil/perfil').then((m) => m.PerfilComponent)
       },
       {
         path: 'pagos',
         title: 'Pagos | SportBook',
-        // Sin `adminGuard`: el cliente entra a ver los pagos de sus reservas. Lo
-        // que no puede es registrarlos, y eso lo decide el backend.
         loadComponent: () => import('./components/pago/pago').then((m) => m.PagoComponent)
       },
       {
         path: 'eventos',
         title: 'Eventos | SportBook',
-        // Sin `adminGuard` a propósito: el evento es de quien es la reserva, así
-        // que el cliente entra a gestionar los suyos y el backend le devuelve
-        // solamente esos.
         loadComponent: () => import('./components/evento/evento').then((m) => m.EventoComponent)
       },
       {
@@ -96,8 +76,6 @@ export const routes: Routes = [
       {
         path: 'equipamientos',
         title: 'Equipamiento | SportBook',
-        // Con `adminGuard`: el stock y los precios los maneja el complejo. El
-        // cliente ve el equipamiento al reservar, no en esta pantalla.
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./components/equipamiento/equipamiento').then((m) => m.EquipamientoComponent)

@@ -4,12 +4,6 @@ import { Observable } from 'rxjs';
 import { Evento, EventoDto, EventoEdicionDto, FiltrosEvento } from '../models/evento';
 import { environment } from '../../environments/environment';
 
-/**
- * Acceso a los endpoints de eventos del backend.
- *
- * Sigue el mismo criterio que el resto de los servicios: la URL sale del
- * ambiente y los errores quedan a cargo del interceptor.
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -39,7 +33,6 @@ export class EventoService {
     return this.http.post<Evento>(this.url, evento);
   }
 
-  /** El cuerpo va sin `reservaId`: el evento no se mueve de reserva. */
   actualizar(id: number, evento: EventoEdicionDto): Observable<Evento> {
     return this.http.put<Evento>(`${this.url}/${id}`, evento);
   }

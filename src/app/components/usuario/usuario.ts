@@ -21,14 +21,6 @@ import {
   DatosConfirmacion
 } from '../shared/confirmacion/confirmacion';
 
-/**
- * Pantalla de ABM de usuarios.
- *
- * Sigue el patrón de `CanchaComponent`: además de los usuarios carga los roles,
- * porque el formulario necesita ofrecerlos en un selector. A diferencia de las
- * canchas, acá no hace falta el estado "todavía no hay roles": los siembra la
- * migración del backend, así que siempre hay al menos ADMIN y CLIENTE.
- */
 @Component({
   selector: 'app-usuario',
   imports: [
@@ -55,7 +47,6 @@ export class UsuarioComponent implements OnInit {
   protected readonly cargando = signal(false);
   protected readonly error = signal(false);
 
-  /** En mobile se muestran tarjetas apiladas; desde MD, una tabla. */
   protected readonly esPantallaAncha = toSignal(
     this.breakpointObserver.observe(BREAKPOINT_MD).pipe(map((estado) => estado.matches)),
     { initialValue: false }
@@ -63,10 +54,6 @@ export class UsuarioComponent implements OnInit {
 
   protected readonly columnas = ['nombre', 'email', 'telefono', 'rol', 'estado', 'acciones'];
 
-  /**
-   * Las filas de `mat-table` llegan al template sin tipar, así que la traducción
-   * del rol se hace acá y no llamando a la función desde el HTML.
-   */
   protected etiquetaRol(usuario: Usuario): string {
     return usuario.rol ? etiquetaRol(usuario.rol.nombre) : '';
   }
@@ -79,8 +66,6 @@ export class UsuarioComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(false);
 
-    // Las dos listas se piden juntas: la pantalla no está lista para usarse
-    // hasta que llegan ambas, así que comparten el estado de carga y de error.
     forkJoin({
       usuarios: this.usuarioService.listar(),
       roles: this.rolService.listar()
@@ -90,8 +75,6 @@ export class UsuarioComponent implements OnInit {
         this.roles.set(roles);
         this.cargando.set(false);
       },
-      // El mensaje al usuario ya lo muestra el interceptor; acá solo se refleja
-      // el estado en la vista para poder ofrecer un reintento.
       error: () => {
         this.error.set(true);
         this.cargando.set(false);
@@ -107,10 +90,6 @@ export class UsuarioComponent implements OnInit {
     this.abrirFormulario(usuario);
   }
 
-  /**
-   * El alta y la edición las resuelve el diálogo, que se cierra recién cuando el
-   * backend confirma. Acá solo se refleja en la lista lo que ya quedó guardado.
-   */
   private abrirFormulario(usuario: Usuario | null): void {
     const dialogRef = this.dialog.open<UsuarioDialogComponent, DatosUsuarioDialog, Usuario>(
       UsuarioDialogComponent,
@@ -163,9 +142,6 @@ export class UsuarioComponent implements OnInit {
         this.usuarios.update((usuarios) => usuarios.filter((usuario) => usuario.id !== id));
         this.notificacion.exito('Usuario eliminado correctamente.');
       },
-      // El aviso ya lo mostró el interceptor y el usuario sigue en la lista,
-      // que es lo que corresponde. Sin este manejador, el error que el
-      // interceptor relanza quedaría sin atrapar.
       error: () => {}
     });
   }

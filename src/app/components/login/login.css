@@ -1,5 +1,3 @@
-/* Mobile-first: la tarjeta ocupa el ancho disponible y se limita desde SM. */
-
 .pantalla-login {
   display: flex;
   align-items: center;
@@ -15,8 +13,6 @@
   padding-bottom: 0.5rem;
 }
 
-/* El encabezado de Material apila título y subtítulo al costado del avatar; acá
-   se centra todo en columna, con el ícono arriba. */
 .encabezado {
   display: flex;
   flex-direction: column;

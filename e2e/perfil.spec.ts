@@ -2,15 +2,6 @@ import { Page } from '@playwright/test';
 import { ADMINISTRADOR, ANA } from './apoyo/datos';
 import { abrirComo, expect, notificacion, test } from './apoyo/fixtures';
 
-/**
- * Mi perfil: la cuenta propia de quien está conectado.
- *
- * Es la pantalla que evita que un cliente dependa del complejo para corregir sus
- * propios datos. Sirve a los dos roles por igual, así que lo que hay que ver acá
- * (y no en los unitarios) es que se llegue desde el menú de la cuenta y que el
- * nombre cambiado se refleje en la barra superior sin recargar.
- */
-
 const abrirMenuDeLaCuenta = (page: Page) =>
   page.getByRole('button', { name: 'Menú de la cuenta' }).click();
 
@@ -29,8 +20,6 @@ test.describe('Mi perfil', () => {
     await expect(page.getByLabel('Teléfono')).toHaveValue(ANA.telefono);
   });
 
-  // Se muestran, pero no hay ningún control para cambiarlos: los administra el
-  // complejo.
   test('el nivel de acceso y el estado de la cuenta no se pueden editar', async ({ page }) => {
     await abrirComo(page, ANA, '/perfil');
 
@@ -48,8 +37,6 @@ test.describe('Mi perfil', () => {
 
     await expect(notificacion(page)).toContainText('Datos actualizados correctamente.');
 
-    // La barra superior lee la sesión: si no se refrescara, seguiría mostrando
-    // el nombre anterior hasta recargar.
     await expect(page.getByRole('button', { name: 'Menú de la cuenta' })).toContainText(
       'Ana Gómez Pérez'
     );
@@ -89,7 +76,6 @@ test.describe('Mi perfil', () => {
 
     await expect(notificacion(page)).toContainText('Contraseña actualizada correctamente.');
 
-    // Los campos se vacían: dejarlas escritas en pantalla no le sirve a nadie.
     await expect(page.getByLabel('Contraseña actual')).toHaveValue('');
     await expect(page.getByLabel('Contraseña nueva')).toHaveValue('');
 
@@ -97,8 +83,6 @@ test.describe('Mi perfil', () => {
     expect(guardada?.contrasena).toBe('claveNueva456');
   });
 
-  // El backend responde 400 y no 401 justamente para esto: equivocarse al
-  // tipear no tiene que echar al usuario de su sesión.
   test('con la contraseña actual incorrecta avisa y no cierra la sesión', async ({ page, api }) => {
     await abrirComo(page, ANA, '/perfil');
 
@@ -126,7 +110,6 @@ test.describe('Mi perfil', () => {
     ).toBeVisible();
   });
 
-  // No es una pantalla de administración: no depende del rol.
   test('el administrador también gestiona su propia cuenta', async ({ page, api }) => {
     await abrirComo(page, ADMINISTRADOR, '/perfil');
 
@@ -137,7 +120,6 @@ test.describe('Mi perfil', () => {
 
     const guardado = api.estado.usuarios.find((usuario) => usuario.id === ADMINISTRADOR.id);
     expect(guardado?.nombre).toBe('Lucía Prieto Salas');
-    // Y sigue siendo administrador: el perfil no toca el rol.
     expect(guardado?.rolId).toBe(ADMINISTRADOR.rolId);
   });
 });
